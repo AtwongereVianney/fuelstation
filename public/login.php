@@ -1,6 +1,6 @@
 <?php
 session_start();
-
+include '../config/db_connect.php';
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
