@@ -1,5 +1,11 @@
 <?php
 // db_connect.php
+require_once '../includes/auth_helpers.php';
+if (!has_permission('users.view')) {
+    // Optionally show an error or redirect
+    die('Access denied.');
+}
+
 $host = 'localhost';
 $user = 'root'; // Change if not using root
 $pass = '';    // Change to your MySQL password

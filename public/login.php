@@ -1,6 +1,5 @@
 <?php
 session_start();
-require_once 'db_connect.php';
 
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -71,6 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Login</button>
                     </form>
+                    <div class="mt-3 text-center">
+                        <a href="forgot_password.php">Forgot Password?</a>
+                    </div>
                     <div class="mt-3 text-center">
                         Don't have an account? <a href="register.php">Register</a>
                     </div>
