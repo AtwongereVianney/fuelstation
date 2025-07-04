@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['username'] = $user['username'];
             $_SESSION['role_id'] = $user['role_id'];
             
+            
             // Ensure role_name is always a string, never null or array
             $role_name = $user['role_name'] ?? 'guest';
             $role_display_name = $user['role_display_name'] ?? $role_name;

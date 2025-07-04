@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Password must be at least 8 characters.';
     }
 
+
     // Check for existing username/email
     $sql = "SELECT id FROM users WHERE username=? OR email=? LIMIT 1";
     $stmt = mysqli_prepare($conn, $sql);

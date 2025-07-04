@@ -3,12 +3,12 @@ session_start();
 include '../config/db_connect.php';
 include '../includes/sidebar.php';
 
-// Get selected branch
-$selected_branch_id = $_SESSION['selected_branch_id'] ?? null;
-if (!$selected_branch_id) {
-    echo '<div class="alert alert-warning m-4">No branch selected. Please select a branch from the sidebar.</div>';
-    exit;
-}
+// // Get selected branch
+// $selected_branch_id = $_SESSION['selected_branch_id'] ?? null;
+// if (!$selected_branch_id) {
+//     echo '<div class="alert alert-warning m-4">No branch selected. Please select a branch from the sidebar.</div>';
+//     exit;
+// }
 
 // Fetch branch info
 $branch_sql = "SELECT * FROM branches WHERE id = ? AND deleted_at IS NULL LIMIT 1";
