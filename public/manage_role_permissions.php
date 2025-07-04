@@ -1,11 +1,5 @@
 <?php
-session_start();
 require_once '../config/db_connect.php';
-if (!isset($_SESSION['user_id']) || ($_SESSION['role_name'] ?? '') !== 'super_admin') {
-    header('Location: login.php');
-    exit;
-}
-
 // Fetch all roles
 $roles = [];
 $sql = "SELECT id, display_name FROM roles WHERE deleted_at IS NULL ORDER BY display_name ASC";
@@ -75,7 +69,9 @@ if ($selected_role_id) {
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-3 p-0">
-            <?php include '../includes/sidebar.php'; ?>
+            <div id="sidebar" class="sidebar ...">
+                <?php include '../includes/sidebar.php'; ?>
+            </div>
         </div>
         <div class="col-md-9 p-4">
             <h2 class="mb-4">Role Permissions Management</h2>
@@ -121,5 +117,10 @@ if ($selected_role_id) {
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById('sidebarToggle').onclick = function() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+};
+</script>
 </body>
 </html> 

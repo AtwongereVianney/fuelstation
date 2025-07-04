@@ -8,8 +8,17 @@ $branch_result = mysqli_query($conn, $branch_sql);
 if ($branch_result) {
     while ($row = mysqli_fetch_assoc($branch_result)) {
         $branches[] = $row;
-        }
+    }
 }
+
+// Handle branch selection
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['selected_branch_id'])) {
+    $_SESSION['selected_branch_id'] = intval($_POST['selected_branch_id']);
+    // Optionally redirect to the same page to avoid resubmission
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+$selected_branch_id = $_SESSION['selected_branch_id'] ?? ($branches[0]['id'] ?? null);
 
 // Fetch fuel types
 $fuel_types = [];
@@ -328,6 +337,13 @@ if ($role_result) {
                     <span class="brand-text sidebar-text fw-bold fs-5">Fuel Station</span>
                 </div>
                 <small class="text-muted sidebar-text fw-light">Management System</small>
+                <form method="post" class="mt-3">
+                    <select name="selected_branch_id" class="form-select" onchange="this.form.submit()">
+                        <?php foreach ($branches as $branch): ?>
+                            <option value="<?php echo $branch['id']; ?>" <?php if ($selected_branch_id == $branch['id']) echo 'selected'; ?>><?php echo htmlspecialchars($branch['branch_name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </form>
             </div>
             
             <!-- Navigation Menu -->
@@ -357,7 +373,7 @@ if ($role_result) {
                             <span class="tooltip-text">User Management</span>
                         </div>
                         <ul class="list-unstyled ps-3">
-                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Users</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="user.php"><span class="sidebar-text">Users</span></a></li>
                             <li><a class="nav-link text-white submenu-item py-2" href="manage_roles.php"><span class="sidebar-text">Roles</span></a></li>
                             <li><a class="nav-link text-white submenu-item py-2" href="manage_permissions.php"><span class="sidebar-text">Permissions</span></a></li>
                             <li><a class="nav-link text-white submenu-item py-2" href="manage_role_permissions.php"><span class="sidebar-text">Role Permissions</span></a></li>
@@ -375,12 +391,12 @@ if ($role_result) {
                             <div class="nav-link text-white d-flex align-items-center py-2 w-100">
                                 <i class="fas fa-building menu-icon text-green-400"></i>
                                 <span class="sidebar-text">Branches</span>
-                            </div>
+                        </div>
                             <span class="tooltip-text">Branches</span>
                         </div>
                         <ul class="list-unstyled ps-3">
                             <?php foreach ($branches as $branch): ?>
-                                <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text"><?php echo htmlspecialchars($branch['branch_name']); ?></span></a></li>
+                                <li><a class="nav-link text-white submenu-item py-2" href="branch_dashboard.php"><span class="sidebar-text"><?php echo htmlspecialchars($branch['branch_name']); ?></span></a></li>
                             <?php endforeach; ?>
                         </ul>
                     </li>

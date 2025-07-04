@@ -1,0 +1,318 @@
+<?php
+session_start();
+include '../config/db_connect.php';
+include '../includes/sidebar.php';
+// Handle Edit User
+$edit_success = false;
+$edit_errors = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_user'])) {
+    $user_id = intval($_POST['id'] ?? 0);
+    $username = trim($_POST['username'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $status = $_POST['status'] === 'active' ? 'active' : 'inactive';
+    $role_id = intval($_POST['role_id'] ?? 0);
+    if ($user_id && $username && $email && $role_id) {
+        $update_sql = "UPDATE users SET username=?, email=?, status=?, updated_at=NOW() WHERE id=?";
+        $update_stmt = mysqli_prepare($conn, $update_sql);
+        mysqli_stmt_bind_param($update_stmt, 'sssi', $username, $email, $status, $user_id);
+        mysqli_stmt_execute($update_stmt);
+        mysqli_stmt_close($update_stmt);
+        $role_update_sql = "UPDATE user_roles SET role_id=? WHERE user_id=?";
+        $role_update_stmt = mysqli_prepare($conn, $role_update_sql);
+        mysqli_stmt_bind_param($role_update_stmt, 'ii', $role_id, $user_id);
+        mysqli_stmt_execute($role_update_stmt);
+        mysqli_stmt_close($role_update_stmt);
+        $edit_success = true;
+    } else {
+        $edit_errors[] = 'All fields are required.';
+    }
+}
+
+// Handle Delete User (soft delete)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
+    $user_id = intval($_POST['id'] ?? 0);
+    if ($user_id) {
+        $sql = "UPDATE users SET deleted_at = NOW() WHERE id = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, 'i', $user_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
+}
+
+// Handle Add User
+$add_success = false;
+$add_errors = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
+    $username = trim($_POST['username'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $status = $_POST['status'] === 'active' ? 'active' : 'inactive';
+    $role_id = intval($_POST['role_id'] ?? 0);
+    if ($username && $email && $password && $role_id) {
+        // Check for duplicate username/email
+        $check_sql = "SELECT id FROM users WHERE (username=? OR email=?) AND deleted_at IS NULL LIMIT 1";
+        $check_stmt = mysqli_prepare($conn, $check_sql);
+        mysqli_stmt_bind_param($check_stmt, 'ss', $username, $email);
+        mysqli_stmt_execute($check_stmt);
+        $check_result = mysqli_stmt_get_result($check_stmt);
+        if (mysqli_fetch_assoc($check_result)) {
+            $add_errors[] = 'Username or email already exists.';
+        } else {
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $insert_sql = "INSERT INTO users (username, email, password, status, created_at) VALUES (?, ?, ?, ?, NOW())";
+            $insert_stmt = mysqli_prepare($conn, $insert_sql);
+            mysqli_stmt_bind_param($insert_stmt, 'ssss', $username, $email, $hashed_password, $status);
+            if (mysqli_stmt_execute($insert_stmt)) {
+                $new_user_id = mysqli_insert_id($conn);
+                $role_insert_sql = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
+                $role_insert_stmt = mysqli_prepare($conn, $role_insert_sql);
+                mysqli_stmt_bind_param($role_insert_stmt, 'ii', $new_user_id, $role_id);
+                mysqli_stmt_execute($role_insert_stmt);
+                mysqli_stmt_close($role_insert_stmt);
+                $add_success = true;
+            } else {
+                $add_errors[] = 'Failed to add user.';
+            }
+            mysqli_stmt_close($insert_stmt);
+        }
+        mysqli_stmt_close($check_stmt);
+    } else {
+        $add_errors[] = 'All fields are required.';
+    }
+}
+
+// Fetch all users with their roles
+$sql = "SELECT u.id, u.username, u.email, u.status, u.created_at, u.updated_at, r.id as role_id, r.name as role_name, r.display_name as role_display_name FROM users u LEFT JOIN user_roles ur ON u.id = ur.user_id LEFT JOIN roles r ON ur.role_id = r.id WHERE u.deleted_at IS NULL ORDER BY u.created_at DESC";
+$result = mysqli_query($conn, $sql);
+$users = [];
+while ($row = mysqli_fetch_assoc($result)) {
+    $users[] = $row;
+}
+
+// Fetch all roles for edit modal
+$roles = [];
+$role_sql = "SELECT id, display_name FROM roles";
+$role_result = mysqli_query($conn, $role_sql);
+while ($row = mysqli_fetch_assoc($role_result)) {
+    $roles[] = $row;
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Users - Uganda Fuel Station</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 p-0">
+            <?php include '../includes/sidebar.php'; ?>
+        </div>
+        <div class="col-md-9 p-4">
+            <h2 class="mb-4">Users Management</h2>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="fas fa-user-plus me-1"></i> Add New User</button>
+            <?php if ($edit_success): ?>
+                <div class="alert alert-success">User updated successfully.</div>
+            <?php endif; ?>
+            <?php if (!empty($edit_errors)): ?>
+                <div class="alert alert-danger">
+                    <?php foreach ($edit_errors as $error) echo '<div>' . htmlspecialchars($error) . '</div>'; ?>
+                </div>
+            <?php endif; ?>
+            <?php if ($add_success): ?>
+                <div class="alert alert-success">User added successfully.</div>
+            <?php endif; ?>
+            <?php if (!empty($add_errors)): ?>
+                <div class="alert alert-danger">
+                    <?php foreach ($add_errors as $error) echo '<div>' . htmlspecialchars($error) . '</div>'; ?>
+                </div>
+            <?php endif; ?>
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">All Users</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($users as $user): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($user['id']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['username']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['email']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['role_display_name'] ?? $user['role_name'] ?? 'N/A'); ?></td>
+                                        <td>
+                                            <?php if ($user['status'] === 'active'): ?>
+                                                <span class="badge bg-success">Active</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($user['created_at']); ?></td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewUserModal<?php echo $user['id']; ?>" title="View"><i class="fas fa-eye"></i></button>
+                                                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editUserModal<?php echo $user['id']; ?>" title="Edit"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal<?php echo $user['id']; ?>" title="Delete"><i class="fas fa-trash"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Modals for each user -->
+            <?php foreach ($users as $user): ?>
+            <!-- View Modal -->
+            <div class="modal fade" id="viewUserModal<?php echo $user['id']; ?>" tabindex="-1" aria-labelledby="viewUserModalLabel<?php echo $user['id']; ?>" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="viewUserModalLabel<?php echo $user['id']; ?>">User Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <table class="table table-bordered">
+                        <tr><th>ID</th><td><?php echo htmlspecialchars($user['id']); ?></td></tr>
+                        <tr><th>Username</th><td><?php echo htmlspecialchars($user['username']); ?></td></tr>
+                        <tr><th>Email</th><td><?php echo htmlspecialchars($user['email']); ?></td></tr>
+                        <tr><th>Role</th><td><?php echo htmlspecialchars($user['role_display_name'] ?? $user['role_name'] ?? 'N/A'); ?></td></tr>
+                        <tr><th>Status</th><td><?php echo htmlspecialchars($user['status']); ?></td></tr>
+                        <tr><th>Created At</th><td><?php echo htmlspecialchars($user['created_at']); ?></td></tr>
+                        <tr><th>Updated At</th><td><?php echo htmlspecialchars($user['updated_at']); ?></td></tr>
+                    </table>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Edit Modal -->
+            <div class="modal fade" id="editUserModal<?php echo $user['id']; ?>" tabindex="-1" aria-labelledby="editUserModalLabel<?php echo $user['id']; ?>" aria-hidden="true">
+              <div class="modal-dialog">
+                <form method="post" class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel<?php echo $user['id']; ?>">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+                    <div class="mb-3">
+                        <label for="username<?php echo $user['id']; ?>" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username<?php echo $user['id']; ?>" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email<?php echo $user['id']; ?>" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email<?php echo $user['id']; ?>" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status<?php echo $user['id']; ?>" class="form-label">Status</label>
+                        <select class="form-select" id="status<?php echo $user['id']; ?>" name="status">
+                            <option value="active" <?php if ($user['status'] === 'active') echo 'selected'; ?>>Active</option>
+                            <option value="inactive" <?php if ($user['status'] === 'inactive') echo 'selected'; ?>>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="role_id<?php echo $user['id']; ?>" class="form-label">Role</label>
+                        <select class="form-select" id="role_id<?php echo $user['id']; ?>" name="role_id">
+                            <?php foreach ($roles as $role): ?>
+                                <option value="<?php echo $role['id']; ?>" <?php if ($user['role_id'] == $role['id']) echo 'selected'; ?>><?php echo htmlspecialchars($role['display_name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="edit_user" class="btn btn-warning">Update User</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <!-- Delete Modal -->
+            <div class="modal fade" id="deleteUserModal<?php echo $user['id']; ?>" tabindex="-1" aria-labelledby="deleteUserModalLabel<?php echo $user['id']; ?>" aria-hidden="true">
+              <div class="modal-dialog">
+                <form method="post" class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="deleteUserModalLabel<?php echo $user['id']; ?>">Delete User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
+                    <p>Are you sure you want to delete the user <strong><?php echo htmlspecialchars($user['username']); ?></strong>?</p>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="delete_user" class="btn btn-danger">Delete</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <?php endforeach; ?>
+            <!-- Add User Modal -->
+            <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <form method="post" class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="add_username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="add_username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="add_email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="add_password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_status" class="form-label">Status</label>
+                        <select class="form-select" id="add_status" name="status">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_role_id" class="form-label">Role</label>
+                        <select class="form-select" id="add_role_id" name="role_id" required>
+                            <option value="">Select Role</option>
+                            <?php foreach ($roles as $role): ?>
+                                <option value="<?php echo $role['id']; ?>"><?php echo htmlspecialchars($role['display_name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="add_user" class="btn btn-primary">Add User</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
