@@ -8,7 +8,7 @@
     <script>
         // Redirect to login.php after 2 seconds
         setTimeout(function() {
-            window.location.href = 'login.php';
+            window.location.href = 'public/login.php';
         }, 2000);
     </script>
 </head>

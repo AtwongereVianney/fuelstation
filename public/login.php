@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($username) || empty($password)) {
         $errors[] = 'Username and password are required.';
     } else {
-        $sql = "SELECT u.id, u.username, u.password, u.status, ur.role_id, r.name as role_name FROM users u
+        $sql = "SELECT u.id, u.username, u.password, u.status, ur.role_id, r.name as role_name, r.display_name as role_display_name FROM users u
                 LEFT JOIN user_roles ur ON u.id = ur.user_id
                 LEFT JOIN roles r ON ur.role_id = r.id
                 WHERE u.username = ? OR u.email = ? LIMIT 1";
@@ -21,13 +21,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_close($stmt);
 
         if ($user && $user['status'] === 'active' && password_verify($password, $user['password'])) {
-            // Set session
+            // Set session variables with proper type handling
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role_id'] = $user['role_id'];
-            $_SESSION['role_name'] = $user['role_name'];
+            
+            // Ensure role_name is always a string, never null or array
+            $role_name = $user['role_name'] ?? 'guest';
+            $role_display_name = $user['role_display_name'] ?? $role_name;
+            
+            // Store role as string, not array
+            $_SESSION['role_name'] = (string)$role_name;
+            $_SESSION['role_display_name'] = (string)$role_display_name;
+            
             // Redirect based on role
-            if ($user['role_name'] === 'super_admin') {
+            if ($role_name === 'super_admin') {
                 header('Location: dashboard.php?role=super_admin');
             } else {
                 header('Location: dashboard.php');
@@ -56,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card-body">
                     <?php if (!empty($errors)): ?>
                         <div class="alert alert-danger">
-                            <?php foreach ($errors as $error) echo '<div>' . $error . '</div>'; ?>
+                            <?php foreach ($errors as $error) echo '<div>' . htmlspecialchars($error) . '</div>'; ?>
                         </div>
                     <?php endif; ?>
                     <form method="post" action="">
@@ -82,4 +90,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 </body>
-</html> 
+</html>
