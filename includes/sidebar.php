@@ -357,11 +357,13 @@ if ($role_result) {
                             <span class="tooltip-text">User Management</span>
                         </div>
                         <ul class="list-unstyled ps-3">
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Users</span></a></li>
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Permissions</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Users</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="manage_roles.php"><span class="sidebar-text">Roles</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="manage_permissions.php"><span class="sidebar-text">Permissions</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="manage_role_permissions.php"><span class="sidebar-text">Role Permissions</span></a></li>
                             <!-- Dynamic Roles -->
                             <?php foreach ($roles as $role): ?>
-                                <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text"><?php echo htmlspecialchars($role['display_name']); ?></span></a></li>
+                                <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text"><?php echo htmlspecialchars($role['display_name']); ?></span></a></li>
                             <?php endforeach; ?>
                         </ul>
                     </li>
@@ -378,7 +380,7 @@ if ($role_result) {
                         </div>
                         <ul class="list-unstyled ps-3">
                             <?php foreach ($branches as $branch): ?>
-                                <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text"><?php echo htmlspecialchars($branch['branch_name']); ?></span></a></li>
+                                <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text"><?php echo htmlspecialchars($branch['branch_name']); ?></span></a></li>
                             <?php endforeach; ?>
                         </ul>
                     </li>
@@ -395,7 +397,7 @@ if ($role_result) {
                         </div>
                         <ul class="list-unstyled ps-3">
                             <?php foreach ($fuel_types as $fuel): ?>
-                                <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text"><?php echo htmlspecialchars($fuel['name']); ?></span></a></li>
+                                <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text"><?php echo htmlspecialchars($fuel['name']); ?></span></a></li>
                             <?php endforeach; ?>
                         </ul>
                     </li>
@@ -411,10 +413,10 @@ if ($role_result) {
                             <span class="tooltip-text">Financial</span>
                         </div>
                         <ul class="list-unstyled ps-3">
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Daily Sales Summary</span></a></li>
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Expenses</span></a></li>
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Cash Float</span></a></li>
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Bank Reconciliation</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Daily Sales Summary</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Expenses</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Cash Float</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Bank Reconciliation</span></a></li>
                         </ul>
                     </li>
                     <div class="divider"></div>
@@ -428,8 +430,8 @@ if ($role_result) {
                             <span class="tooltip-text">Shift Management</span>
                         </div>
                         <ul class="list-unstyled ps-3">
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Shifts</span></a></li>
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Shift Assignments</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Shifts</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Shift Assignments</span></a></li>
                         </ul>
                     </li>
                     <div class="divider"></div>
@@ -443,10 +445,10 @@ if ($role_result) {
                             <span class="tooltip-text">Maintenance & Compliance</span>
                         </div>
                         <ul class="list-unstyled ps-3">
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Equipment Maintenance</span></a></li>
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Regulatory Compliance</span></a></li>
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Fuel Quality Tests</span></a></li>
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Safety Incidents</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Equipment Maintenance</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Regulatory Compliance</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Fuel Quality Tests</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Safety Incidents</span></a></li>
                         </ul>
                     </li>
                     <div class="divider"></div>
@@ -460,8 +462,8 @@ if ($role_result) {
                             <span class="tooltip-text">Reporting & Analytics</span>
                         </div>
                         <ul class="list-unstyled ps-3">
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Reports</span></a></li>
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Outstanding Credit</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Reports</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Outstanding Credit</span></a></li>
                         </ul>
                     </li>
                     <div class="divider"></div>
@@ -475,9 +477,9 @@ if ($role_result) {
                             <span class="tooltip-text">System</span>
                         </div>
                         <ul class="list-unstyled ps-3">
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">System Settings</span></a></li>
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Audit Logs</span></a></li>
-                            <li><a class="nav-link text-slate-300 submenu-item py-2" href="#"><span class="sidebar-text">Notifications</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">System Settings</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Audit Logs</span></a></li>
+                            <li><a class="nav-link text-white submenu-item py-2" href="#"><span class="sidebar-text">Notifications</span></a></li>
                         </ul>
                     </li>
                     <div class="divider"></div>
