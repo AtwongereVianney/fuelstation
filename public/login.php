@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($username) || empty($password)) {
         $errors[] = 'Username and password are required.';
     } else {
-        $sql = "SELECT u.id, u.username, u.password, u.status, ur.role_id, r.name as role_name, r.display_name as role_display_name FROM users u
+        $sql = "SELECT u.id, u.username, u.password, u.status, u.business_id, u.branch_id, ur.role_id, r.name as role_name, r.display_name as role_display_name FROM users u
                 LEFT JOIN user_roles ur ON u.id = ur.user_id
                 LEFT JOIN roles r ON ur.role_id = r.id
                 WHERE u.username = ? OR u.email = ? LIMIT 1";
@@ -25,7 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role_id'] = $user['role_id'];
-            
+            $_SESSION['business_id'] = $user['business_id'];
+            $_SESSION['branch_id'] = $user['branch_id'];
             
             // Ensure role_name is always a string, never null or array
             $role_name = $user['role_name'] ?? 'guest';
@@ -34,6 +35,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Store role as string, not array
             $_SESSION['role_name'] = (string)$role_name;
             $_SESSION['role_display_name'] = (string)$role_display_name;
+            
+            // Fetch all permissions for this user
+            $permissions = [];
+            $perm_sql = "SELECT p.name FROM permissions p
+                        JOIN role_permissions rp ON rp.permission_id = p.id
+                        JOIN user_roles ur ON ur.role_id = rp.role_id
+                        WHERE ur.user_id = ? AND p.deleted_at IS NULL";
+            $perm_stmt = mysqli_prepare($conn, $perm_sql);
+            mysqli_stmt_bind_param($perm_stmt, 'i', $user['id']);
+            mysqli_stmt_execute($perm_stmt);
+            $perm_result = mysqli_stmt_get_result($perm_stmt);
+            while ($perm_row = mysqli_fetch_assoc($perm_result)) {
+                $permissions[] = $perm_row['name'];
+            }
+            mysqli_stmt_close($perm_stmt);
+            $_SESSION['permissions'] = $permissions;
             
             // Redirect based on role
             if ($role_name === 'super_admin') {
@@ -57,6 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
+    
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
