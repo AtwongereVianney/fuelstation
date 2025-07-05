@@ -98,7 +98,7 @@ if (!$result) {
       <div class="col-md-3 p-0">
         <?php include '../includes/sidebar.php'; ?>
       </div>
-      <div class="col-md-9 p-4">
+      <div>
         <h2 class="mb-4">Roles Management</h2>
         
         <!-- Success/Error Messages -->

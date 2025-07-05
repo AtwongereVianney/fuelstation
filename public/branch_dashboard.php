@@ -116,7 +116,7 @@ mysqli_stmt_close($summary_stmt);
         <div class="col-md-3 p-0">
             <?php include '../includes/sidebar.php'; ?>
         </div>
-        <div class="col-md-9 p-4">
+        <div>
             <h2 class="mb-4">Branch Dashboard: <?php echo htmlspecialchars($branch_name); ?></h2>
             
             <div class="row mb-4">

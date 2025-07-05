@@ -47,7 +47,7 @@ function has_permission($perm) {
         <div class="col-md-3 p-0">
             <?php include '../includes/sidebar.php'; ?>
         </div>
-        <div class="col-md-9 p-4">
+        <div>
             <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded">
                 <div class="container-fluid">
                     <span class="navbar-text">Welcome, <?php echo htmlspecialchars($username); ?> (<?php echo htmlspecialchars($role_display); ?>)</span>

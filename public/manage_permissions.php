@@ -76,7 +76,7 @@ if ($result) {
         <div class="col-md-3 p-0">
             <?php include '../includes/sidebar.php'; ?>
         </div>
-        <div class="col-md-9 p-4">
+        <div>
             <h2 class="mb-4">Permissions Management</h2>
             <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addPermissionModal">Add New Permission</button>
             <div class="table-responsive">

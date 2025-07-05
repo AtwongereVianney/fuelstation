@@ -325,6 +325,37 @@ if ($role_result) {
         .sidebar::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(135deg, #1d4ed8, #7c3aed);
         }
+
+        /* For pages without main-content wrapper */
+body {
+    margin-left: var(--sidebar-width);
+    transition: margin-left 0.3s ease;
+}
+
+body.sidebar-collapsed {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+/* Override for pages with main-content wrapper */
+.main-content {
+    margin-left: 0; /* Reset body margin for pages with main-content */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    body {
+        margin-left: 0;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+}
     </style>
 </head>
 <body class="bg-gray-100">
@@ -526,106 +557,132 @@ if ($role_result) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Sidebar toggle functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            const toggleIcon = sidebarToggle.querySelector('i');
-            
-            // Load saved state from localStorage (if available)
-            const savedState = localStorage.getItem('sidebarCollapsed');
-            if (savedState === 'true') {
-                sidebar.classList.add('collapsed');
-                mainContent.classList.add('collapsed');
-                toggleIcon.classList.remove('fa-bars');
-                toggleIcon.classList.add('fa-chevron-right');
+        // Updated sidebar toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+    // Try to find mainContent, but don't fail if it doesn't exist
+    const mainContent = document.getElementById('mainContent') || document.querySelector('.main-content');
+    const toggleIcon = sidebarToggle.querySelector('i');
+    
+    // Load saved state from localStorage (if available)
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    if (savedState === 'true') {
+        sidebar.classList.add('collapsed');
+        if (mainContent) {
+            mainContent.classList.add('collapsed');
+        }
+        toggleIcon.classList.remove('fa-bars');
+        toggleIcon.classList.add('fa-chevron-right');
+        
+        // For pages without mainContent, adjust the body margin
+        if (!mainContent) {
+            document.body.style.marginLeft = 'var(--sidebar-collapsed-width)';
+        }
+    }
+    
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        
+        if (mainContent) {
+            mainContent.classList.toggle('collapsed');
+        } else {
+            // For pages without mainContent, adjust the body margin directly
+            if (sidebar.classList.contains('collapsed')) {
+                document.body.style.marginLeft = 'var(--sidebar-collapsed-width)';
+            } else {
+                document.body.style.marginLeft = 'var(--sidebar-width)';
             }
-            
-            sidebarToggle.addEventListener('click', function() {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('collapsed');
-                
-                // Update toggle icon
-                if (sidebar.classList.contains('collapsed')) {
-                    toggleIcon.classList.remove('fa-bars');
-                    toggleIcon.classList.add('fa-chevron-right');
-                    localStorage.setItem('sidebarCollapsed', 'true');
-                } else {
-                    toggleIcon.classList.remove('fa-chevron-right');
-                    toggleIcon.classList.add('fa-bars');
-                    localStorage.setItem('sidebarCollapsed', 'false');
-                }
-            });
-            
-            // Close mobile sidebar when clicking on main content
-            mainContent.addEventListener('click', function() {
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.remove('show');
-                    mainContent.classList.remove('show');
-                }
-            });
-            
-            // Handle mobile responsiveness
-            function handleResize() {
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.remove('collapsed');
-                    mainContent.classList.remove('collapsed');
-                    toggleIcon.classList.remove('fa-chevron-right');
-                    toggleIcon.classList.add('fa-bars');
-                }
-            }
-            
-            window.addEventListener('resize', handleResize);
-            
-            // Mobile toggle functionality
+        }
+        
+        // Update toggle icon
+        if (sidebar.classList.contains('collapsed')) {
+            toggleIcon.classList.remove('fa-bars');
+            toggleIcon.classList.add('fa-chevron-right');
+            localStorage.setItem('sidebarCollapsed', 'true');
+        } else {
+            toggleIcon.classList.remove('fa-chevron-right');
+            toggleIcon.classList.add('fa-bars');
+            localStorage.setItem('sidebarCollapsed', 'false');
+        }
+    });
+    
+    // Close mobile sidebar when clicking on main content
+    if (mainContent) {
+        mainContent.addEventListener('click', function() {
             if (window.innerWidth <= 768) {
-                sidebarToggle.addEventListener('click', function() {
-                    sidebar.classList.toggle('show');
-                    mainContent.classList.toggle('show');
-                });
+                sidebar.classList.remove('show');
+                mainContent.classList.remove('show');
             }
-            
-            // Add click handlers for navigation links
-            const navLinks = document.querySelectorAll('.nav-link:not(.dropdown-toggle)');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    // Remove active class from all links
-                    navLinks.forEach(l => l.classList.remove('active'));
-                    // Add active class to clicked link
-                    this.classList.add('active');
-                    
-                    // For demo purposes, prevent default navigation
-                    e.preventDefault();
-                    
-                    // You can add your actual navigation logic here
-                    console.log('Navigating to:', this.getAttribute('href'));
-                });
-            });
-            
-            // Auto-collapse dropdowns when sidebar is collapsed
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                        const target = mutation.target;
-                        if (target.classList.contains('collapsed')) {
-                            // Close all open dropdowns
-                            const openDropdowns = document.querySelectorAll('.collapse.show');
-                            openDropdowns.forEach(dropdown => {
-                                const bsCollapse = new bootstrap.Collapse(dropdown, {
-                                    toggle: false
-                                });
-                                bsCollapse.hide();
-                            });
-                        }
-                    }
-                });
-            });
-            
-            observer.observe(sidebar, {
-                attributes: true,
-                attributeFilter: ['class']
-            });
         });
+    }
+    
+    // Handle mobile responsiveness
+    function handleResize() {
+        if (window.innerWidth <= 768) {
+            sidebar.classList.remove('collapsed');
+            if (mainContent) {
+                mainContent.classList.remove('collapsed');
+            } else {
+                document.body.style.marginLeft = '0';
+            }
+            toggleIcon.classList.remove('fa-chevron-right');
+            toggleIcon.classList.add('fa-bars');
+        }
+    }
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Mobile toggle functionality
+    if (window.innerWidth <= 768) {
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+            if (mainContent) {
+                mainContent.classList.toggle('show');
+            }
+        });
+    }
+    
+    // Add click handlers for navigation links
+    const navLinks = document.querySelectorAll('.nav-link:not(.dropdown-toggle)');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Remove active class from all links
+            navLinks.forEach(l => l.classList.remove('active'));
+            // Add active class to clicked link
+            this.classList.add('active');
+            
+            // Don't prevent default for actual navigation
+            // e.preventDefault();
+            
+            console.log('Navigating to:', this.getAttribute('href'));
+        });
+    });
+    
+    // Auto-collapse dropdowns when sidebar is collapsed
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const target = mutation.target;
+                if (target.classList.contains('collapsed')) {
+                    // Close all open dropdowns
+                    const openDropdowns = document.querySelectorAll('.collapse.show');
+                    openDropdowns.forEach(dropdown => {
+                        const bsCollapse = new bootstrap.Collapse(dropdown, {
+                            toggle: false
+                        });
+                        bsCollapse.hide();
+                    });
+                }
+            }
+        });
+    });
+    
+    observer.observe(sidebar, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
+});
     </script>
 </body>
 </html>
