@@ -1,27 +1,27 @@
 <?php
 session_start();
 include '../config/db_connect.php';
-include '../includes/sidebar.php';
 
-// Determine which branch to show
-if ($_SESSION['role_name'] === 'super_admin') {
-    // Super admin can select any branch via URL
-    if (isset($_GET['branch_id']) && is_numeric($_GET['branch_id'])) {
-        $selected_branch_id = intval($_GET['branch_id']);
-    } else {
-        // Default to the first branch if none selected
-        $branch_result = mysqli_query($conn, "SELECT id FROM branches WHERE deleted_at IS NULL ORDER BY branch_name LIMIT 1");
-        $row = mysqli_fetch_assoc($branch_result);
-        $selected_branch_id = $row ? $row['id'] : null;
-    }
-} else {
-    // Regular users can only see their own branch
-    $selected_branch_id = $_SESSION['branch_id'];
+// Handle branch selection from GET parameter first
+if (isset($_GET['branch_id'])) {
+    $_SESSION['selected_branch_id'] = intval($_GET['branch_id']);
 }
 
-// Fetch branch info
+// Include sidebar after handling GET parameter
+include '../includes/sidebar.php';
+
+// The $selected_branch_id variable is now available from sidebar.php
+// No need to redefine it here as it's already set in the sidebar
+
+// Fetch branch info with error handling
 $branch_sql = "SELECT * FROM branches WHERE id = ? AND deleted_at IS NULL LIMIT 1";
 $branch_stmt = mysqli_prepare($conn, $branch_sql);
+
+if (!$branch_stmt) {
+    echo '<div class="alert alert-danger m-4">Database error: ' . mysqli_error($conn) . '</div>';
+    exit;
+}
+
 mysqli_stmt_bind_param($branch_stmt, 'i', $selected_branch_id);
 mysqli_stmt_execute($branch_stmt);
 $branch_result = mysqli_stmt_get_result($branch_stmt);
@@ -29,9 +29,12 @@ $branch = mysqli_fetch_assoc($branch_result);
 mysqli_stmt_close($branch_stmt);
 
 if (!$branch) {
-    echo '<div class="alert alert-danger m-4">Branch not found.</div>';
+    echo '<div class="alert alert-danger m-4">Branch not found or has been deleted.</div>';
     exit;
 }
+
+// Store branch name for easy access
+$branch_name = $branch['branch_name'] ?? 'Unknown Branch';
 
 // Expenses
 $expenses_sql = "SELECT SUM(amount) as total_expenses FROM expenses WHERE branch_id = ? AND deleted_at IS NULL";
@@ -98,8 +101,6 @@ mysqli_stmt_execute($summary_stmt);
 $summary_result = mysqli_stmt_get_result($summary_stmt);
 $summary = mysqli_fetch_assoc($summary_result);
 mysqli_stmt_close($summary_stmt);
-
-echo '<!-- Branch name: ' . $branch['branch_name'] . ' -->';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -116,7 +117,8 @@ echo '<!-- Branch name: ' . $branch['branch_name'] . ' -->';
             <?php include '../includes/sidebar.php'; ?>
         </div>
         <div class="col-md-9 p-4">
-            <h2 class="mb-4">Branch Dashboard: <?php echo htmlspecialchars($branch['branch_name']); ?></h2>
+            <h2 class="mb-4">Branch Dashboard: <?php echo htmlspecialchars($branch_name); ?></h2>
+            
             <div class="row mb-4">
                 <div class="col-md-3">
                     <div class="card text-bg-primary mb-3">
@@ -151,6 +153,7 @@ echo '<!-- Branch name: ' . $branch['branch_name'] . ' -->';
                     </div>
                 </div>
             </div>
+            
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">Attendants</div>
                 <div class="card-body p-0">
@@ -165,19 +168,26 @@ echo '<!-- Branch name: ' . $branch['branch_name'] . ' -->';
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($attendants as $attendant): ?>
+                                <?php if (!empty($attendants)): ?>
+                                    <?php foreach ($attendants as $attendant): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($attendant['id']); ?></td>
+                                            <td><?php echo htmlspecialchars($attendant['username']); ?></td>
+                                            <td><?php echo htmlspecialchars($attendant['first_name'] . ' ' . $attendant['last_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($attendant['status']); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($attendant['id']); ?></td>
-                                        <td><?php echo htmlspecialchars($attendant['username']); ?></td>
-                                        <td><?php echo htmlspecialchars($attendant['first_name'] . ' ' . $attendant['last_name']); ?></td>
-                                        <td><?php echo htmlspecialchars($attendant['status']); ?></td>
+                                        <td colspan="4" class="text-center text-muted">No attendants found for this branch</td>
                                     </tr>
-                                <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+            
             <div class="card mb-4">
                 <div class="card-header bg-success text-white">Shifts & Assignments</div>
                 <div class="card-body p-0">
@@ -192,19 +202,26 @@ echo '<!-- Branch name: ' . $branch['branch_name'] . ' -->';
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($shifts as $shift): ?>
+                                <?php if (!empty($shifts)): ?>
+                                    <?php foreach ($shifts as $shift): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($shift['shift_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($shift['start_time']); ?></td>
+                                            <td><?php echo htmlspecialchars($shift['end_time']); ?></td>
+                                            <td><?php echo htmlspecialchars(($shift['first_name'] ?? '') . ' ' . ($shift['last_name'] ?? '')); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($shift['shift_name']); ?></td>
-                                        <td><?php echo htmlspecialchars($shift['start_time']); ?></td>
-                                        <td><?php echo htmlspecialchars($shift['end_time']); ?></td>
-                                        <td><?php echo htmlspecialchars($shift['first_name'] . ' ' . $shift['last_name']); ?></td>
+                                        <td colspan="4" class="text-center text-muted">No shifts found for this branch</td>
                                     </tr>
-                                <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+            
             <div class="card mb-4">
                 <div class="card-header bg-warning text-dark">Financial Performance</div>
                 <div class="card-body">
