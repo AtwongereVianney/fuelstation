@@ -12,8 +12,8 @@ $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_employee'])) {
     // Get form data
-    $business_id = intval($_POST['business_id'] ?? 0);
-    $branch_id = intval($_POST['branch_id'] ?? 0);
+    $business_name_input = trim($_POST['business_name'] ?? '');
+    $branch_name_input = trim($_POST['branch_name'] ?? '');
     $username = trim($_POST['username'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
@@ -33,11 +33,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_employee']))
     $hired_date = $_POST['hired_date'] ?? '';
 
     // Debug: Check if form data is being received
-    echo "<!-- DEBUG: Form submitted with business_id: $business_id, branch_id: $branch_id -->";
+    echo "<!-- DEBUG: Form submitted with business_name: $business_name_input, branch_name: $branch_name_input -->";
 
     // Basic validation
     if (empty($username) || empty($email) || empty($password) || empty($confirm_password) || 
-        empty($first_name) || empty($last_name) || $business_id == 0 || $branch_id == 0) {
+        empty($first_name) || empty($last_name) || empty($business_name_input) || empty($branch_name_input)) {
         $errors[] = 'All required fields must be filled.';
     }
     
@@ -93,6 +93,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_employee']))
                 $employee_id = 'EMP0001';
             }
         }
+    }
+
+    // Look up business_id
+    $business_id = 0;
+    if (!empty($business_name_input)) {
+        $sql = "SELECT id FROM businesses WHERE LOWER(business_name) = LOWER(?) AND deleted_at IS NULL LIMIT 1";
+        $stmt = mysqli_prepare($conn, $sql);
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, 's', $business_name_input);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            $row = mysqli_fetch_assoc($result);
+            if ($row) {
+                $business_id = $row['id'];
+            } else {
+                $errors[] = 'Business not found. Please enter a valid business name.';
+            }
+            mysqli_stmt_close($stmt);
+        } else {
+            $errors[] = 'Database error (business lookup): ' . mysqli_error($conn);
+        }
+    } else {
+        $errors[] = 'Business name is required.';
+    }
+
+    // Look up branch_id
+    $branch_id = 0;
+    if (!empty($branch_name_input) && $business_id) {
+        $sql = "SELECT id FROM branches WHERE LOWER(branch_name) = LOWER(?) AND business_id = ? AND deleted_at IS NULL LIMIT 1";
+        $stmt = mysqli_prepare($conn, $sql);
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, 'si', $branch_name_input, $business_id);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            $row = mysqli_fetch_assoc($result);
+            if ($row) {
+                $branch_id = $row['id'];
+            } else {
+                $errors[] = 'Branch not found for the selected business. Please enter a valid branch name.';
+            }
+            mysqli_stmt_close($stmt);
+        } else {
+            $errors[] = 'Database error (branch lookup): ' . mysqli_error($conn);
+        }
+    } else if (empty($branch_name_input)) {
+        $errors[] = 'Branch name is required.';
     }
 
     // Insert user if no errors
@@ -204,33 +250,14 @@ if (!$branches_result) {
                                 <h5 class="text-primary border-bottom pb-2">Business Information</h5>
                             </div>
                             <div class="col-md-6">
-                                <label for="business_id" class="form-label">Business <span class="text-danger">*</span></label>
-                                <select class="form-select" id="business_id" name="business_id" required>
-                                    <option value="">Select Business</option>
-                                    <?php if ($businesses_result): ?>
-                                        <?php while ($business = mysqli_fetch_assoc($businesses_result)): ?>
-                                            <option value="<?php echo $business['id']; ?>" 
-                                                <?php echo (isset($_POST['business_id']) && $_POST['business_id'] == $business['id']) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($business['business_name']); ?>
-                                            </option>
-                                        <?php endwhile; ?>
-                                    <?php endif; ?>
-                                </select>
+                                <label for="business_name" class="form-label">Business Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="business_name" name="business_name" value="<?php echo htmlspecialchars($_POST['business_name'] ?? ''); ?>" required>
+                                <div class="form-text">Enter the exact business name as registered in the system.</div>
                             </div>
                             <div class="col-md-6">
-                                <label for="branch_id" class="form-label">Branch <span class="text-danger">*</span></label>
-                                <select class="form-select" id="branch_id" name="branch_id" required>
-                                    <option value="">Select Branch</option>
-                                    <?php if ($branches_result): ?>
-                                        <?php while ($branch = mysqli_fetch_assoc($branches_result)): ?>
-                                            <option value="<?php echo $branch['id']; ?>" 
-                                                data-business-id="<?php echo $branch['business_id']; ?>"
-                                                <?php echo (isset($_POST['branch_id']) && $_POST['branch_id'] == $branch['id']) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($branch['branch_name']); ?>
-                                            </option>
-                                        <?php endwhile; ?>
-                                    <?php endif; ?>
-                                </select>
+                                <label for="branch_name" class="form-label">Branch Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="branch_name" name="branch_name" value="<?php echo htmlspecialchars($_POST['branch_name'] ?? ''); ?>" required>
+                                <div class="form-text">Enter the exact branch name as registered in the system.</div>
                             </div>
                         </div>
 
@@ -375,38 +402,5 @@ if (!$branches_result) {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-// Filter branches based on selected business
-document.getElementById('business_id').addEventListener('change', function() {
-    const businessId = this.value;
-    const branchSelect = document.getElementById('branch_id');
-    const branchOptions = branchSelect.querySelectorAll('option');
-    
-    // Reset branch selection
-    branchSelect.value = '';
-    
-    // Show/hide branch options based on business selection
-    branchOptions.forEach(function(option) {
-        if (option.value === '') {
-            option.style.display = 'block';
-        } else {
-            const optionBusinessId = option.getAttribute('data-business-id');
-            if (businessId === '' || optionBusinessId === businessId) {
-                option.style.display = 'block';
-            } else {
-                option.style.display = 'none';
-            }
-        }
-    });
-});
-
-// Initialize branch filtering on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const businessSelect = document.getElementById('business_id');
-    if (businessSelect.value) {
-        businessSelect.dispatchEvent(new Event('change'));
-    }
-});
-</script>
 </body>
 </html>
