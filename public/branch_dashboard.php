@@ -3,12 +3,21 @@ session_start();
 include '../config/db_connect.php';
 include '../includes/sidebar.php';
 
-// // Get selected branch
-// $selected_branch_id = $_SESSION['selected_branch_id'] ?? null;
-// if (!$selected_branch_id) {
-//     echo '<div class="alert alert-warning m-4">No branch selected. Please select a branch from the sidebar.</div>';
-//     exit;
-// }
+// Determine which branch to show
+if ($_SESSION['role_name'] === 'super_admin') {
+    // Super admin can select any branch via URL
+    if (isset($_GET['branch_id']) && is_numeric($_GET['branch_id'])) {
+        $selected_branch_id = intval($_GET['branch_id']);
+    } else {
+        // Default to the first branch if none selected
+        $branch_result = mysqli_query($conn, "SELECT id FROM branches WHERE deleted_at IS NULL ORDER BY branch_name LIMIT 1");
+        $row = mysqli_fetch_assoc($branch_result);
+        $selected_branch_id = $row ? $row['id'] : null;
+    }
+} else {
+    // Regular users can only see their own branch
+    $selected_branch_id = $_SESSION['branch_id'];
+}
 
 // Fetch branch info
 $branch_sql = "SELECT * FROM branches WHERE id = ? AND deleted_at IS NULL LIMIT 1";
@@ -89,6 +98,8 @@ mysqli_stmt_execute($summary_stmt);
 $summary_result = mysqli_stmt_get_result($summary_stmt);
 $summary = mysqli_fetch_assoc($summary_result);
 mysqli_stmt_close($summary_stmt);
+
+echo '<!-- Branch name: ' . $branch['branch_name'] . ' -->';
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
 }
 
 // Fetch all users with their roles
-$sql = "SELECT u.id, u.username, u.email, u.status, u.created_at, u.updated_at, r.id as role_id, r.name as role_name, r.display_name as role_display_name FROM users u LEFT JOIN user_roles ur ON u.id = ur.user_id LEFT JOIN roles r ON ur.role_id = r.id WHERE u.deleted_at IS NULL ORDER BY u.created_at DESC";
+$sql = "SELECT u.id, u.username, u.email, u.status, u.created_at, u.updated_at, r.id as role_id, r.name as role_name, r.display_name as role_display_name FROM users u LEFT JOIN user_roles ur ON u.id = ur.user_id LEFT JOIN roles r ON ur.role_id = r.id WHERE u.deleted_at IS NULL ORDER BY u.id ASC";
 $result = mysqli_query($conn, $sql);
 $users = [];
 while ($row = mysqli_fetch_assoc($result)) {
@@ -149,9 +149,10 @@ while ($row = mysqli_fetch_assoc($role_result)) {
                                 </tr>
                             </thead>
                             <tbody>
+                                <?php $serial = 1; ?>
                                 <?php foreach ($users as $user): ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($user['id']); ?></td>
+                                        <td><?php echo htmlspecialchars($serial++); ?></td>
                                         <td><?php echo htmlspecialchars($user['username']); ?></td>
                                         <td><?php echo htmlspecialchars($user['email']); ?></td>
                                         <td><?php echo htmlspecialchars($user['role_display_name'] ?? $user['role_name'] ?? 'N/A'); ?></td>

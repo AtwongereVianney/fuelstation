@@ -3,8 +3,14 @@ include_once __DIR__ . '/../config/db_connect.php';
 
 // Fetch branches
 $branches = [];
-$branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
-$branch_result = mysqli_query($conn, $branch_sql);
+if ($_SESSION['role_name'] === 'super_admin') {
+    $branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
+    $branch_result = mysqli_query($conn, $branch_sql);
+} else {
+    $branch_id = intval($_SESSION['branch_id']);
+    $branch_sql = "SELECT id, branch_name FROM branches WHERE id = $branch_id AND deleted_at IS NULL";
+    $branch_result = mysqli_query($conn, $branch_sql);
+}
 if ($branch_result) {
     while ($row = mysqli_fetch_assoc($branch_result)) {
         $branches[] = $row;
@@ -396,7 +402,9 @@ if ($role_result) {
                         </div>
                         <ul class="list-unstyled ps-3">
                             <?php foreach ($branches as $branch): ?>
-                                <li><a class="nav-link text-white submenu-item py-2" href="branch_dashboard.php"><span class="sidebar-text"><?php echo htmlspecialchars($branch['branch_name']); ?></span></a></li>
+                                <li><a class="nav-link text-white submenu-item py-2" href="branch_dashboard.php?branch_id=<?php echo $branch['id']; ?>">
+                                    <span class="sidebar-text"><?php echo htmlspecialchars($branch['branch_name']); ?></span>
+                                </a></li>
                             <?php endforeach; ?>
                         </ul>
                     </li>
