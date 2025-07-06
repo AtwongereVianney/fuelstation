@@ -1,7 +1,6 @@
 <?php
 session_start();
 include '../config/db_connect.php';
-include '../includes/sidebar.php';
 // Handle Edit User
 $edit_success = false;
 $edit_errors = [];
