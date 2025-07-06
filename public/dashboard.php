@@ -42,10 +42,11 @@ function has_permission($perm) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+    <?php include '../includes/sidebar.php'; ?>
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-3 p-0">
-            <?php include '../includes/sidebar.php'; ?>
+            
         </div>
         <div>
             <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded">
@@ -134,8 +135,8 @@ function has_permission($perm) {
                 <?php }
                 // Staff Attendance
                 if (has_permission('attendance.view')) {
-                    $present = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM attendance WHERE date = CURDATE() AND status = 'present'"))[0];
-                    $absent = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM attendance WHERE date = CURDATE() AND status = 'absent'"))[0];
+                    $present = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM shift_assignments WHERE date = CURDATE() AND status = 'present'"))[0];
+                    $absent = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM shift_assignments WHERE date = CURDATE() AND status = 'absent'"))[0];
                     $total = $present + $absent;
                 ?>
                     <div class="col-md-3"><div class="card text-bg-secondary h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-user-check me-2"></i>Attendance</h5><p class="card-text display-6 fw-bold"><?php echo "$present / $total Present"; ?></p><a href="#" class="btn btn-link p-0 mt-2">View Details</a></div></div></div>
@@ -430,163 +431,6 @@ function has_permission($perm) {
                                 <td><?php echo htmlspecialchars($row['created_at']); ?></td>
                                 <td><?php echo htmlspecialchars($row['title']); ?></td>
                                 <td><?php echo htmlspecialchars($row['message']); ?></td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <?php /* Attendance table not implemented yet
-            <?php if (has_permission('attendance.view')): ?>
-            <div class="card mb-4">
-                <div class="card-header bg-secondary text-white">Recent Attendance</div>
-                <div class="card-body p-0">
-                    <table class="table table-sm mb-0">
-                        <thead class="table-light">
-                            <tr><th>Date</th><th>Staff</th><th>Status</th></tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $res = mysqli_query($conn, "SELECT a.*, u.username FROM attendance a LEFT JOIN users u ON a.user_id = u.id ORDER BY a.date DESC, a.id DESC LIMIT 5");
-                            while ($row = mysqli_fetch_assoc($res)): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($row['date']); ?></td>
-                                <td><?php echo htmlspecialchars($row['username']); ?></td>
-                                <td><?php echo htmlspecialchars($row['status']); ?></td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <?php endif; ?>
-            */ ?>
-
-            <?php /* Pump readings table not implemented yet
-            <?php if (has_permission('pump_readings.view')): ?>
-            <div class="card mb-4">
-                <div class="card-header bg-info">Recent Pump Readings</div>
-                <div class="card-body p-0">
-                    <table class="table table-sm mb-0">
-                        <thead class="table-light">
-                            <tr><th>Date</th><th>Pump</th><th>Reading</th><th>Attendant</th></tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $res = mysqli_query($conn, "SELECT pr.*, p.name as pump_name, u.username FROM pump_readings pr LEFT JOIN pumps p ON pr.pump_id = p.id LEFT JOIN users u ON pr.attendant_id = u.id ORDER BY pr.reading_date DESC, pr.reading_time DESC LIMIT 5");
-                            while ($row = mysqli_fetch_assoc($res)): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($row['reading_date']); ?></td>
-                                <td><?php echo htmlspecialchars($row['pump_name']); ?></td>
-                                <td><?php echo htmlspecialchars($row['reading']); ?></td>
-                                <td><?php echo htmlspecialchars($row['username']); ?></td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <?php endif; ?>
-            */ ?>
-
-            <?php /* Supplier deliveries table not implemented yet - using fuel_purchases instead
-            <?php if (has_permission('supplier_deliveries.view')): ?>
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">Recent Supplier Deliveries</div>
-                <div class="card-body p-0">
-                    <table class="table table-sm mb-0">
-                        <thead class="table-light">
-                            <tr><th>Date</th><th>Supplier</th><th>Product</th><th>Quantity</th></tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $res = mysqli_query($conn, "SELECT sd.*, s.name as supplier_name, ft.name as product FROM supplier_deliveries sd LEFT JOIN suppliers s ON sd.supplier_id = s.id LEFT JOIN fuel_types ft ON sd.fuel_type_id = ft.id ORDER BY sd.delivery_date DESC LIMIT 5");
-                            while ($row = mysqli_fetch_assoc($res)): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($row['delivery_date']); ?></td>
-                                <td><?php echo htmlspecialchars($row['supplier_name']); ?></td>
-                                <td><?php echo htmlspecialchars($row['product']); ?></td>
-                                <td><?php echo htmlspecialchars($row['quantity']); ?></td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <?php endif; ?>
-            */ ?>
-
-            <?php /* Customer feedback table not implemented yet
-            <?php if (has_permission('customer_feedback.view')): ?>
-            <div class="card mb-4">
-                <div class="card-header bg-warning">Recent Customer Feedback</div>
-                <div class="card-body p-0">
-                    <table class="table table-sm mb-0">
-                        <thead class="table-light">
-                            <tr><th>Date</th><th>Customer</th><th>Feedback</th><th>Status</th></tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $res = mysqli_query($conn, "SELECT * FROM customer_feedback ORDER BY created_at DESC LIMIT 5");
-                            while ($row = mysqli_fetch_assoc($res)): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($row['created_at']); ?></td>
-                                <td><?php echo htmlspecialchars($row['customer_name']); ?></td>
-                                <td><?php echo htmlspecialchars($row['feedback']); ?></td>
-                                <td><?php echo htmlspecialchars($row['status']); ?></td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <?php endif; ?>
-            */ ?>
-
-            <?php if (has_permission('fuel_prices.view')): ?>
-            <div class="card mb-4">
-                <div class="card-header bg-danger text-white">Recent Price Changes</div>
-                <div class="card-body p-0">
-                    <table class="table table-sm mb-0">
-                        <thead class="table-light">
-                            <tr><th>Date</th><th>Product</th><th>Old Price</th><th>New Price</th></tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $res = mysqli_query($conn, "SELECT fph.*, ft.name as product FROM fuel_price_history fph LEFT JOIN fuel_types ft ON fph.fuel_type_id = ft.id WHERE fph.deleted_at IS NULL ORDER BY fph.effective_date DESC, fph.created_at DESC LIMIT 5");
-                            while ($row = mysqli_fetch_assoc($res)): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($row['effective_date']); ?></td>
-                                <td><?php echo htmlspecialchars($row['product']); ?></td>
-                                <td><?php echo htmlspecialchars($row['old_price']); ?></td>
-                                <td><?php echo htmlspecialchars($row['new_price']); ?></td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <?php if (has_permission('shifts.view')): ?>
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">Recent Shift Assignments</div>
-                <div class="card-body p-0">
-                    <table class="table table-sm mb-0">
-                        <thead class="table-light">
-                            <tr><th>Date</th><th>Shift</th><th>Employee</th><th>Status</th></tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $res = mysqli_query($conn, "SELECT sa.*, s.shift_name, u.username FROM shift_assignments sa LEFT JOIN shifts s ON sa.shift_id = s.id LEFT JOIN users u ON sa.user_id = u.id WHERE sa.deleted_at IS NULL ORDER BY sa.assignment_date DESC, sa.created_at DESC LIMIT 5");
-                            while ($row = mysqli_fetch_assoc($res)): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($row['assignment_date']); ?></td>
-                                <td><?php echo htmlspecialchars($row['shift_name']); ?></td>
-                                <td><?php echo htmlspecialchars($row['username']); ?></td>
-                                <td><?php echo htmlspecialchars($row['status']); ?></td>
                             </tr>
                             <?php endwhile; ?>
                         </tbody>

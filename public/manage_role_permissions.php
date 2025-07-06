@@ -10,13 +10,14 @@ if ($result) {
     }
 }
 
-// Fetch all permissions
-$permissions = [];
-$sql = "SELECT id, display_name FROM permissions WHERE deleted_at IS NULL ORDER BY display_name ASC";
+// Fetch all permissions, grouped by module
+$permissions_by_module = [];
+$sql = "SELECT id, display_name, module FROM permissions WHERE deleted_at IS NULL ORDER BY module ASC, display_name ASC";
 $result = mysqli_query($conn, $sql);
 if ($result) {
     while ($row = mysqli_fetch_assoc($result)) {
-        $permissions[] = $row;
+        $module = $row['module'] ?: 'Other';
+        $permissions_by_module[$module][] = $row;
     }
 }
 
@@ -91,27 +92,38 @@ if ($selected_role_id) {
             </form>
             <form method="post">
                 <input type="hidden" name="role_id" value="<?php echo $selected_role_id; ?>">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Permission</th>
-                                <th class="text-center">Assigned</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        <?php foreach ($permissions as $perm): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($perm['display_name']); ?></td>
-                                <td class="text-center">
-                                    <input type="checkbox" name="permissions[]" value="<?php echo $perm['id']; ?>" <?php if (in_array($perm['id'], $current_permissions)) echo 'checked'; ?>>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                <div class="accordion" id="permissionsAccordion">
+                    <?php foreach ($permissions_by_module as $module => $perms): ?>
+                        <div class="accordion-item mb-2">
+                            <h2 class="accordion-header d-flex align-items-center justify-content-between" id="heading-<?php echo htmlspecialchars($module); ?>">
+                                <button class="accordion-button collapsed flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<?php echo htmlspecialchars($module); ?>" aria-expanded="false" aria-controls="collapse-<?php echo htmlspecialchars($module); ?>">
+                                    <?php echo ucwords(str_replace('_', ' ', $module)); ?>
+                                </button>
+                                <div class="form-check ms-3 me-3">
+                                    <input class="form-check-input module-checkbox" type="checkbox" id="module-check-<?php echo htmlspecialchars($module); ?>" data-module="<?php echo htmlspecialchars($module); ?>">
+                                    <label class="form-check-label small" for="module-check-<?php echo htmlspecialchars($module); ?>"></label>
+                                </div>
+                            </h2>
+                            <div id="collapse-<?php echo htmlspecialchars($module); ?>" class="accordion-collapse collapse" aria-labelledby="heading-<?php echo htmlspecialchars($module); ?>" data-bs-parent="#permissionsAccordion">
+                                <div class="accordion-body p-2">
+                                    <div class="row">
+                                        <?php foreach ($perms as $perm): ?>
+                                            <div class="col-md-6 col-lg-4 mb-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input perm-checkbox perm-checkbox-<?php echo htmlspecialchars($module); ?>" type="checkbox" name="permissions[]" value="<?php echo $perm['id']; ?>" id="perm-<?php echo $perm['id']; ?>" <?php if (in_array($perm['id'], $current_permissions)) echo 'checked'; ?>>
+                                                    <label class="form-check-label" for="perm-<?php echo $perm['id']; ?>">
+                                                        <?php echo htmlspecialchars($perm['display_name']); ?>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-                <button type="submit" class="btn btn-success">Save Permissions</button>
+                <button type="submit" class="btn btn-success mt-3">Save Permissions</button>
             </form>
         </div>
     </div>
@@ -121,6 +133,31 @@ if ($selected_role_id) {
 document.getElementById('sidebarToggle').onclick = function() {
     document.getElementById('sidebar').classList.toggle('collapsed');
 };
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Module checkbox toggles all permissions in that module
+    document.querySelectorAll('.module-checkbox').forEach(function(moduleCheckbox) {
+        moduleCheckbox.addEventListener('change', function() {
+            var module = this.getAttribute('data-module');
+            var checkboxes = document.querySelectorAll('.perm-checkbox-' + CSS.escape(module));
+            checkboxes.forEach(function(cb) {
+                cb.checked = moduleCheckbox.checked;
+            });
+        });
+        // Set module checkbox checked if all children are checked
+        var module = moduleCheckbox.getAttribute('data-module');
+        var checkboxes = document.querySelectorAll('.perm-checkbox-' + CSS.escape(module));
+        var allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        moduleCheckbox.checked = allChecked;
+        // Update module checkbox if any child is changed
+        checkboxes.forEach(function(cb) {
+            cb.addEventListener('change', function() {
+                var allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                moduleCheckbox.checked = allChecked;
+            });
+        });
+    });
+});
 </script>
 </body>
 </html> 
