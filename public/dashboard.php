@@ -68,7 +68,7 @@ function has_permission($perm) {
                     <div class="col-md-3"><div class="card text-bg-info h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-building me-2"></i>Branches</h5><p class="card-text display-6 fw-bold"><?php echo $branches_count; ?></p></div></div></div>
                 <?php }
                 // Sales
-                if (has_permission('sales.view')) {
+                if (has_permission('sales_transactions.view')) {
                     $total_sales = mysqli_fetch_row(mysqli_query($conn, "SELECT IFNULL(SUM(final_amount),0) FROM sales_transactions WHERE deleted_at IS NULL"))[0];
                     $today_sales = mysqli_fetch_row(mysqli_query($conn, "SELECT IFNULL(SUM(final_amount),0) FROM sales_transactions WHERE deleted_at IS NULL AND transaction_date = CURDATE()"))[0];
                 ?>
@@ -88,7 +88,7 @@ function has_permission($perm) {
                     <div class="col-md-3"><div class="card text-bg-success h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-gas-pump me-2"></i>Fuel Purchases</h5><p class="card-text display-6 fw-bold">UGX <?php echo number_format($fuel_purchases, 2); ?></p><a href="#" class="btn btn-link p-0 mt-2">View Details</a></div></div></div>
                 <?php }
                 // Inventory
-                if (has_permission('inventory.view')) {
+                if (has_permission('storage_tanks.view')) {
                     $fuel_types = mysqli_query($conn, "SELECT name, (SELECT IFNULL(SUM(current_level),0) FROM storage_tanks WHERE fuel_type_id = ft.id AND deleted_at IS NULL) as total_stock FROM fuel_types ft WHERE deleted_at IS NULL");
                 ?>
                     <div class="col-md-3"><div class="card text-bg-dark h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-boxes me-2"></i>Inventory</h5>
@@ -159,21 +159,21 @@ function has_permission($perm) {
                     <div class="col-md-3"><div class="card text-bg-warning h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-comment-dots me-2"></i>Feedback</h5><p class="card-text display-6 fw-bold"><?php echo $unread_feedback; ?> New</p><a href="#" class="btn btn-link p-0 mt-2">View Details</a></div></div></div>
                 <?php }
                 // Price Changes
-                if (has_permission('price_changes.view')) {
-                    $last_price = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM price_changes WHERE deleted_at IS NULL ORDER BY change_date DESC, change_time DESC LIMIT 1"));
-                    $last_date = $last_price ? $last_price['change_date'] : 'N/A';
+                if (has_permission('fuel_prices.view')) {
+                    $last_price = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM fuel_price_history WHERE deleted_at IS NULL ORDER BY effective_date DESC, created_at DESC LIMIT 1"));
+                    $last_date = $last_price ? $last_price['effective_date'] : 'N/A';
                 ?>
                     <div class="col-md-3"><div class="card text-bg-danger h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-tag me-2"></i>Price Changes</h5><p class="card-text display-6 fw-bold"><?php echo htmlspecialchars($last_date); ?></p><a href="#" class="btn btn-link p-0 mt-2">View Details</a></div></div></div>
                 <?php }
                 // Shift Management
                 if (has_permission('shifts.view')) {
-                    $open_shifts = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM shifts WHERE status = 'open'"))[0];
+                    $open_shifts = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM shift_assignments WHERE status IN ('scheduled', 'active') AND deleted_at IS NULL"))[0];
                 ?>
                     <div class="col-md-3"><div class="card text-bg-primary h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-user-clock me-2"></i>Open Shifts</h5><p class="card-text display-6 fw-bold"><?php echo $open_shifts; ?></p><a href="#" class="btn btn-link p-0 mt-2">View Details</a></div></div></div>
                 <?php }
                 // Stock Alerts
-                if (has_permission('stock_alerts.view')) {
-                    $low_stock = mysqli_query($conn, "SELECT name, current_level, reorder_level FROM storage_tanks st LEFT JOIN fuel_types ft ON st.fuel_type_id = ft.id WHERE st.deleted_at IS NULL AND current_level <= reorder_level");
+                if (has_permission('inventory.view')) {
+                    $low_stock = mysqli_query($conn, "SELECT ft.name, st.current_level, st.minimum_level FROM storage_tanks st LEFT JOIN fuel_types ft ON st.fuel_type_id = ft.id WHERE st.deleted_at IS NULL AND st.current_level <= st.minimum_level");
                     $low_count = mysqli_num_rows($low_stock);
                 ?>
                     <div class="col-md-3"><div class="card text-bg-dark h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-exclamation-circle me-2"></i>Stock Alerts</h5><p class="card-text display-6 fw-bold"><?php echo $low_count; ?> Low</p><a href="#" class="btn btn-link p-0 mt-2" data-bs-toggle="collapse" data-bs-target="#lowStockTable">View List</a></div></div></div>
@@ -262,7 +262,7 @@ function has_permission($perm) {
                     <?php endif; ?>
                 </div>                
             <?php endif; ?>
-            <?php if (has_permission('sales.view')): ?>
+            <?php if (has_permission('sales_transactions.view')): ?>
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">Recent Sales Transactions</div>
                 <div class="card-body p-0">
@@ -438,6 +438,7 @@ function has_permission($perm) {
             </div>
             <?php endif; ?>
 
+            <?php /* Attendance table not implemented yet
             <?php if (has_permission('attendance.view')): ?>
             <div class="card mb-4">
                 <div class="card-header bg-secondary text-white">Recent Attendance</div>
@@ -461,7 +462,9 @@ function has_permission($perm) {
                 </div>
             </div>
             <?php endif; ?>
+            */ ?>
 
+            <?php /* Pump readings table not implemented yet
             <?php if (has_permission('pump_readings.view')): ?>
             <div class="card mb-4">
                 <div class="card-header bg-info">Recent Pump Readings</div>
@@ -486,7 +489,9 @@ function has_permission($perm) {
                 </div>
             </div>
             <?php endif; ?>
+            */ ?>
 
+            <?php /* Supplier deliveries table not implemented yet - using fuel_purchases instead
             <?php if (has_permission('supplier_deliveries.view')): ?>
             <div class="card mb-4">
                 <div class="card-header bg-success text-white">Recent Supplier Deliveries</div>
@@ -511,7 +516,9 @@ function has_permission($perm) {
                 </div>
             </div>
             <?php endif; ?>
+            */ ?>
 
+            <?php /* Customer feedback table not implemented yet
             <?php if (has_permission('customer_feedback.view')): ?>
             <div class="card mb-4">
                 <div class="card-header bg-warning">Recent Customer Feedback</div>
@@ -536,8 +543,9 @@ function has_permission($perm) {
                 </div>
             </div>
             <?php endif; ?>
+            */ ?>
 
-            <?php if (has_permission('price_changes.view')): ?>
+            <?php if (has_permission('fuel_prices.view')): ?>
             <div class="card mb-4">
                 <div class="card-header bg-danger text-white">Recent Price Changes</div>
                 <div class="card-body p-0">
@@ -547,10 +555,10 @@ function has_permission($perm) {
                         </thead>
                         <tbody>
                             <?php
-                            $res = mysqli_query($conn, "SELECT pc.*, ft.name as product FROM price_changes pc LEFT JOIN fuel_types ft ON pc.fuel_type_id = ft.id WHERE pc.deleted_at IS NULL ORDER BY pc.change_date DESC, pc.change_time DESC LIMIT 5");
+                            $res = mysqli_query($conn, "SELECT fph.*, ft.name as product FROM fuel_price_history fph LEFT JOIN fuel_types ft ON fph.fuel_type_id = ft.id WHERE fph.deleted_at IS NULL ORDER BY fph.effective_date DESC, fph.created_at DESC LIMIT 5");
                             while ($row = mysqli_fetch_assoc($res)): ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($row['change_date']); ?></td>
+                                <td><?php echo htmlspecialchars($row['effective_date']); ?></td>
                                 <td><?php echo htmlspecialchars($row['product']); ?></td>
                                 <td><?php echo htmlspecialchars($row['old_price']); ?></td>
                                 <td><?php echo htmlspecialchars($row['new_price']); ?></td>
@@ -564,20 +572,20 @@ function has_permission($perm) {
 
             <?php if (has_permission('shifts.view')): ?>
             <div class="card mb-4">
-                <div class="card-header bg-primary text-white">Recent Shifts</div>
+                <div class="card-header bg-primary text-white">Recent Shift Assignments</div>
                 <div class="card-body p-0">
                     <table class="table table-sm mb-0">
                         <thead class="table-light">
-                            <tr><th>Shift</th><th>Start</th><th>End</th><th>Status</th></tr>
+                            <tr><th>Date</th><th>Shift</th><th>Employee</th><th>Status</th></tr>
                         </thead>
                         <tbody>
                             <?php
-                            $res = mysqli_query($conn, "SELECT * FROM shifts ORDER BY start_time DESC LIMIT 5");
+                            $res = mysqli_query($conn, "SELECT sa.*, s.shift_name, u.username FROM shift_assignments sa LEFT JOIN shifts s ON sa.shift_id = s.id LEFT JOIN users u ON sa.user_id = u.id WHERE sa.deleted_at IS NULL ORDER BY sa.assignment_date DESC, sa.created_at DESC LIMIT 5");
                             while ($row = mysqli_fetch_assoc($res)): ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($row['id']); ?></td>
-                                <td><?php echo htmlspecialchars($row['start_time']); ?></td>
-                                <td><?php echo htmlspecialchars($row['end_time']); ?></td>
+                                <td><?php echo htmlspecialchars($row['assignment_date']); ?></td>
+                                <td><?php echo htmlspecialchars($row['shift_name']); ?></td>
+                                <td><?php echo htmlspecialchars($row['username']); ?></td>
                                 <td><?php echo htmlspecialchars($row['status']); ?></td>
                             </tr>
                             <?php endwhile; ?>
@@ -587,13 +595,13 @@ function has_permission($perm) {
             </div>
             <?php endif; ?>
 
-            <?php if (has_permission('stock_alerts.view')): ?>
+            <?php if (has_permission('storage_tanks.view')): ?>
             <div class="card mb-4 collapse" id="lowStockTable">
                 <div class="card-header bg-dark text-white">Low Stock Items</div>
                 <div class="card-body p-0">
                     <table class="table table-sm mb-0">
                         <thead class="table-light">
-                            <tr><th>Product</th><th>Current Level</th><th>Reorder Level</th></tr>
+                            <tr><th>Product</th><th>Current Level</th><th>Minimum Level</th></tr>
                         </thead>
                         <tbody>
                             <?php
@@ -602,7 +610,7 @@ function has_permission($perm) {
                             <tr>
                                 <td><?php echo htmlspecialchars($row['name']); ?></td>
                                 <td><?php echo htmlspecialchars($row['current_level']); ?></td>
-                                <td><?php echo htmlspecialchars($row['reorder_level']); ?></td>
+                                <td><?php echo htmlspecialchars($row['minimum_level']); ?></td>
                             </tr>
                             <?php endwhile; ?>
                         </tbody>

@@ -73,7 +73,7 @@ if ($selected_role_id) {
                 <?php include '../includes/sidebar.php'; ?>
             </div>
         </div>
-        <div class="col-md-9 p-4">
+        <div>
             <h2 class="mb-4">Role Permissions Management</h2>
             <form method="get" class="mb-3">
                 <div class="row g-2 align-items-center">
