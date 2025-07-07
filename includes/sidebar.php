@@ -587,7 +587,7 @@ body.sidebar-collapsed .toggle-btn {
                 <ul class="list-unstyled ps-3" role="menu" aria-label="Shift Management submenu">
                     <li role="none">
                         <a class="nav-link text-white submenu-item py-2" 
-                           href="#" 
+                           href="shifts.php" 
                            role="menuitem"
                            aria-label="Shifts"
                            title="Shifts">
