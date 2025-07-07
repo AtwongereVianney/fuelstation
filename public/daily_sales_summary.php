@@ -44,6 +44,11 @@ if ($selected_branch_id && $selected_date) {
 </head>
 <body>
 <div class="container py-4">
+<div class="row">
+        <div class="col-md-3 p-0">
+            <?php include '../includes/sidebar.php'; ?>
+        </div>
+        <div>
     <h2 class="mb-4">Daily Sales Summary</h2>
     <form method="get" class="mb-4">
         <div class="row g-2 align-items-end">
@@ -122,6 +127,7 @@ if ($selected_branch_id && $selected_date) {
     <?php else: ?>
         <div class="alert alert-info">No sales transactions found for this branch and date.</div>
     <?php endif; ?>
+</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

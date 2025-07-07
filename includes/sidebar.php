@@ -532,7 +532,7 @@ body.sidebar-collapsed .toggle-btn {
                 <ul class="list-unstyled ps-3" role="menu" aria-label="Financial submenu">
                     <li role="none">
                         <a class="nav-link text-white submenu-item py-2" 
-                           href="#" 
+                           href="daily_sales_summary.php" 
                            role="menuitem"
                            aria-label="Daily Sales Summary"
                            title="Daily Sales Summary">
@@ -541,7 +541,7 @@ body.sidebar-collapsed .toggle-btn {
                     </li>
                     <li role="none">
                         <a class="nav-link text-white submenu-item py-2" 
-                           href="#" 
+                           href="expenses.php" 
                            role="menuitem"
                            aria-label="Expenses"
                            title="Expenses">
