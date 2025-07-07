@@ -596,7 +596,7 @@ body.sidebar-collapsed .toggle-btn {
                     </li>
                     <li role="none">
                         <a class="nav-link text-white submenu-item py-2" 
-                           href="#" 
+                           href="shift_assignments.php" 
                            role="menuitem"
                            aria-label="Shift Assignments"
                            title="Shift Assignments">
