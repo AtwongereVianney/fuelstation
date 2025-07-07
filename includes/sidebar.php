@@ -734,7 +734,7 @@ body.sidebar-collapsed .toggle-btn {
                     </li>
                     <li role="none">
                         <a class="nav-link text-white submenu-item py-2" 
-                           href="#" 
+                           href="notifications.php" 
                            role="menuitem"
                            aria-label="Notifications"
                            title="Notifications">
