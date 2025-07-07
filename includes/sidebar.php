@@ -502,7 +502,7 @@ body.sidebar-collapsed .toggle-btn {
                         <?php foreach ($fuel_types as $fuel): ?>
                             <li role="none">
                                 <a class="nav-link text-white submenu-item py-2" 
-                                   href="#" 
+                                   href="fuel_type_info.php?fuel_type_id=<?php echo htmlspecialchars($fuel['id']); ?>" 
                                    role="menuitem"
                                    aria-label="<?php echo htmlspecialchars($fuel['name']); ?>"
                                    title="<?php echo htmlspecialchars($fuel['name']); ?>">
