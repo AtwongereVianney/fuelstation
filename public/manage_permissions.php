@@ -71,42 +71,65 @@ if ($result) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<div class="d-flex" style="min-height:100vh;">
-    <?php include '../includes/sidebar.php'; ?>
-    <div class="main-content">
-        <h2 class="mb-4">Permissions Management</h2>
-        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addPermissionModal">Add New Permission</button>
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Display Name</th>
-                        <th>Description</th>
-                        <th>Module</th>
-                        <th class="text-end" style="width: 200px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php foreach ($permissions as $perm): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($perm['id']); ?></td>
-                        <td><?php echo htmlspecialchars($perm['name'] ?? ''); ?></td>
-                        <td><?php echo htmlspecialchars($perm['display_name']); ?></td>
-                        <td><?php echo htmlspecialchars($perm['description'] ?? ''); ?></td>
-                        <td><?php echo htmlspecialchars($perm['module'] ?? ''); ?></td>
-                        <td class="text-end">
-                            <div class="btn-group" role="group">
-                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewPermissionModal<?php echo $perm['id']; ?>">View</button>
-                                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editPermissionModal<?php echo $perm['id']; ?>">Edit</button>
-                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deletePermissionModal<?php echo $perm['id']; ?>">Delete</button>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
+<!-- Responsive Sidebar Offcanvas for mobile -->
+<div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <?php include '../includes/sidebar.php'; ?>
+    </div>
+</div>
+<div class="container-fluid">
+    <div class="row flex-nowrap">
+        <!-- Sidebar for desktop -->
+        <div class="col-auto d-none d-md-block p-0">
+            <?php include '../includes/sidebar.php'; ?>
+        </div>
+        <!-- Main content -->
+        <div class="col ps-md-4 pt-3 main-content">
+            <!-- Mobile menu button -->
+            <div class="d-md-none mb-3">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                    <i class="fas fa-bars"></i> Menu
+                </button>
+            </div>
+            <h2 class="mb-4">Permissions Management</h2>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addPermissionModal">Add New Permission</button>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Display Name</th>
+                            <th>Description</th>
+                            <th>Module</th>
+                            <th class="text-end" style="width: 200px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($permissions as $perm): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($perm['id']); ?></td>
+                            <td><?php echo htmlspecialchars($perm['name'] ?? ''); ?></td>
+                            <td><?php echo htmlspecialchars($perm['display_name']); ?></td>
+                            <td><?php echo htmlspecialchars($perm['description'] ?? ''); ?></td>
+                            <td><?php echo htmlspecialchars($perm['module'] ?? ''); ?></td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewPermissionModal<?php echo $perm['id']; ?>">View</button>
+                                    <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editPermissionModal<?php echo $perm['id']; ?>">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deletePermissionModal<?php echo $perm['id']; ?>">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
         </div>
     </div>
 </div>
