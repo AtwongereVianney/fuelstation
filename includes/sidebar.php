@@ -11,7 +11,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <style>
-  .sidebar {
+.sidebar {
     min-width: 260px;
     max-width: 260px;
     min-height: 100vh;
@@ -48,7 +48,7 @@
   }
   .sidebar .collapse .nav-link {
     padding-left: 2.5rem;
-  }
+}
   .sidebar .sidebar-heading .collapse-arrow {
     margin-left: auto;
     font-size: 1em;
@@ -60,7 +60,7 @@
   .sidebar-divider {
     border-top-width: 4px !important;
     opacity: 1;
-  }
+}
   .sidebar.collapsed {
     max-width: 64px;
     min-width: 64px;
@@ -84,7 +84,7 @@
   .sidebar.collapsed .collapse,
   .sidebar.collapsed .collapsing {
     display: none !important;
-  }
+}
 </style>
 
 <div id="sidebar-wrapper" class="d-flex">
@@ -99,13 +99,13 @@
         <i class="bi bi-speedometer2"></i>
         <span><a href="../public/dashboard.php"></a>Dashboard</a></span>
         <button id="sidebarToggle" class="btn btn-outline-secondary btn-sm ms-2 py-0 px-2 d-inline-flex" style="line-height:1.1; height:1.8em;"> <i class="bi bi-list"></i></button>
-      </div>
+                </div>
       <hr class="sidebar-divider border-secondary m-0">
 
       <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#userMgmt" aria-expanded="false" aria-controls="userMgmt">
         <i class="bi bi-people"></i><span>User Management</span>
         <span class="collapse-arrow bi bi-caret-down-fill"></span>
-      </div>
+                    </div>
       <div class="collapse" id="userMgmt" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
           <li><a class="nav-link" href="../public/user.php"><i class="bi bi-person"></i><span>Users</span></a></li>
@@ -113,35 +113,35 @@
           <li><a class="nav-link" href="../public/manage_permissions.php"><i class="bi bi-shield-lock"></i><span>Permissions</span></a></li>
           <li><a class="nav-link" href="../public/manage_role_permissions.php"><i class="bi bi-shield-check"></i><span>Role Permissions</span></a></li>
         </ul>
-      </div>
+                </div>
       <hr class="sidebar-divider border-secondary m-0">
 
       <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#businessBranches" aria-expanded="false" aria-controls="businessBranches">
         <i class="bi bi-building"></i><span>Business & Branches</span>
         <span class="collapse-arrow bi bi-caret-down-fill"></span>
-      </div>
+                    </div>
       <div class="collapse" id="businessBranches" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
           <li><a class="nav-link" href="../public/branch_dashboard.php"><i class="bi bi-diagram-3"></i><span>Branches</span></a></li>
         </ul>
-      </div>
+                </div>
       <hr class="sidebar-divider border-secondary m-0">
 
       <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#inventory" aria-expanded="false" aria-controls="inventory">
         <i class="bi bi-box-seam"></i><span>Inventory</span>
         <span class="collapse-arrow bi bi-caret-down-fill"></span>
-      </div>
+                    </div>
       <div class="collapse" id="inventory" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
           <li><a class="nav-link" href="../public/fuel_type_info.php"><i class="bi bi-droplet-half"></i><span>Fuel Types</span></a></li>
         </ul>
-      </div>
+                </div>
       <hr class="sidebar-divider border-secondary m-0">
 
       <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#financial" aria-expanded="false" aria-controls="financial">
         <i class="bi bi-cash-stack"></i><span>Financial</span>
         <span class="collapse-arrow bi bi-caret-down-fill"></span>
-      </div>
+                    </div>
       <div class="collapse" id="financial" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
           <li><a class="nav-link" href="../public/daily_sales_summary.php"><i class="bi bi-graph-up"></i><span>Daily Sales Summary</span></a></li>
@@ -149,25 +149,25 @@
           <li><a class="nav-link" href="#"><i class="bi bi-cash"></i><span>Cash Float</span></a></li>
           <li><a class="nav-link" href="#"><i class="bi bi-bank"></i><span>Bank Reconciliation</span></a></li>
         </ul>
-      </div>
+                </div>
       <hr class="sidebar-divider border-secondary m-0">
 
       <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#shiftMgmt" aria-expanded="false" aria-controls="shiftMgmt">
         <i class="bi bi-clock-history"></i><span>Shift Management</span>
         <span class="collapse-arrow bi bi-caret-down-fill"></span>
-      </div>
+                    </div>
       <div class="collapse" id="shiftMgmt" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
           <li><a class="nav-link" href="../public/shifts.php"><i class="bi bi-clock"></i><span>Shifts</span></a></li>
           <li><a class="nav-link" href="../public/shift_assignments.php"><i class="bi bi-person-lines-fill"></i><span>Shift Assignments</span></a></li>
         </ul>
-      </div>
+                </div>
       <hr class="sidebar-divider border-secondary m-0">
 
       <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#maintenance" aria-expanded="false" aria-controls="maintenance">
         <i class="bi bi-tools"></i><span>Maintenance & Compliance</span>
         <span class="collapse-arrow bi bi-caret-down-fill"></span>
-      </div>
+                    </div>
       <div class="collapse" id="maintenance" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
           <li><a class="nav-link" href="#"><i class="bi bi-gear"></i><span>Equipment Maintenance</span></a></li>
@@ -175,25 +175,25 @@
           <li><a class="nav-link" href="#"><i class="bi bi-droplet"></i><span>Fuel Quality Tests</span></a></li>
           <li><a class="nav-link" href="#"><i class="bi bi-exclamation-triangle"></i><span>Safety Incidents</span></a></li>
         </ul>
-      </div>
+                </div>
       <hr class="sidebar-divider border-secondary m-0">
 
       <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#reporting" aria-expanded="false" aria-controls="reporting">
         <i class="bi bi-bar-chart"></i><span>Reporting & Analytics</span>
         <span class="collapse-arrow bi bi-caret-down-fill"></span>
-      </div>
+                    </div>
       <div class="collapse" id="reporting" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
           <li><a class="nav-link" href="#"><i class="bi bi-file-earmark-bar-graph"></i><span>Reports</span></a></li>
           <li><a class="nav-link" href="#"><i class="bi bi-credit-card"></i><span>Outstanding Credit</span></a></li>
         </ul>
-      </div>
+                </div>
       <hr class="sidebar-divider border-secondary m-0">
 
       <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#system" aria-expanded="false" aria-controls="system">
         <i class="bi bi-gear-wide-connected"></i><span>System</span>
         <span class="collapse-arrow bi bi-caret-down-fill"></span>
-      </div>
+                    </div>
       <div class="collapse" id="system" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
           <li><a class="nav-link" href="#"><i class="bi bi-sliders"></i><span>System Settings</span></a></li>
@@ -208,7 +208,7 @@
         <li><a class="nav-link text-danger" href="../public/logout.php"><i class="bi bi-box-arrow-right"></i><span>Logout</span></a></li>
       </ul>
     </div>
-  </nav>
+</nav>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -237,13 +237,13 @@
       if (arrow) {
         arrow.classList.toggle('bi-caret-down-fill');
         arrow.classList.toggle('bi-caret-up-fill');
-      }
+            }
+        });
     });
-  });
-
+    
   // Sidebar expand/collapse toggle
   document.getElementById('sidebarToggle').addEventListener('click', function(e) {
     e.stopPropagation();
     document.querySelector('.sidebar').classList.toggle('collapsed');
   });
-</script> 
+</script>

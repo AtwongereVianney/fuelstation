@@ -93,200 +93,216 @@ if (!$result) {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<div class="d-flex" style="min-height:100vh;">
-    <?php include '../includes/sidebar.php'; ?>
-    <div class="main-content">
-        <h2 class="mb-4">Roles Management</h2>
-        
-        <!-- Success/Error Messages -->
-        <?php if (isset($_SESSION['success_message'])): ?>
-          <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-        <?php endif; ?>
-        
-        <?php if (isset($_SESSION['error_message'])): ?>
-          <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-        <?php endif; ?>
-        
-        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addRoleModal">Add New Role</button>
-        
-        <div class="table-responsive">
-          <table class="table table-bordered table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>S/N</th>
-                <th>Name</th>
-                <th>Display Name</th>
-                <th>Description</th>
-                <th>Level</th>
-                <th class="text-end" style="width: 200px;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php
-              $sn = 1;
-              $roles_array = []; // Store roles for modals
-              if (mysqli_num_rows($result) > 0) {
-                while ($role = mysqli_fetch_assoc($result)) {
-                  $roles_array[] = $role; // Store role for modal generation
-              ?>
-                <tr>
-                  <td><?php echo $sn++; ?></td>
-                  <td><?php echo htmlspecialchars($role['name']); ?></td>
-                  <td><?php echo htmlspecialchars($role['display_name']); ?></td>
-                  <td><?php echo htmlspecialchars($role['description'] ?? ''); ?></td>
-                  <td><?php echo htmlspecialchars($role['level'] ?? ''); ?></td>
-                  <td class="text-end">
-                    <div class="btn-group" role="group">
-                      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewRoleModal<?php echo $role['id']; ?>">View</button>
-                      <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editRoleModal<?php echo $role['id']; ?>">Edit</button>
-                      <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal<?php echo $role['id']; ?>">Delete</button>
-                    </div>
-                  </td>
-                </tr>
-              <?php
-                }
-              } else {
-              ?>
-                <tr>
-                  <td colspan="6" class="text-center">No roles found.</td>
-                </tr>
-              <?php
-              }
-              ?>
-            </tbody>
-          </table>
-        </div>
+<!-- Responsive Sidebar Offcanvas for mobile -->
+<div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
+    <div class="offcanvas-body p-0">
+        <?php include '../includes/sidebar.php'; ?>
+      </div>
 </div>
-
-<!-- Add Role Modal -->
-<div class="modal fade" id="addRoleModal" tabindex="-1" aria-labelledby="addRoleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="post" class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addRoleModalLabel">Add New Role</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label class="form-label">Name</label>
-          <input type="text" name="name" class="form-control" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Display Name</label>
-          <input type="text" name="display_name" class="form-control" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Description</label>
-          <textarea name="description" class="form-control"></textarea>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Level</label>
-          <input type="number" name="level" class="form-control" min="1" value="1" required>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="submit" name="add_role" class="btn btn-primary">Add Role</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modals for each role (View, Edit, Delete) -->
-<?php
-if (!empty($roles_array)) {
-  foreach ($roles_array as $role) {
-?>
-  <!-- View Modal -->
-  <div class="modal fade" id="viewRoleModal<?php echo $role['id']; ?>" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">View Role Details</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <p><strong>Name:</strong> <?php echo htmlspecialchars($role['name']); ?></p>
-          <p><strong>Display Name:</strong> <?php echo htmlspecialchars($role['display_name']); ?></p>
-          <p><strong>Description:</strong> <?php echo htmlspecialchars($role['description'] ?? 'No description'); ?></p>
-          <p><strong>Level:</strong> <?php echo htmlspecialchars($role['level']); ?></p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
-      </div>
+<div class="container-fluid">
+    <div class="row g-0">
+        <!-- Sidebar for desktop -->
+        <nav class="col-md-3 col-lg-2 d-none d-md-block bg-light p-0">
+            <?php include '../includes/sidebar.php'; ?>
+        </nav>
+        <!-- Main content -->
+        <main class="px-2 pt-3 w-100">
+            <!-- Mobile menu button -->
+            <div class="d-md-none mb-3">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                    <i class="fas fa-bars"></i> Menu
+                </button>
+            </div>
+            <h2 class="mb-4">Roles Management</h2>
+            <!-- Success/Error Messages -->
+            <?php if (isset($_SESSION['success_message'])): ?>
+              <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
+            <?php endif; ?>
+            <?php if (isset($_SESSION['error_message'])): ?>
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
+            <?php endif; ?>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addRoleModal">Add New Role</button>
+            <div class="w-100">
+                <div class="table-responsive">
+                  <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>S/N</th>
+                        <th>Name</th>
+                        <th>Display Name</th>
+                        <th>Description</th>
+                        <th>Level</th>
+                        <th class="text-end" style="width: 200px;">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php
+                      $sn = 1;
+                      $roles_array = []; // Store roles for modals
+                      if (mysqli_num_rows($result) > 0) {
+                        while ($role = mysqli_fetch_assoc($result)) {
+                          $roles_array[] = $role; // Store role for modal generation
+                      ?>
+                        <tr>
+                          <td><?php echo $sn++; ?></td>
+                          <td><?php echo htmlspecialchars($role['name']); ?></td>
+                          <td><?php echo htmlspecialchars($role['display_name']); ?></td>
+                          <td><?php echo htmlspecialchars($role['description'] ?? ''); ?></td>
+                          <td><?php echo htmlspecialchars($role['level'] ?? ''); ?></td>
+                          <td class="text-end">
+                            <div class="btn-group" role="group">
+                              <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewRoleModal<?php echo $role['id']; ?>">View</button>
+                              <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editRoleModal<?php echo $role['id']; ?>">Edit</button>
+                              <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal<?php echo $role['id']; ?>">Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      <?php
+                        }
+                      } else {
+                      ?>
+                        <tr>
+                          <td colspan="6" class="text-center">No roles found.</td>
+                        </tr>
+                      <?php
+                      }
+                      ?>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+            </div>
+        </main>
     </div>
   </div>
-
-  <!-- Edit Modal -->
-  <div class="modal fade" id="editRoleModal<?php echo $role['id']; ?>" tabindex="-1" aria-hidden="true">
+  <!-- Add Role Modal -->
+  <div class="modal fade" id="addRoleModal" tabindex="-1" aria-labelledby="addRoleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <form method="post" class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Edit Role</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <h5 class="modal-title" id="addRoleModalLabel">Add New Role</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <input type="hidden" name="id" value="<?php echo $role['id']; ?>">
           <div class="mb-3">
             <label class="form-label">Name</label>
-            <input type="text" name="name" class="form-control" value="<?php echo htmlspecialchars($role['name']); ?>" required>
+            <input type="text" name="name" class="form-control" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Display Name</label>
-            <input type="text" name="display_name" class="form-control" value="<?php echo htmlspecialchars($role['display_name']); ?>" required>
+            <input type="text" name="display_name" class="form-control" required>
           </div>
           <div class="mb-3">
             <label class="form-label">Description</label>
-            <textarea name="description" class="form-control"><?php echo htmlspecialchars($role['description'] ?? ''); ?></textarea>
+            <textarea name="description" class="form-control"></textarea>
           </div>
           <div class="mb-3">
             <label class="form-label">Level</label>
-            <input type="number" name="level" class="form-control" min="1" value="<?php echo htmlspecialchars($role['level']); ?>" required>
+            <input type="number" name="level" class="form-control" min="1" value="1" required>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" name="edit_role" class="btn btn-warning">Update Role</button>
+          <button type="submit" name="add_role" class="btn btn-primary">Add Role</button>
         </div>
       </form>
     </div>
   </div>
-
-  <!-- Delete Modal -->
-  <div class="modal fade" id="deleteRoleModal<?php echo $role['id']; ?>" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Delete Role</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <p>Are you sure you want to delete the role: <strong><?php echo htmlspecialchars($role['display_name']); ?></strong>?</p>
-          <p class="text-danger"><small>This action cannot be undone.</small></p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <form method="post" style="display: inline;">
-            <input type="hidden" name="id" value="<?php echo $role['id']; ?>">
-            <button type="submit" name="delete_role" class="btn btn-danger">Delete</button>
-          </form>
+  <!-- Modals for each role (View, Edit, Delete) -->
+  <?php
+  if (!empty($roles_array)) {
+    foreach ($roles_array as $role) {
+  ?>
+    <!-- View Modal -->
+    <div class="modal fade" id="viewRoleModal<?php echo $role['id']; ?>" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">View Role Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Name:</strong> <?php echo htmlspecialchars($role['name']); ?></p>
+            <p><strong>Display Name:</strong> <?php echo htmlspecialchars($role['display_name']); ?></p>
+            <p><strong>Description:</strong> <?php echo htmlspecialchars($role['description'] ?? 'No description'); ?></p>
+            <p><strong>Level:</strong> <?php echo htmlspecialchars($role['level']); ?></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-<?php
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editRoleModal<?php echo $role['id']; ?>" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <form method="post" class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Role</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" name="id" value="<?php echo $role['id']; ?>">
+            <div class="mb-3">
+              <label class="form-label">Name</label>
+              <input type="text" name="name" class="form-control" value="<?php echo htmlspecialchars($role['name']); ?>" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Display Name</label>
+              <input type="text" name="display_name" class="form-control" value="<?php echo htmlspecialchars($role['display_name']); ?>" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea name="description" class="form-control"><?php echo htmlspecialchars($role['description'] ?? ''); ?></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Level</label>
+              <input type="number" name="level" class="form-control" min="1" value="<?php echo htmlspecialchars($role['level']); ?>" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" name="edit_role" class="btn btn-warning">Update Role</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteRoleModal<?php echo $role['id']; ?>" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Delete Role</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p>Are you sure you want to delete the role: <strong><?php echo htmlspecialchars($role['display_name']); ?></strong>?</p>
+            <p class="text-danger"><small>This action cannot be undone.</small></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <form method="post" style="display: inline;">
+              <input type="hidden" name="id" value="<?php echo $role['id']; ?>">
+              <button type="submit" name="delete_role" class="btn btn-danger">Delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  <?php
+    }
   }
-}
-?>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  ?>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
