@@ -74,39 +74,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-    
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-primary text-white">Login</div>
-                <div class="card-body">
-                    <?php if (!empty($errors)): ?>
-                        <div class="alert alert-danger">
-                            <?php foreach ($errors as $error) echo '<div>' . htmlspecialchars($error) . '</div>'; ?>
-                        </div>
-                    <?php endif; ?>
-                    <form method="post" action="">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username or Email</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Login</button>
-                    </form>
-                    <div class="mt-3 text-center">
-                        <a href="forgot_password.php">Forgot Password?</a>
+    <div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center">
+        <div class="row w-100 justify-content-center">
+            <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4 class="mb-0">Uganda Fuel Station Login</h4>
                     </div>
-                    <div class="mt-3 text-center">
-                        Don't have an account? <a href="register.php">Register</a>
+                    <div class="card-body">
+                        <?php if (!empty($errors)): ?>
+                            <div class="alert alert-danger">
+                                <?php foreach ($errors as $error) echo '<div>' . htmlspecialchars($error) . '</div>'; ?>
+                            </div>
+                        <?php endif; ?>
+                        <form method="post" action="" autocomplete="on">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username or Email</label>
+                                <input type="text" class="form-control" id="username" name="username" required autofocus>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Login</button>
+                        </form>
+                        <div class="mt-3 text-center">
+                            <a href="forgot_password.php">Forgot Password?</a>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <span>Don't have an account? <a href="register.php">Register</a></span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
