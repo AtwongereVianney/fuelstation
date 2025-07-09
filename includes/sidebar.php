@@ -97,7 +97,7 @@
     <div class="flex-grow-1 d-flex flex-column">
       <div class="sidebar-heading d-flex align-items-center">
         <i class="bi bi-speedometer2"></i>
-        <span><a href="../public/dashboard.php"></a>Dashboard</a></span>
+        <span><a href="../public/dashboard.php" style="color: white;">Dashboard</a></span>
         <button id="sidebarToggle" class="btn btn-outline-secondary btn-sm ms-2 py-0 px-2 d-inline-flex" style="line-height:1.1; height:1.8em;"> <i class="bi bi-list"></i></button>
                 </div>
       <hr class="sidebar-divider border-secondary m-0">
