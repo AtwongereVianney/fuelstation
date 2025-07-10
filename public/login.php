@@ -81,26 +81,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="card-header bg-primary text-white text-center">
                         <h4 class="mb-0">Uganda Fuel Station Login</h4>
                     </div>
-                    <div class="card-body">
-                        <?php if (!empty($errors)): ?>
-                            <div class="alert alert-danger">
-                                <?php foreach ($errors as $error) echo '<div>' . htmlspecialchars($error) . '</div>'; ?>
-                            </div>
-                        <?php endif; ?>
-                        <form method="post" action="" autocomplete="on">
-                            <div class="mb-3">
-                                <label for="username" class="form-label">Username or Email</label>
-                                <input type="text" class="form-control" id="username" name="username" required autofocus>
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Login</button>
-                        </form>
-                        <div class="mt-3 text-center">
-                            <a href="forgot_password.php">Forgot Password?</a>
+                <div class="card-body">
+                    <?php if (!empty($errors)): ?>
+                        <div class="alert alert-danger">
+                            <?php foreach ($errors as $error) echo '<div>' . htmlspecialchars($error) . '</div>'; ?>
                         </div>
+                    <?php endif; ?>
+                        <form method="post" action="" autocomplete="on">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username or Email</label>
+                                <input type="text" class="form-control" id="username" name="username" required autofocus>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                    <div class="mt-3 text-center">
+                        <a href="forgot_password.php">Forgot Password?</a>
+                    </div>
                         <div class="mt-2 text-center">
                             <span>Don't have an account? <a href="register.php">Register</a></span>
                         </div>

@@ -96,16 +96,18 @@
     </div>
     <div class="flex-grow-1 d-flex flex-column">
       <div class="sidebar-heading d-flex align-items-center">
-        <i class="bi bi-speedometer2"></i>
-        <span><a href="../public/dashboard.php" style="color: white;">Dashboard</a></span>
-        <button id="sidebarToggle" class="btn btn-outline-secondary btn-sm ms-2 py-0 px-2 d-inline-flex" style="line-height:1.1; height:1.8em;"> <i class="bi bi-list"></i></button>
-                </div>
+        <i class="bi bi-speedometer2 me-2"></i>
+        <a href="../public/dashboard.php" class="text-white text-decoration-none flex-grow-1">Dashboard</a>
+        <button id="sidebarToggle" class="btn btn-outline-secondary btn-sm ms-2 py-0 px-2 d-inline-flex align-items-center" style="line-height:1.1; height:1.8em;">
+            <i class="bi bi-list"></i>
+        </button>
+      </div>
       <hr class="sidebar-divider border-secondary m-0">
 
       <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#userMgmt" aria-expanded="false" aria-controls="userMgmt">
         <i class="bi bi-people"></i><span>User Management</span>
         <span class="collapse-arrow bi bi-caret-down-fill"></span>
-      </div>
+                    </div>
       <div class="collapse" id="userMgmt" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
           <li><a class="nav-link" href="../public/user.php"><i class="bi bi-person"></i><span>Users</span></a></li>
