@@ -105,7 +105,7 @@
       <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#userMgmt" aria-expanded="false" aria-controls="userMgmt">
         <i class="bi bi-people"></i><span>User Management</span>
         <span class="collapse-arrow bi bi-caret-down-fill"></span>
-                    </div>
+      </div>
       <div class="collapse" id="userMgmt" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
           <li><a class="nav-link" href="../public/user.php"><i class="bi bi-person"></i><span>Users</span></a></li>
