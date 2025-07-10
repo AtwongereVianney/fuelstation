@@ -101,7 +101,7 @@
         <button id="sidebarToggle" class="btn btn-outline-secondary btn-sm ms-2 py-0 px-2 d-inline-flex align-items-center" style="line-height:1.1; height:1.8em;">
             <i class="bi bi-list"></i>
         </button>
-      </div>
+                </div>
       <hr class="sidebar-divider border-secondary m-0">
 
       <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#userMgmt" aria-expanded="false" aria-controls="userMgmt">
