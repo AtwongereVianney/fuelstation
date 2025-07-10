@@ -114,6 +114,7 @@
           <li><a class="nav-link" href="../public/manage_roles.php"><i class="bi bi-person-badge"></i><span>Roles</span></a></li>
           <li><a class="nav-link" href="../public/manage_permissions.php"><i class="bi bi-shield-lock"></i><span>Permissions</span></a></li>
           <li><a class="nav-link" href="../public/manage_role_permissions.php"><i class="bi bi-shield-check"></i><span>Role Permissions</span></a></li>
+          <li><a class="nav-link" href="#"><i class="bi bi-person-workspace"></i><span>Employee Management</span></a></li>
         </ul>
                 </div>
       <hr class="sidebar-divider border-secondary m-0">
