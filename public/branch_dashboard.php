@@ -6,12 +6,7 @@ include '../config/db_connect.php';
 if (isset($_GET['branch_id'])) {
     $_SESSION['selected_branch_id'] = intval($_GET['branch_id']);
 }
-
-// Include sidebar after handling GET parameter
-include '../includes/sidebar.php';
-
-// The $selected_branch_id variable is now available from sidebar.php
-// No need to redefine it here as it's already set in the sidebar
+$selected_branch_id = $_SESSION['selected_branch_id'] ?? null;
 
 // Fetch branch info with error handling
 $branch_sql = "SELECT * FROM branches WHERE id = ? AND deleted_at IS NULL LIMIT 1";
@@ -28,10 +23,6 @@ $branch_result = mysqli_stmt_get_result($branch_stmt);
 $branch = mysqli_fetch_assoc($branch_result);
 mysqli_stmt_close($branch_stmt);
 
-if (!$branch) {
-    echo '<div class="alert alert-danger m-4">Branch not found or has been deleted.</div>';
-    exit;
-}
 
 // Store branch name for easy access
 $branch_name = $branch['branch_name'] ?? 'Unknown Branch';

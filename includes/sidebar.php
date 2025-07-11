@@ -1,3 +1,14 @@
+<?php
+require_once __DIR__ . '/../config/db_connect.php';
+$sidebar_branches = [];
+$sidebar_branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
+$sidebar_branch_result = mysqli_query($conn, $sidebar_branch_sql);
+if ($sidebar_branch_result) {
+    while ($row = mysqli_fetch_assoc($sidebar_branch_result)) {
+        $sidebar_branches[] = $row;
+    }
+}
+?>
 <!--
   Sidebar Component for Petrol Station
   -----------------------------------
@@ -125,7 +136,10 @@
                     </div>
       <div class="collapse" id="businessBranches" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/branch_dashboard.php"><i class="bi bi-diagram-3"></i><span>Branches</span></a></li>
+          <li><a class="nav-link" href="../public/branch_dashboard.php"><i class="bi bi-diagram-3"></i><span>All Branches Dashboard</span></a></li>
+          <?php foreach ($sidebar_branches as $branch): ?>
+            <li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=<?php echo $branch['id']; ?>"><i class="bi bi-building"></i><span><?php echo htmlspecialchars($branch['branch_name']); ?></span></a></li>
+          <?php endforeach; ?>
         </ul>
                 </div>
       <hr class="sidebar-divider border-secondary m-0">
@@ -187,7 +201,7 @@
                     </div>
       <div class="collapse" id="reporting" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="#"><i class="bi bi-file-earmark-bar-graph"></i><span>Reports</span></a></li>
+          <li><a class="nav-link" href="../public/reports.php"><i class="bi bi-file-earmark-bar-graph"></i><span>Reports</span></a></li>
           <li><a class="nav-link" href="#"><i class="bi bi-credit-card"></i><span>Outstanding Credit</span></a></li>
         </ul>
                 </div>
