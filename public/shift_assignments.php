@@ -191,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </h5>
             <?php if ($assignments): ?>
                 <div class="table-responsive">
-                    <table class="table table-sm table-bordered align-middle mb-0">
+                    <table class="table table-sm table-bordered align-middle mb-0 small">
                         <thead class="table-light">
                             <tr>
                                 <th>Date</th>
@@ -225,28 +225,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <td><?php echo h($a['notes']); ?></td>
                                     <td><?php echo h($a['status']); ?></td>
                                     <td class="text-end">
-                                        <button class="btn btn-sm btn-primary me-1 editAssignmentBtn"
-                                            data-id="<?php echo $a['id']; ?>"
-                                            data-shift_id="<?php echo h($a['shift_id']); ?>"
-                                            data-user_id="<?php echo h($a['user_id']); ?>"
-                                            data-assignment_date="<?php echo h($a['assignment_date']); ?>"
-                                            data-status="<?php echo h($a['status']); ?>"
-                                            data-notes="<?php echo h($a['notes']); ?>"
-                                            data-opening_cash="<?php echo h($a['opening_cash']); ?>"
-                                            data-closing_cash="<?php echo h($a['closing_cash']); ?>"
-                                            data-cash_difference="<?php echo h($a['cash_difference']); ?>"
-                                            data-clock_in_time="<?php echo h($a['clock_in_time']); ?>"
-                                            data-clock_out_time="<?php echo h($a['clock_out_time']); ?>"
-                                            data-total_hours="<?php echo h($a['total_hours']); ?>"
-                                            data-total_sales="<?php echo h($a['total_sales']); ?>"
-                                            data-bs-toggle="modal" data-bs-target="#assignmentModal">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </button>
-                                        <button class="btn btn-sm btn-danger deleteAssignmentBtn"
-                                            data-id="<?php echo $a['id']; ?>"
-                                            data-bs-toggle="modal" data-bs-target="#deleteAssignmentModal">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
+                                        <div class="d-inline-flex align-items-center gap-1">
+                                            <button class="btn btn-sm btn-primary editAssignmentBtn"
+                                                data-id="<?php echo $a['id']; ?>"
+                                                data-shift_id="<?php echo h($a['shift_id']); ?>"
+                                                data-user_id="<?php echo h($a['user_id']); ?>"
+                                                data-assignment_date="<?php echo h($a['assignment_date']); ?>"
+                                                data-status="<?php echo h($a['status']); ?>"
+                                                data-notes="<?php echo h($a['notes']); ?>"
+                                                data-opening_cash="<?php echo h($a['opening_cash']); ?>"
+                                                data-closing_cash="<?php echo h($a['closing_cash']); ?>"
+                                                data-cash_difference="<?php echo h($a['cash_difference']); ?>"
+                                                data-clock_in_time="<?php echo h($a['clock_in_time']); ?>"
+                                                data-clock_out_time="<?php echo h($a['clock_out_time']); ?>"
+                                                data-total_hours="<?php echo h($a['total_hours']); ?>"
+                                                data-total_sales="<?php echo h($a['total_sales']); ?>"
+                                                data-bs-toggle="modal" data-bs-target="#assignmentModal">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger deleteAssignmentBtn"
+                                                data-id="<?php echo $a['id']; ?>"
+                                                data-bs-toggle="modal" data-bs-target="#deleteAssignmentModal">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
