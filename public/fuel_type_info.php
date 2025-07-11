@@ -211,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     </div>
                     <div class="tab-pane fade" id="dispensers" role="tabpanel">
                         <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm"><i class="bi bi-plus"></i> Add Dispenser</button>
+                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addDispenserModal"><i class="bi bi-plus"></i> Add Dispenser</button>
                         </div>
                         <?php if ($dispensers): ?>
                             <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Branch</th><th>Dispenser #</th><th>Tank #</th><th>Pump Price</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     </div>
                     <div class="tab-pane fade" id="purchases" role="tabpanel">
                         <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm"><i class="bi bi-plus"></i> Add Purchase</button>
+                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addPurchaseModal"><i class="bi bi-plus"></i> Add Purchase</button>
                         </div>
                         <?php if ($purchases): ?>
                             <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Date</th><th>Branch</th><th>Supplier</th><th>Quantity</th><th>Unit Cost</th><th>Total Cost</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     </div>
                     <div class="tab-pane fade" id="sales" role="tabpanel">
                         <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm"><i class="bi bi-plus"></i> Add Sale</button>
+                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addSaleModal"><i class="bi bi-plus"></i> Add Sale</button>
                         </div>
                         <?php if ($sales): ?>
                             <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Date</th><th>Time</th><th>Branch</th><th>Dispenser #</th><th>Quantity</th><th>Unit Price</th><th>Final Amount</th><th>Payment</th><th class="text-end">Actions</th></tr></thead><tbody>
@@ -250,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     </div>
                     <div class="tab-pane fade" id="price" role="tabpanel">
                         <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm"><i class="bi bi-plus"></i> Add Price</button>
+                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addPriceModal"><i class="bi bi-plus"></i> Add Price</button>
                         </div>
                         <?php if ($price_history): ?>
                             <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Branch</th><th>Old Price</th><th>New Price</th><th>Effective Date</th><th>Changed By</th><th>Reason</th><th class="text-end">Actions</th></tr></thead><tbody>
@@ -263,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     </div>
                     <div class="tab-pane fade" id="quality" role="tabpanel">
                         <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm"><i class="bi bi-plus"></i> Add Test</button>
+                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addQualityTestModal"><i class="bi bi-plus"></i> Add Test</button>
                         </div>
                         <?php if ($quality_tests): ?>
                             <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Date</th><th>Branch</th><th>Tank #</th><th>Type</th><th>Density</th><th>Octane</th><th>Result</th><th>Tested By</th><th class="text-end">Actions</th></tr></thead><tbody>
@@ -276,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     </div>
                     <div class="tab-pane fade" id="variance" role="tabpanel">
                         <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm"><i class="bi bi-plus"></i> Add Variance</button>
+                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addVarianceModal"><i class="bi bi-plus"></i> Add Variance</button>
                         </div>
                         <?php if ($variances): ?>
                             <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Date</th><th>Branch</th><th>Tank #</th><th>Expected Qty</th><th>Actual Qty</th><th>Variance</th><th>Type</th><th>Reason</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
@@ -297,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 <!-- Add Tank Modal -->
 <div class="modal fade" id="addTankModal" tabindex="-1" aria-labelledby="addTankModalLabel" aria-hidden="true">
   <div class="modal-dialog">
-    <form method="post" action="">
+    <form method="post" action="storage_tanks/handle_action.php">
       <input type="hidden" name="action" value="add_tank">
       <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
       <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
@@ -339,7 +339,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 <?php foreach ($storage_tanks as $t): ?>
 <div class="modal fade" id="editTankModal<?php echo $t['id']; ?>" tabindex="-1" aria-labelledby="editTankModalLabel<?php echo $t['id']; ?>" aria-hidden="true">
   <div class="modal-dialog">
-    <form method="post" action="">
+    <form method="post" action="storage_tanks/handle_action.php">
       <input type="hidden" name="action" value="edit_tank">
       <input type="hidden" name="tank_id" value="<?php echo $t['id']; ?>">
       <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
@@ -387,7 +387,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 </div>
 <div class="modal fade" id="deleteTankModal<?php echo $t['id']; ?>" tabindex="-1" aria-labelledby="deleteTankModalLabel<?php echo $t['id']; ?>" aria-hidden="true">
   <div class="modal-dialog">
-    <form method="post" action="">
+    <form method="post" action="storage_tanks/handle_action.php">
       <input type="hidden" name="action" value="delete_tank">
       <input type="hidden" name="tank_id" value="<?php echo $t['id']; ?>">
       <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
@@ -408,6 +408,813 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
   </div>
 </div>
 <?php endforeach; ?>
+<!-- Add Dispenser Modal -->
+<div class="modal fade" id="addDispenserModal" tabindex="-1" aria-labelledby="addDispenserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="dispensers/handle_action.php">
+      <input type="hidden" name="action" value="add_dispenser">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addDispenserModalLabel">Add Dispenser</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Tank</label>
+            <select name="tank_id" class="form-select" required>
+              <option value="">Select Tank</option>
+              <?php foreach ($storage_tanks as $t): ?>
+                <option value="<?php echo $t['id']; ?>"><?php echo h($t['tank_number']); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Dispenser Number</label>
+            <input type="text" name="dispenser_number" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Pump Price</label>
+            <input type="number" step="0.01" name="pump_price" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Status</label>
+            <input type="text" name="status" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Add Dispenser</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<?php foreach ($dispensers as $d): ?>
+<div class="modal fade" id="editDispenserModal<?php echo $d['id']; ?>" tabindex="-1" aria-labelledby="editDispenserModalLabel<?php echo $d['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="dispensers/handle_action.php">
+      <input type="hidden" name="action" value="edit_dispenser">
+      <input type="hidden" name="dispenser_id" value="<?php echo $d['id']; ?>">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editDispenserModalLabel<?php echo $d['id']; ?>">Edit Dispenser</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Tank</label>
+            <select name="tank_id" class="form-select" required>
+              <option value="">Select Tank</option>
+              <?php foreach ($storage_tanks as $t): ?>
+                <option value="<?php echo $t['id']; ?>" <?php if ($t['id'] == $d['tank_id']) echo 'selected'; ?>><?php echo h($t['tank_number']); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Dispenser Number</label>
+            <input type="text" name="dispenser_number" class="form-control" value="<?php echo h($d['dispenser_number']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Pump Price</label>
+            <input type="number" step="0.01" name="pump_price" class="form-control" value="<?php echo h($d['pump_price']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Status</label>
+            <input type="text" name="status" class="form-control" value="<?php echo h($d['status']); ?>" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="modal fade" id="deleteDispenserModal<?php echo $d['id']; ?>" tabindex="-1" aria-labelledby="deleteDispenserModalLabel<?php echo $d['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="dispensers/handle_action.php">
+      <input type="hidden" name="action" value="delete_dispenser">
+      <input type="hidden" name="dispenser_id" value="<?php echo $d['id']; ?>">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteDispenserModalLabel<?php echo $d['id']; ?>">Delete Dispenser</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete dispenser <strong><?php echo h($d['dispenser_number']); ?></strong>?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<?php endforeach; ?>
+<!-- Add Purchase Modal -->
+<div class="modal fade" id="addPurchaseModal" tabindex="-1" aria-labelledby="addPurchaseModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="purchases/handle_action.php">
+      <input type="hidden" name="action" value="add_purchase">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addPurchaseModalLabel">Add Purchase</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Supplier</label>
+            <input type="text" name="supplier_id" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Delivery Date</label>
+            <input type="date" name="delivery_date" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Quantity Delivered</label>
+            <input type="number" step="0.01" name="quantity_delivered" id="quantity_delivered" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Unit Cost</label>
+            <input type="number" step="0.01" name="unit_cost" id="unit_cost" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Total Cost</label>
+            <input type="number" step="0.01" name="total_cost" id="total_cost" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Payment Status</label>
+            <input type="text" name="payment_status" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Add Purchase</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<?php foreach ($purchases as $p): ?>
+<div class="modal fade" id="editPurchaseModal<?php echo $p['id']; ?>" tabindex="-1" aria-labelledby="editPurchaseModalLabel<?php echo $p['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="purchases/handle_action.php">
+      <input type="hidden" name="action" value="edit_purchase">
+      <input type="hidden" name="purchase_id" value="<?php echo $p['id']; ?>">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editPurchaseModalLabel<?php echo $p['id']; ?>">Edit Purchase</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Supplier</label>
+            <input type="text" name="supplier_id" class="form-control" value="<?php echo h($p['supplier_id']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Delivery Date</label>
+            <input type="date" name="delivery_date" class="form-control" value="<?php echo h($p['delivery_date']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Quantity Delivered</label>
+            <input type="number" step="0.01" name="quantity_delivered" id="quantity_delivered<?php echo $p['id']; ?>" class="form-control" value="<?php echo h($p['quantity_delivered']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Unit Cost</label>
+            <input type="number" step="0.01" name="unit_cost" id="unit_cost<?php echo $p['id']; ?>" class="form-control" value="<?php echo h($p['unit_cost']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Total Cost</label>
+            <input type="number" step="0.01" name="total_cost" id="total_cost<?php echo $p['id']; ?>" class="form-control" value="<?php echo h($p['total_cost']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Payment Status</label>
+            <input type="text" name="payment_status" class="form-control" value="<?php echo h($p['payment_status']); ?>" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="modal fade" id="deletePurchaseModal<?php echo $p['id']; ?>" tabindex="-1" aria-labelledby="deletePurchaseModalLabel<?php echo $p['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="purchases/handle_action.php">
+      <input type="hidden" name="action" value="delete_purchase">
+      <input type="hidden" name="purchase_id" value="<?php echo $p['id']; ?>">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deletePurchaseModalLabel<?php echo $p['id']; ?>">Delete Purchase</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete this purchase?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<?php endforeach; ?>
+<!-- Add Sale Modal -->
+<div class="modal fade" id="addSaleModal" tabindex="-1" aria-labelledby="addSaleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="sales/handle_action.php">
+      <input type="hidden" name="action" value="add_sale">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addSaleModalLabel">Add Sale</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Dispenser</label>
+            <select name="dispenser_id" class="form-select" required>
+              <option value="">Select Dispenser</option>
+              <?php foreach ($dispensers as $d): ?>
+                <option value="<?php echo $d['id']; ?>"><?php echo h($d['dispenser_number']); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Transaction Date</label>
+            <input type="date" name="transaction_date" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Transaction Time</label>
+            <input type="time" name="transaction_time" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Quantity</label>
+            <input type="number" step="0.01" name="quantity" id="sale_quantity" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Unit Price</label>
+            <input type="number" step="0.01" name="unit_price" id="sale_unit_price" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Final Amount</label>
+            <input type="number" step="0.01" name="final_amount" id="sale_final_amount" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Payment Method</label>
+            <input type="text" name="payment_method" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Attendant ID</label>
+            <input type="number" name="attendant_id" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Add Sale</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<?php foreach ($sales as $s): ?>
+<div class="modal fade" id="editSaleModal<?php echo $s['id']; ?>" tabindex="-1" aria-labelledby="editSaleModalLabel<?php echo $s['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="sales/handle_action.php">
+      <input type="hidden" name="action" value="edit_sale">
+      <input type="hidden" name="sale_id" value="<?php echo $s['id']; ?>">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editSaleModalLabel<?php echo $s['id']; ?>">Edit Sale</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Dispenser</label>
+            <select name="dispenser_id" class="form-select" required>
+              <option value="">Select Dispenser</option>
+              <?php foreach ($dispensers as $d): ?>
+                <option value="<?php echo $d['id']; ?>" <?php if ($d['id'] == $s['dispenser_id']) echo 'selected'; ?>><?php echo h($d['dispenser_number']); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Transaction Time</label>
+            <input type="time" name="transaction_time" class="form-control" value="<?php echo h($s['transaction_time']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Quantity</label>
+            <input type="number" step="0.01" name="quantity" id="sale_quantity<?php echo $s['id']; ?>" class="form-control" value="<?php echo h($s['quantity']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Unit Price</label>
+            <input type="number" step="0.01" name="unit_price" id="sale_unit_price<?php echo $s['id']; ?>" class="form-control" value="<?php echo h($s['unit_price']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Final Amount</label>
+            <input type="number" step="0.01" name="final_amount" id="sale_final_amount<?php echo $s['id']; ?>" class="form-control" value="<?php echo h($s['final_amount']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Payment Method</label>
+            <input type="text" name="payment_method" class="form-control" value="<?php echo h($s['payment_method']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Attendant ID</label>
+            <input type="number" name="attendant_id" class="form-control" value="<?php echo h($s['attendant_id']); ?>" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="modal fade" id="deleteSaleModal<?php echo $s['id']; ?>" tabindex="-1" aria-labelledby="deleteSaleModalLabel<?php echo $s['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="sales/handle_action.php">
+      <input type="hidden" name="action" value="delete_sale">
+      <input type="hidden" name="sale_id" value="<?php echo $s['id']; ?>">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteSaleModalLabel<?php echo $s['id']; ?>">Delete Sale</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete this sale?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<?php endforeach; ?>
+<!-- Add Price History Modal -->
+<div class="modal fade" id="addPriceModal" tabindex="-1" aria-labelledby="addPriceModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="price_history/handle_action.php">
+      <input type="hidden" name="action" value="add_price">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addPriceModalLabel">Add Price History</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Old Price</label>
+            <input type="number" step="0.01" name="old_price" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">New Price</label>
+            <input type="number" step="0.01" name="new_price" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Effective Date</label>
+            <input type="date" name="effective_date" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Changed By</label>
+            <input type="text" name="changed_by" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Reason</label>
+            <input type="text" name="reason" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Add Price</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<?php foreach ($price_history as $ph): ?>
+<div class="modal fade" id="editPriceModal<?php echo $ph['id']; ?>" tabindex="-1" aria-labelledby="editPriceModalLabel<?php echo $ph['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="price_history/handle_action.php">
+      <input type="hidden" name="action" value="edit_price">
+      <input type="hidden" name="price_id" value="<?php echo $ph['id']; ?>">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editPriceModalLabel<?php echo $ph['id']; ?>">Edit Price History</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Old Price</label>
+            <input type="number" step="0.01" name="old_price" class="form-control" value="<?php echo h($ph['old_price']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">New Price</label>
+            <input type="number" step="0.01" name="new_price" class="form-control" value="<?php echo h($ph['new_price']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Effective Date</label>
+            <input type="date" name="effective_date" class="form-control" value="<?php echo h($ph['effective_date']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Changed By</label>
+            <input type="text" name="changed_by" class="form-control" value="<?php echo h($ph['changed_by']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Reason</label>
+            <input type="text" name="reason" class="form-control" value="<?php echo h($ph['reason']); ?>" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="modal fade" id="deletePriceModal<?php echo $ph['id']; ?>" tabindex="-1" aria-labelledby="deletePriceModalLabel<?php echo $ph['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="price_history/handle_action.php">
+      <input type="hidden" name="action" value="delete_price">
+      <input type="hidden" name="price_id" value="<?php echo $ph['id']; ?>">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deletePriceModalLabel<?php echo $ph['id']; ?>">Delete Price History</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete this price history record?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<?php endforeach; ?>
+<!-- Add Quality Test Modal -->
+<div class="modal fade" id="addQualityTestModal" tabindex="-1" aria-labelledby="addQualityTestModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="quality_tests/handle_action.php">
+      <input type="hidden" name="action" value="add_quality_test">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addQualityTestModalLabel">Add Quality Test</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Tank</label>
+            <select name="tank_id" class="form-select" required>
+              <option value="">Select Tank</option>
+              <?php foreach ($storage_tanks as $t): ?>
+                <option value="<?php echo $t['id']; ?>"><?php echo h($t['tank_number']); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Test Date</label>
+            <input type="date" name="test_date" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Test Type</label>
+            <input type="text" name="test_type" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Density</label>
+            <input type="number" step="0.01" name="density" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Octane Rating</label>
+            <input type="number" step="0.01" name="octane_rating" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Test Result</label>
+            <input type="text" name="test_result" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Tested By</label>
+            <input type="text" name="tested_by" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Add Test</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<?php foreach ($quality_tests as $qt): ?>
+<div class="modal fade" id="editQualityTestModal<?php echo $qt['id']; ?>" tabindex="-1" aria-labelledby="editQualityTestModalLabel<?php echo $qt['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="quality_tests/handle_action.php">
+      <input type="hidden" name="action" value="edit_quality_test">
+      <input type="hidden" name="quality_test_id" value="<?php echo $qt['id']; ?>">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editQualityTestModalLabel<?php echo $qt['id']; ?>">Edit Quality Test</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Tank</label>
+            <select name="tank_id" class="form-select" required>
+              <option value="">Select Tank</option>
+              <?php foreach ($storage_tanks as $t): ?>
+                <option value="<?php echo $t['id']; ?>" <?php if ($t['id'] == $qt['tank_id']) echo 'selected'; ?>><?php echo h($t['tank_number']); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Test Date</label>
+            <input type="date" name="test_date" class="form-control" value="<?php echo h($qt['test_date']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Test Type</label>
+            <input type="text" name="test_type" class="form-control" value="<?php echo h($qt['test_type']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Density</label>
+            <input type="number" step="0.01" name="density" class="form-control" value="<?php echo h($qt['density']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Octane Rating</label>
+            <input type="number" step="0.01" name="octane_rating" class="form-control" value="<?php echo h($qt['octane_rating']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Test Result</label>
+            <input type="text" name="test_result" class="form-control" value="<?php echo h($qt['test_result']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Tested By</label>
+            <input type="text" name="tested_by" class="form-control" value="<?php echo h($qt['tested_by']); ?>" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="modal fade" id="deleteQualityTestModal<?php echo $qt['id']; ?>" tabindex="-1" aria-labelledby="deleteQualityTestModalLabel<?php echo $qt['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="quality_tests/handle_action.php">
+      <input type="hidden" name="action" value="delete_quality_test">
+      <input type="hidden" name="quality_test_id" value="<?php echo $qt['id']; ?>">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteQualityTestModalLabel<?php echo $qt['id']; ?>">Delete Quality Test</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete this quality test?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<?php endforeach; ?>
+<!-- Add Variance Modal -->
+<div class="modal fade" id="addVarianceModal" tabindex="-1" aria-labelledby="addVarianceModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="variance/handle_action.php">
+      <input type="hidden" name="action" value="add_variance">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addVarianceModalLabel">Add Variance</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Tank</label>
+            <select name="tank_id" class="form-select" required>
+              <option value="">Select Tank</option>
+              <?php foreach ($storage_tanks as $t): ?>
+                <option value="<?php echo $t['id']; ?>"><?php echo h($t['tank_number']); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Variance Date</label>
+            <input type="date" name="variance_date" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Expected Quantity</label>
+            <input type="number" step="0.01" name="expected_quantity" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Actual Quantity</label>
+            <input type="number" step="0.01" name="actual_quantity" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Variance Quantity</label>
+            <input type="number" step="0.01" name="variance_quantity" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Variance Type</label>
+            <input type="text" name="variance_type" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Variance Reason</label>
+            <input type="text" name="variance_reason" class="form-control" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Status</label>
+            <input type="text" name="status" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Add Variance</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<?php foreach ($variances as $v): ?>
+<div class="modal fade" id="editVarianceModal<?php echo $v['id']; ?>" tabindex="-1" aria-labelledby="editVarianceModalLabel<?php echo $v['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="variance/handle_action.php">
+      <input type="hidden" name="action" value="edit_variance">
+      <input type="hidden" name="variance_id" value="<?php echo $v['id']; ?>">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editVarianceModalLabel<?php echo $v['id']; ?>">Edit Variance</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label class="form-label">Tank</label>
+            <select name="tank_id" class="form-select" required>
+              <option value="">Select Tank</option>
+              <?php foreach ($storage_tanks as $t): ?>
+                <option value="<?php echo $t['id']; ?>" <?php if ($t['id'] == $v['tank_id']) echo 'selected'; ?>><?php echo h($t['tank_number']); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Variance Date</label>
+            <input type="date" name="variance_date" class="form-control" value="<?php echo h($v['variance_date']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Expected Quantity</label>
+            <input type="number" step="0.01" name="expected_quantity" class="form-control" value="<?php echo h($v['expected_quantity']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Actual Quantity</label>
+            <input type="number" step="0.01" name="actual_quantity" class="form-control" value="<?php echo h($v['actual_quantity']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Variance Quantity</label>
+            <input type="number" step="0.01" name="variance_quantity" class="form-control" value="<?php echo h($v['variance_quantity']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Variance Type</label>
+            <input type="text" name="variance_type" class="form-control" value="<?php echo h($v['variance_type']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Variance Reason</label>
+            <input type="text" name="variance_reason" class="form-control" value="<?php echo h($v['variance_reason']); ?>" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Status</label>
+            <input type="text" name="status" class="form-control" value="<?php echo h($v['status']); ?>" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="modal fade" id="deleteVarianceModal<?php echo $v['id']; ?>" tabindex="-1" aria-labelledby="deleteVarianceModalLabel<?php echo $v['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="variance/handle_action.php">
+      <input type="hidden" name="action" value="delete_variance">
+      <input type="hidden" name="variance_id" value="<?php echo $v['id']; ?>">
+      <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteVarianceModalLabel<?php echo $v['id']; ?>">Delete Variance</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete this variance?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<?php endforeach; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ... existing code ...
+// Auto-calculate Total Cost in Purchase Modals
+function updateTotalCost(prefix = '') {
+  var qty = parseFloat(document.getElementById(prefix + 'quantity_delivered')?.value) || 0;
+  var price = parseFloat(document.getElementById(prefix + 'unit_cost')?.value) || 0;
+  if(document.getElementById(prefix + 'total_cost')) {
+    document.getElementById(prefix + 'total_cost').value = (qty * price).toFixed(2);
+  }
+}
+// Add Purchase Modal
+if (document.getElementById('quantity_delivered')) {
+  document.getElementById('quantity_delivered').addEventListener('input', function(){updateTotalCost('');});
+}
+if (document.getElementById('unit_cost')) {
+  document.getElementById('unit_cost').addEventListener('input', function(){updateTotalCost('');});
+}
+// Edit Purchase Modals (for each purchase row)
+<?php foreach ($purchases as $p): ?>
+if (document.getElementById('quantity_delivered<?php echo $p['id']; ?>')) {
+  document.getElementById('quantity_delivered<?php echo $p['id']; ?>').addEventListener('input', function(){updateTotalCost('<?php echo $p['id']; ?>');});
+}
+if (document.getElementById('unit_cost<?php echo $p['id']; ?>')) {
+  document.getElementById('unit_cost<?php echo $p['id']; ?>').addEventListener('input', function(){updateTotalCost('<?php echo $p['id']; ?>');});
+}
+<?php endforeach; ?>
+// ... existing code ...
+// Auto-calculate Final Amount in Sale Modals
+function updateSaleFinalAmount(prefix = '') {
+  var qty = parseFloat(document.getElementById(prefix + 'sale_quantity')?.value) || 0;
+  var price = parseFloat(document.getElementById(prefix + 'sale_unit_price')?.value) || 0;
+  if(document.getElementById(prefix + 'sale_final_amount')) {
+    document.getElementById(prefix + 'sale_final_amount').value = (qty * price).toFixed(2);
+  }
+}
+// Add Sale Modal
+if (document.getElementById('sale_quantity')) {
+  document.getElementById('sale_quantity').addEventListener('input', function(){updateSaleFinalAmount('');});
+}
+if (document.getElementById('sale_unit_price')) {
+  document.getElementById('sale_unit_price').addEventListener('input', function(){updateSaleFinalAmount('');});
+}
+// Edit Sale Modals (for each sale row)
+<?php foreach ($sales as $s): ?>
+if (document.getElementById('sale_quantity<?php echo $s['id']; ?>')) {
+  document.getElementById('sale_quantity<?php echo $s['id']; ?>').addEventListener('input', function(){updateSaleFinalAmount('<?php echo $s['id']; ?>');});
+}
+if (document.getElementById('sale_unit_price<?php echo $s['id']; ?>')) {
+  document.getElementById('sale_unit_price<?php echo $s['id']; ?>').addEventListener('input', function(){updateSaleFinalAmount('<?php echo $s['id']; ?>');});
+}
+<?php endforeach; ?>
+// ... existing code ...
+</script>
 </body>
 </html> 

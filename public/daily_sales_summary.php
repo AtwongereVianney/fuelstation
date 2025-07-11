@@ -481,6 +481,18 @@ document.querySelectorAll('.deleteSaleBtn').forEach(function(btn) {
     document.getElementById('delete_sale_id').value = btn.getAttribute('data-id');
   });
 });
+// Auto-calculate Final Amount in Sale Modal
+function updateFinalAmount() {
+  var qty = parseFloat(document.getElementById('quantity').value) || 0;
+  var price = parseFloat(document.getElementById('unit_price').value) || 0;
+  document.getElementById('final_amount').value = (qty * price).toFixed(2);
+}
+if (document.getElementById('quantity')) {
+  document.getElementById('quantity').addEventListener('input', updateFinalAmount);
+}
+if (document.getElementById('unit_price')) {
+  document.getElementById('unit_price').addEventListener('input', updateFinalAmount);
+}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
