@@ -126,9 +126,9 @@ if ($result) {
                                   <div class="text-muted small">Name: <span class="fst-italic"><?php echo htmlspecialchars($perm['name']); ?></span></div>
                                 </div>
                                 <div class="mt-2 mt-md-0 ms-md-2 text-nowrap">
-                                  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewPermissionModal<?php echo $perm['id']; ?>">View</button>
-                                  <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editPermissionModal<?php echo $perm['id']; ?>">Edit</button>
-                                  <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deletePermissionModal<?php echo $perm['id']; ?>">Delete</button>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewPermissionModal<?php echo $perm['id']; ?>">View</button>
+                                    <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editPermissionModal<?php echo $perm['id']; ?>">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deletePermissionModal<?php echo $perm['id']; ?>">Delete</button>
                                 </div>
                               </div>
                             </li>
@@ -137,7 +137,7 @@ if ($result) {
                       </div>
                     </div>
                   </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
               </div>
             </div>
             <div class="d-block d-md-none small text-muted mt-2">Cards are scrollable. Tap a card to see more permissions.</div>
