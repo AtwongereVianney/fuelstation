@@ -11,7 +11,9 @@ if ($branch_result) {
     }
 }
 
-// Fetch all fuel types for dropdown
+$selected_branch_id = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : ($all_branches[0]['id'] ?? null);
+
+// Fetch all fuel types for dropdown (optionally, you can filter by branch if needed)
 $fuel_types = [];
 $fuel_sql = "SELECT id, name, code, description, octane_rating, unit_of_measure FROM fuel_types WHERE deleted_at IS NULL AND is_active = 1 ORDER BY name";
 $fuel_result = mysqli_query($conn, $fuel_sql);
@@ -20,8 +22,6 @@ if ($fuel_result) {
         $fuel_types[] = $row;
     }
 }
-
-// Get selected fuel type
 $selected_fuel_id = isset($_GET['fuel_type_id']) ? intval($_GET['fuel_type_id']) : ($fuel_types[0]['id'] ?? null);
 $selected_fuel = null;
 foreach ($fuel_types as $ft) {
@@ -36,39 +36,39 @@ function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UT
 
 // Fetch related data if a fuel type is selected
 $storage_tanks = $dispensers = $purchases = $sales = $price_history = $quality_tests = $variances = [];
-if ($selected_fuel_id) {
+if ($selected_fuel_id && $selected_branch_id) {
     // Storage Tanks
-    $sql = "SELECT st.*, b.branch_name FROM storage_tanks st JOIN branches b ON st.branch_id = b.id WHERE st.fuel_type_id = $selected_fuel_id AND st.deleted_at IS NULL ORDER BY b.branch_name, st.tank_number";
+    $sql = "SELECT st.*, b.branch_name FROM storage_tanks st JOIN branches b ON st.branch_id = b.id WHERE st.fuel_type_id = $selected_fuel_id AND st.branch_id = $selected_branch_id AND st.deleted_at IS NULL ORDER BY st.tank_number";
     $res = mysqli_query($conn, $sql);
     if ($res) while ($row = mysqli_fetch_assoc($res)) $storage_tanks[] = $row;
 
     // Dispensers
-    $sql = "SELECT fd.*, b.branch_name, st.tank_number FROM fuel_dispensers fd JOIN branches b ON fd.branch_id = b.id JOIN storage_tanks st ON fd.tank_id = st.id WHERE st.fuel_type_id = $selected_fuel_id AND fd.deleted_at IS NULL ORDER BY b.branch_name, fd.dispenser_number";
+    $sql = "SELECT fd.*, b.branch_name, st.tank_number FROM fuel_dispensers fd JOIN branches b ON fd.branch_id = b.id JOIN storage_tanks st ON fd.tank_id = st.id WHERE st.fuel_type_id = $selected_fuel_id AND fd.branch_id = $selected_branch_id AND fd.deleted_at IS NULL ORDER BY b.branch_name, fd.dispenser_number";
     $res = mysqli_query($conn, $sql);
     if ($res) while ($row = mysqli_fetch_assoc($res)) $dispensers[] = $row;
 
     // Purchases
-    $sql = "SELECT fp.*, b.branch_name, s.name AS supplier_name FROM fuel_purchases fp JOIN branches b ON fp.branch_id = b.id JOIN suppliers s ON fp.supplier_id = s.id WHERE fp.fuel_type_id = $selected_fuel_id AND fp.deleted_at IS NULL ORDER BY fp.delivery_date DESC LIMIT 20";
+    $sql = "SELECT fp.*, b.branch_name, s.name AS supplier_name FROM fuel_purchases fp JOIN branches b ON fp.branch_id = b.id JOIN suppliers s ON fp.supplier_id = s.id WHERE fp.fuel_type_id = $selected_fuel_id AND fp.branch_id = $selected_branch_id AND fp.deleted_at IS NULL ORDER BY fp.delivery_date DESC LIMIT 20";
     $res = mysqli_query($conn, $sql);
     if ($res) while ($row = mysqli_fetch_assoc($res)) $purchases[] = $row;
 
     // Sales
-    $sql = "SELECT st.*, b.branch_name, fd.dispenser_number FROM sales_transactions st JOIN branches b ON st.branch_id = b.id JOIN fuel_dispensers fd ON st.dispenser_id = fd.id WHERE st.fuel_type_id = $selected_fuel_id AND st.deleted_at IS NULL ORDER BY st.transaction_date DESC, st.transaction_time DESC LIMIT 20";
+    $sql = "SELECT st.*, b.branch_name, fd.dispenser_number FROM sales_transactions st JOIN branches b ON st.branch_id = b.id JOIN fuel_dispensers fd ON st.dispenser_id = fd.id WHERE st.fuel_type_id = $selected_fuel_id AND st.branch_id = $selected_branch_id AND st.deleted_at IS NULL ORDER BY st.transaction_date DESC, st.transaction_time DESC LIMIT 20";
     $res = mysqli_query($conn, $sql);
     if ($res) while ($row = mysqli_fetch_assoc($res)) $sales[] = $row;
 
     // Price History
-    $sql = "SELECT fph.*, b.branch_name FROM fuel_price_history fph JOIN branches b ON fph.branch_id = b.id WHERE fph.fuel_type_id = $selected_fuel_id ORDER BY fph.effective_date DESC LIMIT 20";
+    $sql = "SELECT fph.*, b.branch_name FROM fuel_price_history fph JOIN branches b ON fph.branch_id = b.id WHERE fph.fuel_type_id = $selected_fuel_id AND fph.branch_id = $selected_branch_id ORDER BY fph.effective_date DESC LIMIT 20";
     $res = mysqli_query($conn, $sql);
     if ($res) while ($row = mysqli_fetch_assoc($res)) $price_history[] = $row;
 
     // Quality Tests
-    $sql = "SELECT fqt.*, b.branch_name, st.tank_number FROM fuel_quality_tests fqt JOIN branches b ON fqt.branch_id = b.id LEFT JOIN storage_tanks st ON fqt.tank_id = st.id WHERE fqt.fuel_type_id = $selected_fuel_id AND fqt.deleted_at IS NULL ORDER BY fqt.test_date DESC LIMIT 20";
+    $sql = "SELECT fqt.*, b.branch_name, st.tank_number FROM fuel_quality_tests fqt JOIN branches b ON fqt.branch_id = b.id LEFT JOIN storage_tanks st ON fqt.tank_id = st.id WHERE fqt.fuel_type_id = $selected_fuel_id AND fqt.branch_id = $selected_branch_id AND fqt.deleted_at IS NULL ORDER BY fqt.test_date DESC LIMIT 20";
     $res = mysqli_query($conn, $sql);
     if ($res) while ($row = mysqli_fetch_assoc($res)) $quality_tests[] = $row;
 
     // Variances
-    $sql = "SELECT fv.*, b.branch_name, st.tank_number FROM fuel_variances fv JOIN branches b ON fv.branch_id = b.id JOIN storage_tanks st ON fv.tank_id = st.id WHERE st.fuel_type_id = $selected_fuel_id AND fv.deleted_at IS NULL ORDER BY fv.variance_date DESC LIMIT 20";
+    $sql = "SELECT fv.*, b.branch_name, st.tank_number FROM fuel_variances fv JOIN branches b ON fv.branch_id = b.id JOIN storage_tanks st ON fv.tank_id = st.id WHERE st.fuel_type_id = $selected_fuel_id AND fv.branch_id = $selected_branch_id AND fv.deleted_at IS NULL ORDER BY fv.variance_date DESC LIMIT 20";
     $res = mysqli_query($conn, $sql);
     if ($res) while ($row = mysqli_fetch_assoc($res)) $variances[] = $row;
 }
@@ -91,14 +91,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'edit_tank') {
     $tank_id = intval($_POST['tank_id']);
     $fuel_type_id = intval($_POST['fuel_type_id']);
-    // Get and sanitize other fields...
-    // $branch_id = ... (see Add)
-    // $tank_number = ...
-    // $capacity = ...
-    // $current_level = ...
-    // $status = ...
-    // $sql = \"UPDATE storage_tanks SET ... WHERE id = $tank_id\";
-    // mysqli_query($conn, $sql);
+    $branch_id = intval($_POST['branch_id']);
+    $tank_number = mysqli_real_escape_string($conn, $_POST['tank_number']);
+    $capacity = floatval($_POST['capacity']);
+    $current_level = floatval($_POST['current_level']);
+    $status = mysqli_real_escape_string($conn, $_POST['status']);
+
+    $sql = "UPDATE storage_tanks SET branch_id = $branch_id, tank_number = '$tank_number', capacity = $capacity, current_level = $current_level, status = '$status' WHERE id = $tank_id";
+    mysqli_query($conn, $sql);
     header("Location: fuel_type_info.php?fuel_type_id=$fuel_type_id");
     exit;
 }
@@ -150,12 +150,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             <form method="get" class="mb-4">
                 <div class="row g-2 align-items-center">
                     <div class="col-auto">
+                        <label for="branch_id" class="form-label">Select Branch:</label>
+                    </div>
+                    <div class="col-auto">
+                        <select name="branch_id" id="branch_id" class="form-select" onchange="this.form.submit()">
+                            <?php foreach ($all_branches as $b): ?>
+                                <option value="<?php echo $b['id']; ?>" <?php if ($b['id'] == ($_GET['branch_id'] ?? '')) echo 'selected'; ?>>
+                                    <?php echo htmlspecialchars($b['branch_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-auto">
                         <label for="fuel_type_id" class="form-label">Select Fuel Type:</label>
                     </div>
                     <div class="col-auto">
                         <select name="fuel_type_id" id="fuel_type_id" class="form-select" onchange="this.form.submit()">
                             <?php foreach ($fuel_types as $ft): ?>
-                                <option value="<?php echo $ft['id']; ?>" <?php if ($ft['id'] == $selected_fuel_id) echo 'selected'; ?>><?php echo h($ft['name']); ?></option>
+                                <option value="<?php echo $ft['id']; ?>" <?php if ($ft['id'] == ($_GET['fuel_type_id'] ?? '')) echo 'selected'; ?>>
+                                    <?php echo htmlspecialchars($ft['name']); ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -286,6 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     <form method="post" action="">
       <input type="hidden" name="action" value="add_tank">
       <input type="hidden" name="fuel_type_id" value="<?php echo h($selected_fuel_id); ?>">
+      <input type="hidden" name="branch_id" value="<?php echo (int)$selected_branch_id; ?>">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="addTankModalLabel">Add Storage Tank</h5>
@@ -294,12 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <div class="modal-body">
           <div class="mb-2">
             <label class="form-label">Branch</label>
-            <select name="branch_id" class="form-select" required>
-              <option value="">Select Branch</option>
-              <?php foreach ($all_branches as $branch): ?>
-                <option value="<?php echo $branch['id']; ?>"><?php echo htmlspecialchars($branch['branch_name']); ?></option>
-              <?php endforeach; ?>
-            </select>
+            <input type="text" class="form-control" value="<?php echo htmlspecialchars($all_branches[array_search($selected_branch_id, array_column($all_branches, 'id'))]['branch_name']); ?>" disabled>
           </div>
           <div class="mb-2">
             <label class="form-label">Tank Number</label>
@@ -341,7 +351,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <div class="modal-body">
           <div class="mb-2">
             <label class="form-label">Branch</label>
-            <input type="text" name="branch_name" class="form-control" value="<?php echo h($t['branch_name']); ?>" required>
+            <select name="branch_id" class="form-select" required>
+              <option value="">Select Branch</option>
+              <?php foreach ($all_branches as $branch): ?>
+                <option value="<?php echo $branch['id']; ?>" <?php if ($branch['id'] == $t['branch_id']) echo 'selected'; ?>>
+                  <?php echo htmlspecialchars($branch['branch_name']); ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
           </div>
           <div class="mb-2">
             <label class="form-label">Tank Number</label>
