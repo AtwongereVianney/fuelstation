@@ -172,6 +172,7 @@ mysqli_stmt_close($summary_stmt);
                                     <th>Username</th>
                                     <th>Name</th>
                                     <th>Status</th>
+                                    <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -182,11 +183,15 @@ mysqli_stmt_close($summary_stmt);
                                             <td><?php echo htmlspecialchars($attendant['username']); ?></td>
                                             <td><?php echo htmlspecialchars($attendant['first_name'] . ' ' . $attendant['last_name']); ?></td>
                                             <td><?php echo htmlspecialchars($attendant['status']); ?></td>
+                                            <td class="text-end">
+                                                <a href="#" class="btn btn-sm btn-primary me-1"><i class="bi bi-pencil"></i> Edit</a>
+                                                <a href="#" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Delete</a>
+                                            </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted">No attendants found for this branch</td>
+                                        <td colspan="5" class="text-center text-muted">No attendants found for this branch</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -206,6 +211,7 @@ mysqli_stmt_close($summary_stmt);
                                     <th>Start Time</th>
                                     <th>End Time</th>
                                     <th>Attendant</th>
+                                    <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -216,11 +222,15 @@ mysqli_stmt_close($summary_stmt);
                                             <td><?php echo htmlspecialchars($shift['start_time']); ?></td>
                                             <td><?php echo htmlspecialchars($shift['end_time']); ?></td>
                                             <td><?php echo htmlspecialchars(($shift['first_name'] ?? '') . ' ' . ($shift['last_name'] ?? '')); ?></td>
+                                            <td class="text-end">
+                                                <a href="#" class="btn btn-sm btn-primary me-1"><i class="bi bi-eye"></i> View</a>
+                                                <a href="#" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Delete</a>
+                                            </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted">No shifts found for this branch</td>
+                                        <td colspan="5" class="text-center text-muted">No shifts found for this branch</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>

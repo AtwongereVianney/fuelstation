@@ -46,6 +46,51 @@ if ($selected_branch_id && $start_date && $end_date) {
         }
     }
 }
+
+// Fetch shifts and users for dropdowns
+$shifts = [];
+$res = mysqli_query($conn, "SELECT id, shift_name FROM shifts WHERE branch_id = $selected_branch_id AND deleted_at IS NULL ORDER BY start_time");
+if ($res) while ($row = mysqli_fetch_assoc($res)) $shifts[] = $row;
+$users = [];
+$res = mysqli_query($conn, "SELECT id, first_name, last_name FROM users WHERE branch_id = $selected_branch_id AND deleted_at IS NULL ORDER BY first_name, last_name");
+if ($res) while ($row = mysqli_fetch_assoc($res)) $users[] = $row;
+
+// Handle Assign/Edit/Delete
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Assign or Edit
+    if (isset($_POST['assign_shift']) || isset($_POST['edit_assignment'])) {
+        $assignment_id = isset($_POST['assignment_id']) ? intval($_POST['assignment_id']) : 0;
+        $shift_id = intval($_POST['shift_id']);
+        $user_id = intval($_POST['user_id']);
+        $assignment_date = mysqli_real_escape_string($conn, $_POST['assignment_date']);
+        $status = mysqli_real_escape_string($conn, $_POST['status']);
+        $notes = mysqli_real_escape_string($conn, $_POST['notes']);
+        $opening_cash = floatval($_POST['opening_cash']);
+        $closing_cash = floatval($_POST['closing_cash']);
+        $cash_difference = floatval($_POST['cash_difference']);
+        $clock_in_time = mysqli_real_escape_string($conn, $_POST['clock_in_time']);
+        $clock_out_time = mysqli_real_escape_string($conn, $_POST['clock_out_time']);
+        $total_hours = floatval($_POST['total_hours']);
+        $total_sales = floatval($_POST['total_sales']);
+        if (isset($_POST['assign_shift'])) {
+            $sql = "INSERT INTO shift_assignments (shift_id, user_id, assignment_date, status, notes, opening_cash, closing_cash, cash_difference, clock_in_time, clock_out_time, total_hours, total_sales) VALUES ($shift_id, $user_id, '$assignment_date', '$status', '$notes', $opening_cash, $closing_cash, $cash_difference, '$clock_in_time', '$clock_out_time', $total_hours, $total_sales)";
+            mysqli_query($conn, $sql);
+        } elseif (isset($_POST['edit_assignment'])) {
+            $sql = "UPDATE shift_assignments SET shift_id=$shift_id, user_id=$user_id, assignment_date='$assignment_date', status='$status', notes='$notes', opening_cash=$opening_cash, closing_cash=$closing_cash, cash_difference=$cash_difference, clock_in_time='$clock_in_time', clock_out_time='$clock_out_time', total_hours=$total_hours, total_sales=$total_sales WHERE id=$assignment_id";
+            mysqli_query($conn, $sql);
+        }
+        header('Location: shift_assignments.php?branch_id=' . $selected_branch_id . '&start_date=' . urlencode($start_date) . '&end_date=' . urlencode($end_date));
+        exit;
+    }
+    // Delete
+    if (isset($_POST['delete_assignment'])) {
+        $assignment_id = intval($_POST['assignment_id']);
+        $sql = "UPDATE shift_assignments SET deleted_at=NOW() WHERE id=$assignment_id";
+        mysqli_query($conn, $sql);
+        header('Location: shift_assignments.php?branch_id=' . $selected_branch_id . '&start_date=' . urlencode($start_date) . '&end_date=' . urlencode($end_date));
+        exit;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -141,7 +186,9 @@ if ($selected_branch_id && $start_date && $end_date) {
                     </div>
                 </div>
             </div>
-            <h5 class="mb-3">Shift Assignments</h5>
+            <h5 class="mb-3 d-flex justify-content-between align-items-center">Shift Assignments
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#assignmentModal" id="assignShiftBtn"><i class="bi bi-plus"></i> Assign Shift</button>
+            </h5>
             <?php if ($assignments): ?>
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered align-middle mb-0">
@@ -159,6 +206,7 @@ if ($selected_branch_id && $start_date && $end_date) {
                                 <th>Cash Difference</th>
                                 <th>Notes</th>
                                 <th>Status</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -176,6 +224,30 @@ if ($selected_branch_id && $start_date && $end_date) {
                                     <td><?php echo h($a['cash_difference']); ?></td>
                                     <td><?php echo h($a['notes']); ?></td>
                                     <td><?php echo h($a['status']); ?></td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-primary me-1 editAssignmentBtn"
+                                            data-id="<?php echo $a['id']; ?>"
+                                            data-shift_id="<?php echo h($a['shift_id']); ?>"
+                                            data-user_id="<?php echo h($a['user_id']); ?>"
+                                            data-assignment_date="<?php echo h($a['assignment_date']); ?>"
+                                            data-status="<?php echo h($a['status']); ?>"
+                                            data-notes="<?php echo h($a['notes']); ?>"
+                                            data-opening_cash="<?php echo h($a['opening_cash']); ?>"
+                                            data-closing_cash="<?php echo h($a['closing_cash']); ?>"
+                                            data-cash_difference="<?php echo h($a['cash_difference']); ?>"
+                                            data-clock_in_time="<?php echo h($a['clock_in_time']); ?>"
+                                            data-clock_out_time="<?php echo h($a['clock_out_time']); ?>"
+                                            data-total_hours="<?php echo h($a['total_hours']); ?>"
+                                            data-total_sales="<?php echo h($a['total_sales']); ?>"
+                                            data-bs-toggle="modal" data-bs-target="#assignmentModal">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-danger deleteAssignmentBtn"
+                                            data-id="<?php echo $a['id']; ?>"
+                                            data-bs-toggle="modal" data-bs-target="#deleteAssignmentModal">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -188,6 +260,155 @@ if ($selected_branch_id && $start_date && $end_date) {
         </div>
     </div>
 </div>
+<!-- Assign/Edit Assignment Modal -->
+<div class="modal fade" id="assignmentModal" tabindex="-1" aria-labelledby="assignmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="assignmentModalLabel">Assign/Edit Shift</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="assignment_id" id="assignment_id">
+        <div class="mb-2">
+          <label class="form-label">Shift</label>
+          <select class="form-select" name="shift_id" id="shift_id" required>
+            <?php foreach ($shifts as $s): ?>
+              <option value="<?php echo $s['id']; ?>"><?php echo h($s['shift_name']); ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">User</label>
+          <select class="form-select" name="user_id" id="user_id" required>
+            <?php foreach ($users as $u): ?>
+              <option value="<?php echo $u['id']; ?>"><?php echo h($u['first_name'] . ' ' . $u['last_name']); ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Date</label>
+          <input type="date" class="form-control" name="assignment_date" id="assignment_date" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Status</label>
+          <input type="text" class="form-control" name="status" id="status">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Notes</label>
+          <input type="text" class="form-control" name="notes" id="notes">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Opening Cash</label>
+          <input type="number" step="0.01" class="form-control" name="opening_cash" id="opening_cash">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Closing Cash</label>
+          <input type="number" step="0.01" class="form-control" name="closing_cash" id="closing_cash">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Cash Difference</label>
+          <input type="number" step="0.01" class="form-control" name="cash_difference" id="cash_difference">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Clock In</label>
+          <input type="time" class="form-control" name="clock_in_time" id="clock_in_time">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Clock Out</label>
+          <input type="time" class="form-control" name="clock_out_time" id="clock_out_time">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Total Hours</label>
+          <input type="number" step="0.01" class="form-control" name="total_hours" id="total_hours">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Total Sales</label>
+          <input type="number" step="0.01" class="form-control" name="total_sales" id="total_sales">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary" name="assign_shift" id="assignShiftSubmit">Assign Shift</button>
+        <button type="submit" class="btn btn-primary d-none" name="edit_assignment" id="editAssignmentSubmit">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Delete Assignment Modal -->
+<div class="modal fade" id="deleteAssignmentModal" tabindex="-1" aria-labelledby="deleteAssignmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteAssignmentModalLabel">Delete Assignment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="assignment_id" id="delete_assignment_id">
+        <p>Are you sure you want to delete this assignment?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger" name="delete_assignment">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Assign/Edit Modal logic
+const assignmentModal = document.getElementById('assignmentModal');
+const assignShiftBtn = document.getElementById('assignShiftBtn');
+const assignmentModalLabel = document.getElementById('assignmentModalLabel');
+const assignShiftSubmit = document.getElementById('assignShiftSubmit');
+const editAssignmentSubmit = document.getElementById('editAssignmentSubmit');
+if (assignShiftBtn) {
+  assignShiftBtn.addEventListener('click', function() {
+    assignmentModalLabel.textContent = 'Assign Shift';
+    assignShiftSubmit.classList.remove('d-none');
+    editAssignmentSubmit.classList.add('d-none');
+    document.getElementById('assignment_id').value = '';
+    document.getElementById('shift_id').selectedIndex = 0;
+    document.getElementById('user_id').selectedIndex = 0;
+    document.getElementById('assignment_date').value = '';
+    document.getElementById('status').value = '';
+    document.getElementById('notes').value = '';
+    document.getElementById('opening_cash').value = '';
+    document.getElementById('closing_cash').value = '';
+    document.getElementById('cash_difference').value = '';
+    document.getElementById('clock_in_time').value = '';
+    document.getElementById('clock_out_time').value = '';
+    document.getElementById('total_hours').value = '';
+    document.getElementById('total_sales').value = '';
+  });
+}
+document.querySelectorAll('.editAssignmentBtn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    assignmentModalLabel.textContent = 'Edit Assignment';
+    assignShiftSubmit.classList.add('d-none');
+    editAssignmentSubmit.classList.remove('d-none');
+    document.getElementById('assignment_id').value = btn.getAttribute('data-id');
+    document.getElementById('shift_id').value = btn.getAttribute('data-shift_id');
+    document.getElementById('user_id').value = btn.getAttribute('data-user_id');
+    document.getElementById('assignment_date').value = btn.getAttribute('data-assignment_date');
+    document.getElementById('status').value = btn.getAttribute('data-status');
+    document.getElementById('notes').value = btn.getAttribute('data-notes');
+    document.getElementById('opening_cash').value = btn.getAttribute('data-opening_cash');
+    document.getElementById('closing_cash').value = btn.getAttribute('data-closing_cash');
+    document.getElementById('cash_difference').value = btn.getAttribute('data-cash_difference');
+    document.getElementById('clock_in_time').value = btn.getAttribute('data-clock_in_time');
+    document.getElementById('clock_out_time').value = btn.getAttribute('data-clock_out_time');
+    document.getElementById('total_hours').value = btn.getAttribute('data-total_hours');
+    document.getElementById('total_sales').value = btn.getAttribute('data-total_sales');
+  });
+});
+// Delete Modal logic
+const deleteAssignmentModal = document.getElementById('deleteAssignmentModal');
+document.querySelectorAll('.deleteAssignmentBtn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.getElementById('delete_assignment_id').value = btn.getAttribute('data-id');
+  });
+});
+</script>
 </body>
 </html> 

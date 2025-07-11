@@ -49,6 +49,36 @@ if ($selected_branch_id && $start_date && $end_date) {
     $res = mysqli_query($conn, $sql);
     if ($res) while ($row = mysqli_fetch_assoc($res)) $assignments[] = $row;
 }
+
+// Handle Add/Edit Shift
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['add_shift']) || isset($_POST['edit_shift'])) {
+        $shift_name = mysqli_real_escape_string($conn, $_POST['shift_name']);
+        $start_time = mysqli_real_escape_string($conn, $_POST['start_time']);
+        $end_time = mysqli_real_escape_string($conn, $_POST['end_time']);
+        $description = mysqli_real_escape_string($conn, $_POST['description']);
+        $is_active = isset($_POST['is_active']) ? 1 : 0;
+        $branch_id = $selected_branch_id;
+        if (isset($_POST['add_shift'])) {
+            $sql = "INSERT INTO shifts (branch_id, shift_name, start_time, end_time, description, is_active) VALUES ($branch_id, '$shift_name', '$start_time', '$end_time', '$description', $is_active)";
+            mysqli_query($conn, $sql);
+        } elseif (isset($_POST['edit_shift'])) {
+            $shift_id = intval($_POST['shift_id']);
+            $sql = "UPDATE shifts SET shift_name='$shift_name', start_time='$start_time', end_time='$end_time', description='$description', is_active=$is_active WHERE id=$shift_id AND branch_id=$branch_id";
+            mysqli_query($conn, $sql);
+        }
+        header('Location: shifts.php?branch_id=' . $branch_id . '&start_date=' . urlencode($start_date) . '&end_date=' . urlencode($end_date));
+        exit;
+    }
+    // Handle Delete
+    if (isset($_POST['delete_shift'])) {
+        $shift_id = intval($_POST['shift_id']);
+        $sql = "UPDATE shifts SET deleted_at=NOW() WHERE id=$shift_id AND branch_id=$selected_branch_id";
+        mysqli_query($conn, $sql);
+        header('Location: shifts.php?branch_id=' . $selected_branch_id . '&start_date=' . urlencode($start_date) . '&end_date=' . urlencode($end_date));
+        exit;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -128,7 +158,9 @@ if ($selected_branch_id && $start_date && $end_date) {
                     </div>
                 </div>
             </div>
-            <h5 class="mb-3">Shifts</h5>
+            <h5 class="mb-3 d-flex justify-content-between align-items-center">Shifts
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#shiftModal" id="addShiftBtn"><i class="bi bi-plus"></i> Add Shift</button>
+            </h5>
             <?php if ($shifts): ?>
                 <div class="table-responsive mb-4">
                     <table class="table table-sm table-bordered align-middle mb-0">
@@ -139,6 +171,7 @@ if ($selected_branch_id && $start_date && $end_date) {
                                 <th>End Time</th>
                                 <th>Description</th>
                                 <th>Active</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -149,6 +182,24 @@ if ($selected_branch_id && $start_date && $end_date) {
                                     <td><?php echo h($s['end_time']); ?></td>
                                     <td><?php echo h($s['description']); ?></td>
                                     <td><?php echo $s['is_active'] ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'; ?></td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-primary me-1 editShiftBtn" 
+                                            data-id="<?php echo $s['id']; ?>"
+                                            data-name="<?php echo h($s['shift_name']); ?>"
+                                            data-start="<?php echo h($s['start_time']); ?>"
+                                            data-end="<?php echo h($s['end_time']); ?>"
+                                            data-desc="<?php echo h($s['description']); ?>"
+                                            data-active="<?php echo $s['is_active']; ?>"
+                                            data-bs-toggle="modal" data-bs-target="#shiftModal">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-danger deleteShiftBtn" 
+                                            data-id="<?php echo $s['id']; ?>" 
+                                            data-name="<?php echo h($s['shift_name']); ?>"
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -197,6 +248,108 @@ if ($selected_branch_id && $start_date && $end_date) {
         </div>
     </div>
 </div>
+
+<!-- Add/Edit Shift Modal -->
+<div class="modal fade" id="shiftModal" tabindex="-1" aria-labelledby="shiftModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="shiftModalLabel">Add/Edit Shift</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="shift_id" id="shift_id">
+        <div class="mb-3">
+          <label for="shift_name" class="form-label">Shift Name</label>
+          <input type="text" class="form-control" name="shift_name" id="shift_name" required>
+        </div>
+        <div class="mb-3">
+          <label for="start_time" class="form-label">Start Time</label>
+          <input type="time" class="form-control" name="start_time" id="start_time" required>
+        </div>
+        <div class="mb-3">
+          <label for="end_time" class="form-label">End Time</label>
+          <input type="time" class="form-control" name="end_time" id="end_time" required>
+        </div>
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea class="form-control" name="description" id="description"></textarea>
+        </div>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" name="is_active" id="is_active">
+          <label class="form-check-label" for="is_active">Active</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary" name="add_shift" id="addShiftSubmit">Add Shift</button>
+        <button type="submit" class="btn btn-primary d-none" name="edit_shift" id="editShiftSubmit">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Delete Shift</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="shift_id" id="delete_shift_id">
+        <p>Are you sure you want to delete <strong id="delete_shift_name"></strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-danger" name="delete_shift">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Add/Edit Modal logic
+const shiftModal = document.getElementById('shiftModal');
+const addShiftBtn = document.getElementById('addShiftBtn');
+const shiftModalLabel = document.getElementById('shiftModalLabel');
+const addShiftSubmit = document.getElementById('addShiftSubmit');
+const editShiftSubmit = document.getElementById('editShiftSubmit');
+
+if (addShiftBtn) {
+  addShiftBtn.addEventListener('click', function() {
+    shiftModalLabel.textContent = 'Add Shift';
+    addShiftSubmit.classList.remove('d-none');
+    editShiftSubmit.classList.add('d-none');
+    document.getElementById('shift_id').value = '';
+    document.getElementById('shift_name').value = '';
+    document.getElementById('start_time').value = '';
+    document.getElementById('end_time').value = '';
+    document.getElementById('description').value = '';
+    document.getElementById('is_active').checked = true;
+  });
+}
+document.querySelectorAll('.editShiftBtn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    shiftModalLabel.textContent = 'Edit Shift';
+    addShiftSubmit.classList.add('d-none');
+    editShiftSubmit.classList.remove('d-none');
+    document.getElementById('shift_id').value = btn.getAttribute('data-id');
+    document.getElementById('shift_name').value = btn.getAttribute('data-name');
+    document.getElementById('start_time').value = btn.getAttribute('data-start');
+    document.getElementById('end_time').value = btn.getAttribute('data-end');
+    document.getElementById('description').value = btn.getAttribute('data-desc');
+    document.getElementById('is_active').checked = btn.getAttribute('data-active') == '1';
+  });
+});
+// Delete Modal logic
+const deleteModal = document.getElementById('deleteModal');
+document.querySelectorAll('.deleteShiftBtn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.getElementById('delete_shift_id').value = btn.getAttribute('data-id');
+    document.getElementById('delete_shift_name').textContent = btn.getAttribute('data-name');
+  });
+});
+</script>
 </body>
 </html> 
