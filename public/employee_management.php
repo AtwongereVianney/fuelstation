@@ -12,6 +12,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_employee'])) {
     $phone = trim($_POST['phone'] ?? '');
     $branch_id = intval($_POST['branch_id'] ?? 0);
     $status = $_POST['status'] === 'active' ? 'active' : 'inactive';
+    $username = '';
+    if ($email) {
+        $username = explode('@', $email)[0];
+        // Optionally, ensure uniqueness by appending a number if needed
+        $base_username = $username;
+        $i = 1;
+        $check_username_sql = "SELECT id FROM users WHERE username=? LIMIT 1";
+        $check_username_stmt = mysqli_prepare($conn, $check_username_sql);
+        while (true) {
+            mysqli_stmt_bind_param($check_username_stmt, 's', $username);
+            mysqli_stmt_execute($check_username_stmt);
+            $check_username_result = mysqli_stmt_get_result($check_username_stmt);
+            if (!mysqli_fetch_assoc($check_username_result)) break;
+            $username = $base_username . $i;
+            $i++;
+        }
+        mysqli_stmt_close($check_username_stmt);
+    }
     if ($first_name && $last_name && $email) {
         $check_sql = "SELECT id FROM users WHERE email=? AND deleted_at IS NULL LIMIT 1";
         $check_stmt = mysqli_prepare($conn, $check_sql);
@@ -21,9 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_employee'])) {
         if (mysqli_fetch_assoc($check_result)) {
             $add_errors[] = 'Email already exists.';
         } else {
-            $insert_sql = "INSERT INTO users (first_name, last_name, email, phone, branch_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+            $insert_sql = "INSERT INTO users (username, first_name, last_name, email, phone, branch_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
             $insert_stmt = mysqli_prepare($conn, $insert_sql);
-            mysqli_stmt_bind_param($insert_stmt, 'ssssis', $first_name, $last_name, $email, $phone, $branch_id, $status);
+            mysqli_stmt_bind_param($insert_stmt, 'sssssis', $username, $first_name, $last_name, $email, $phone, $branch_id, $status);
             if (mysqli_stmt_execute($insert_stmt)) {
                 $add_success = true;
             } else {

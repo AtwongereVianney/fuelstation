@@ -49,7 +49,7 @@ if ($selected_branch_id && $start_date && $end_date) {
 
 // Fetch shifts and users for dropdowns
 $shifts = [];
-$res = mysqli_query($conn, "SELECT id, shift_name FROM shifts WHERE branch_id = $selected_branch_id AND deleted_at IS NULL ORDER BY start_time");
+$res = mysqli_query($conn, "SELECT id, shift_name, start_time, end_time FROM shifts WHERE branch_id = $selected_branch_id AND deleted_at IS NULL ORDER BY start_time");
 if ($res) while ($row = mysqli_fetch_assoc($res)) $shifts[] = $row;
 $users = [];
 $res = mysqli_query($conn, "SELECT id, first_name, last_name FROM users WHERE branch_id = $selected_branch_id AND deleted_at IS NULL ORDER BY first_name, last_name");
@@ -75,6 +75,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['assign_shift'])) {
             $sql = "INSERT INTO shift_assignments (shift_id, user_id, assignment_date, status, notes, opening_cash, closing_cash, cash_difference, clock_in_time, clock_out_time, total_hours, total_sales) VALUES ($shift_id, $user_id, '$assignment_date', '$status', '$notes', $opening_cash, $closing_cash, $cash_difference, '$clock_in_time', '$clock_out_time', $total_hours, $total_sales)";
             mysqli_query($conn, $sql);
+
+            // Fetch user email and shift details
+            $user_email = '';
+            $user_name = '';
+            $shift_name = '';
+            $shift_time = '';
+            $user_res = mysqli_query($conn, "SELECT email, first_name, last_name FROM users WHERE id = $user_id LIMIT 1");
+            if ($user_row = mysqli_fetch_assoc($user_res)) {
+                $user_email = $user_row['email'];
+                $user_name = $user_row['first_name'] . ' ' . $user_row['last_name'];
+            }
+            $shift_res = mysqli_query($conn, "SELECT shift_name, start_time, end_time FROM shifts WHERE id = $shift_id LIMIT 1");
+            if ($shift_row = mysqli_fetch_assoc($shift_res)) {
+                $shift_name = $shift_row['shift_name'];
+                $shift_time = $shift_row['start_time'] . ' - ' . $shift_row['end_time'];
+            }
+
+            // Send email notification
+            if ($user_email) {
+                $subject = "Shift Assignment Notification";
+                $message = "Dear $user_name,\n\nYou have been assigned to the shift: $shift_name on $assignment_date ($shift_time).\n\nPlease report accordingly.\n\nThank you.";
+                $headers = "From: no-reply@yourdomain.com\r\n";
+                mail($user_email, $subject, $message, $headers);
+            }
         } elseif (isset($_POST['edit_assignment'])) {
             $sql = "UPDATE shift_assignments SET shift_id=$shift_id, user_id=$user_id, assignment_date='$assignment_date', status='$status', notes='$notes', opening_cash=$opening_cash, closing_cash=$closing_cash, cash_difference=$cash_difference, clock_in_time='$clock_in_time', clock_out_time='$clock_out_time', total_hours=$total_hours, total_sales=$total_sales WHERE id=$assignment_id";
             mysqli_query($conn, $sql);
@@ -276,7 +300,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="form-label">Shift</label>
           <select class="form-select" name="shift_id" id="shift_id" required>
             <?php foreach ($shifts as $s): ?>
-              <option value="<?php echo $s['id']; ?>"><?php echo h($s['shift_name']); ?></option>
+              <option 
+                value="<?php echo $s['id']; ?>"
+                data-start_time="<?php echo h($s['start_time']); ?>"
+                data-end_time="<?php echo h($s['end_time']); ?>"
+              >
+                <?php echo h($s['shift_name']); ?>
+              </option>
             <?php endforeach; ?>
           </select>
         </div>
@@ -411,6 +441,55 @@ document.querySelectorAll('.deleteAssignmentBtn').forEach(function(btn) {
     document.getElementById('delete_assignment_id').value = btn.getAttribute('data-id');
   });
 });
+
+// Auto-fill Clock In/Out when shift is selected
+document.getElementById('shift_id').addEventListener('change', function() {
+  var selected = this.options[this.selectedIndex];
+  var start = selected.getAttribute('data-start_time');
+  var end = selected.getAttribute('data-end_time');
+  if (start) document.getElementById('clock_in_time').value = start;
+  if (end) document.getElementById('clock_out_time').value = end;
+});
+
+// Also trigger when opening the modal for Assign Shift
+if (assignShiftBtn) {
+  assignShiftBtn.addEventListener('click', function() {
+    var shiftSelect = document.getElementById('shift_id');
+    var selected = shiftSelect.options[shiftSelect.selectedIndex];
+    var start = selected.getAttribute('data-start_time');
+    var end = selected.getAttribute('data-end_time');
+    if (start) document.getElementById('clock_in_time').value = start;
+    if (end) document.getElementById('clock_out_time').value = end;
+  });
+}
+
+function calculateTotalHours() {
+  var inTime = document.getElementById('clock_in_time').value;
+  var outTime = document.getElementById('clock_out_time').value;
+  var totalHoursField = document.getElementById('total_hours');
+  if (inTime && outTime) {
+    // Parse times as Date objects on the same day
+    var today = new Date().toISOString().split('T')[0];
+    var inDate = new Date(today + 'T' + inTime);
+    var outDate = new Date(today + 'T' + outTime);
+    var diffMs = outDate - inDate;
+    var diffHrs = diffMs / (1000 * 60 * 60);
+    // If negative (overnight shift), add 24 hours
+    if (diffHrs < 0) diffHrs += 24;
+    totalHoursField.value = diffHrs.toFixed(2);
+  } else {
+    totalHoursField.value = '';
+  }
+}
+
+document.getElementById('clock_in_time').addEventListener('change', calculateTotalHours);
+document.getElementById('clock_out_time').addEventListener('change', calculateTotalHours);
+
+// Also call after autofill (when shift is selected or modal is opened)
+document.getElementById('shift_id').addEventListener('change', calculateTotalHours);
+if (assignShiftBtn) {
+  assignShiftBtn.addEventListener('click', calculateTotalHours);
+}
 </script>
 </body>
 </html> 
