@@ -64,6 +64,56 @@ function has_permission($perm) {
                     <span class="navbar-text">Welcome, <?php echo htmlspecialchars($username); ?> (<?php echo htmlspecialchars($role_display); ?>)</span>
                 </div>
             </nav>
+            <!-- Quick Start Section -->
+            <div class="mb-4">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <h5 class="card-title mb-3"><i class="bi bi-lightning-charge-fill text-warning"></i> Quick Start</h5>
+                  <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                      <a href="sales/handle_action.php" class="btn btn-outline-primary w-100 py-3">
+                        <i class="bi bi-cash-coin fs-3"></i><br>New Sale
+                      </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <a href="purchases/handle_action.php" class="btn btn-outline-success w-100 py-3">
+                        <i class="bi bi-bag-plus fs-3"></i><br>New Purchase
+                      </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <a href="employee_management.php" class="btn btn-outline-info w-100 py-3">
+                        <i class="bi bi-person-plus fs-3"></i><br>Add Employee
+                      </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <a href="reports.php" class="btn btn-outline-dark w-100 py-3">
+                        <i class="bi bi-bar-chart-line fs-3"></i><br>View Reports
+                      </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <a href="expenses.php" class="btn btn-outline-warning w-100 py-3">
+                        <i class="bi bi-currency-exchange fs-3"></i><br>Add Expense
+                      </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <a href="shift_assignments.php" class="btn btn-outline-secondary w-100 py-3">
+                        <i class="bi bi-clock-history fs-3"></i><br>Assign Shift
+                      </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <a href="storage_tanks/" class="btn btn-outline-danger w-100 py-3">
+                        <i class="bi bi-droplet-half fs-3"></i><br>Storage Tanks
+                      </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <a href="notifications.php" class="btn btn-outline-primary w-100 py-3">
+                        <i class="bi bi-bell fs-3"></i><br>Notifications
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="row g-4 mb-4">
                 <?php
                 // Users, Roles, Permissions, Branches (super admin only)
@@ -142,32 +192,6 @@ function has_permission($perm) {
                     $notif_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM notifications WHERE deleted_at IS NULL AND (user_id = $user_id OR user_id IS NULL)"))[0];
                 ?>
                     <div class="col-md-3"><div class="card text-bg-light h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-bell me-2"></i>Notifications</h5><p class="card-text display-6 fw-bold"><?php echo $notif_count; ?></p><a href="#" class="btn btn-link p-0 mt-2">View Details</a></div></div></div>
-                <?php }
-                // Staff Attendance
-                if (has_permission('attendance.view')) {
-                    $present = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM attendance WHERE date = CURDATE() AND status = 'present'"))[0];
-                    $absent = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM attendance WHERE date = CURDATE() AND status = 'absent'"))[0];
-                    $total = $present + $absent;
-                ?>
-                    <div class="col-md-3"><div class="card text-bg-secondary h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-user-check me-2"></i>Attendance</h5><p class="card-text display-6 fw-bold"><?php echo "$present / $total Present"; ?></p><a href="#" class="btn btn-link p-0 mt-2">View Details</a></div></div></div>
-                <?php }
-                // Pump Readings
-                if (has_permission('pump_readings.view')) {
-                    $today_readings = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM pump_readings WHERE reading_date = CURDATE()"))[0];
-                ?>
-                    <div class="col-md-3"><div class="card text-bg-info h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-tachometer-alt me-2"></i>Pump Readings</h5><p class="card-text display-6 fw-bold"><?php echo $today_readings; ?> Today</p><a href="#" class="btn btn-link p-0 mt-2">View Details</a></div></div></div>
-                <?php }
-                // Supplier Deliveries
-                if (has_permission('supplier_deliveries.view')) {
-                    $month_deliveries = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM supplier_deliveries WHERE MONTH(delivery_date) = MONTH(CURDATE()) AND YEAR(delivery_date) = YEAR(CURDATE())"))[0];
-                ?>
-                    <div class="col-md-3"><div class="card text-bg-success h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-truck me-2"></i>Supplier Deliveries</h5><p class="card-text display-6 fw-bold"><?php echo $month_deliveries; ?> This Month</p><a href="#" class="btn btn-link p-0 mt-2">View Details</a></div></div></div>
-                <?php }
-                // Customer Feedback
-                if (has_permission('customer_feedback.view')) {
-                    $unread_feedback = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM customer_feedback WHERE status = 'unread'"))[0];
-                ?>
-                    <div class="col-md-3"><div class="card text-bg-warning h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-comment-dots me-2"></i>Feedback</h5><p class="card-text display-6 fw-bold"><?php echo $unread_feedback; ?> New</p><a href="#" class="btn btn-link p-0 mt-2">View Details</a></div></div></div>
                 <?php }
                 // Price Changes
                 if (has_permission('fuel_prices.view')) {
