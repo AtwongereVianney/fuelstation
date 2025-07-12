@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     $sql = "INSERT INTO storage_tanks (branch_id, fuel_type_id, tank_number, capacity, current_level, status) VALUES ($branch_id, $fuel_type_id, '$tank_number', $capacity, $current_level, '$status')";
     mysqli_query($conn, $sql);
-    header("Location: fuel_type_info.php?fuel_type_id=$fuel_type_id");
+    header("Location: fuel_type_info.php?fuel_type_id=$fuel_type_id&branch_id=$branch_id&active_tab=tanks");
     exit;
 }
 
@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     $sql = "UPDATE storage_tanks SET branch_id = $branch_id, tank_number = '$tank_number', capacity = $capacity, current_level = $current_level, status = '$status' WHERE id = $tank_id";
     mysqli_query($conn, $sql);
-    header("Location: fuel_type_info.php?fuel_type_id=$fuel_type_id");
+    header("Location: fuel_type_info.php?fuel_type_id=$fuel_type_id&branch_id=$branch_id&active_tab=tanks");
     exit;
 }
 
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $fuel_type_id = intval($_POST['fuel_type_id']);
     $sql = "UPDATE storage_tanks SET deleted_at = NOW() WHERE id = $tank_id";
     mysqli_query($conn, $sql);
-    header("Location: fuel_type_info.php?fuel_type_id=$fuel_type_id");
+    header("Location: fuel_type_info.php?fuel_type_id=$fuel_type_id&branch_id=$branch_id&active_tab=tanks");
     exit;
 }
 ?>
@@ -1237,6 +1237,19 @@ if (document.getElementById('sale_unit_price<?php echo $s['id']; ?>')) {
 }
 <?php endforeach; ?>
 // ... existing code ...
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const activeTab = urlParams.get('active_tab');
+  if (activeTab) {
+    const tabTrigger = document.querySelector(`[data-bs-target="#${activeTab}"]`);
+    if (tabTrigger) {
+      var tab = new bootstrap.Tab(tabTrigger);
+      tab.show();
+    }
+  }
+});
 </script>
 </body>
 </html> 

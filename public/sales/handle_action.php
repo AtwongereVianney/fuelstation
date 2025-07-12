@@ -33,6 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sql = "UPDATE sales_transactions SET deleted_at=NOW() WHERE id=$id";
         mysqli_query($conn, $sql);
     }
-    header("Location: ../fuel_type_info.php?branch_id=$branch_id&fuel_type_id=$fuel_type_id");
+    header("Location: ../fuel_type_info.php?branch_id=$branch_id&fuel_type_id=$fuel_type_id&active_tab=sales");
     exit;
 } 
