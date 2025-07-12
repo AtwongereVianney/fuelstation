@@ -22,6 +22,16 @@ if ($fuel_result) {
         $fuel_types[] = $row;
     }
 }
+// Fetch all suppliers for dropdown
+$suppliers = [];
+$supplier_sql = "SELECT id, name FROM suppliers WHERE deleted_at IS NULL ORDER BY name";
+$supplier_result = mysqli_query($conn, $supplier_sql);
+if ($supplier_result) {
+    while ($row = mysqli_fetch_assoc($supplier_result)) {
+        $suppliers[] = $row;
+    }
+}
+
 $selected_fuel_id = isset($_GET['fuel_type_id']) ? intval($_GET['fuel_type_id']) : ($fuel_types[0]['id'] ?? null);
 $selected_fuel = null;
 foreach ($fuel_types as $ft) {
@@ -534,7 +544,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <div class="modal-body">
           <div class="mb-2">
             <label class="form-label">Supplier</label>
-            <input type="text" name="supplier_id" class="form-control" required>
+            <select name="supplier_id" class="form-select" required>
+              <option value="">Select Supplier</option>
+              <?php foreach ($suppliers as $s): ?>
+                <option value="<?php echo $s['id']; ?>"><?php echo htmlspecialchars($s['name']); ?></option>
+              <?php endforeach; ?>
+            </select>
           </div>
           <div class="mb-2">
             <label class="form-label">Delivery Date</label>
@@ -581,7 +596,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <div class="modal-body">
           <div class="mb-2">
             <label class="form-label">Supplier</label>
-            <input type="text" name="supplier_id" class="form-control" value="<?php echo h($p['supplier_id']); ?>" required>
+            <select name="supplier_id" class="form-select" required>
+              <option value="">Select Supplier</option>
+              <?php foreach ($suppliers as $s): ?>
+                <option value="<?php echo $s['id']; ?>" <?php if ($s['id'] == $p['supplier_id']) echo 'selected'; ?>>
+                  <?php echo htmlspecialchars($s['name']); ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
           </div>
           <div class="mb-2">
             <label class="form-label">Delivery Date</label>
