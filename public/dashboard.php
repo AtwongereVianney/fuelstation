@@ -494,5 +494,44 @@ mysqli_stmt_close($stmt);
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Accordion behavior: only one section open at a time
+  document.querySelectorAll('.sidebar-heading[data-bs-toggle="collapse"]').forEach(function(heading) {
+    heading.addEventListener('click', function() {
+      document.querySelectorAll('.sidebar-heading[data-bs-toggle="collapse"]').forEach(function(other) {
+        if (other !== heading) {
+          let target = document.querySelector(other.getAttribute('data-bs-target'));
+          if (target && target.classList.contains('show')) {
+            new bootstrap.Collapse(target, {toggle: true}).hide();
+            other.classList.add('collapsed');
+            // Set arrow to down
+            let arrow = other.querySelector('.collapse-arrow');
+            if (arrow) {
+              arrow.classList.remove('bi-caret-up-fill');
+              arrow.classList.add('bi-caret-down-fill');
+            }
+          }
+        }
+      });
+      heading.classList.toggle('collapsed');
+      // Toggle arrow direction
+      let arrow = heading.querySelector('.collapse-arrow');
+      if (arrow) {
+        arrow.classList.toggle('bi-caret-down-fill');
+        arrow.classList.toggle('bi-caret-up-fill');
+      }
+    });
+  });
+  // Sidebar expand/collapse toggle
+  var sidebarToggle = document.getElementById('sidebarToggle');
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', function(e) {
+      e.stopPropagation();
+      document.querySelector('.sidebar').classList.toggle('collapsed');
+    });
+  }
+});
+</script>
 </body>
 </html> 
