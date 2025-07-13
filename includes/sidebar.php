@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/auth_helpers.php';
 $sidebar_branches = [];
 $sidebar_branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
 $sidebar_branch_result = mysqli_query($conn, $sidebar_branch_sql);
@@ -121,11 +122,11 @@ if ($sidebar_branch_result) {
                     </div>
       <div class="collapse" id="userMgmt" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/user.php"><i class="bi bi-person"></i><span>Users</span></a></li>
-          <li><a class="nav-link" href="../public/manage_roles.php"><i class="bi bi-person-badge"></i><span>Roles</span></a></li>
-          <li><a class="nav-link" href="../public/manage_permissions.php"><i class="bi bi-shield-lock"></i><span>Permissions</span></a></li>
-          <li><a class="nav-link" href="../public/manage_role_permissions.php"><i class="bi bi-shield-check"></i><span>Role Permissions</span></a></li>
-          <li><a class="nav-link" href="../public/employee_management.php"><i class="bi bi-person-workspace"></i><span>Employee Management</span></a></li>
+          <?php if (has_permission('users.view')): ?><li><a class="nav-link" href="../public/user.php"><i class="bi bi-person"></i><span>Users</span></a></li><?php endif; ?>
+          <?php if (has_permission('roles.view')): ?><li><a class="nav-link" href="../public/manage_roles.php"><i class="bi bi-person-badge"></i><span>Roles</span></a></li><?php endif; ?>
+          <?php if (has_permission('permissions.view')): ?><li><a class="nav-link" href="../public/manage_permissions.php"><i class="bi bi-shield-lock"></i><span>Permissions</span></a></li><?php endif; ?>
+          <?php if (has_permission('role_permissions.view')): ?><li><a class="nav-link" href="../public/manage_role_permissions.php"><i class="bi bi-shield-check"></i><span>Role Permissions</span></a></li><?php endif; ?>
+          <?php if (has_permission('users.view') || has_permission('employee_management.view')): ?><li><a class="nav-link" href="../public/employee_management.php"><i class="bi bi-person-workspace"></i><span>Employee Management</span></a></li><?php endif; ?>
         </ul>
                 </div>
       <hr class="sidebar-divider border-secondary m-0">
@@ -136,10 +137,12 @@ if ($sidebar_branch_result) {
                     </div>
       <div class="collapse" id="businessBranches" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/branch_dashboard.php"><i class="bi bi-diagram-3"></i><span>All Branches Dashboard</span></a></li>
+          <?php if (has_permission('branches.view')): ?><li><a class="nav-link" href="../public/branch_dashboard.php"><i class="bi bi-diagram-3"></i><span>All Branches Dashboard</span></a></li><?php endif; ?>
+          <?php if (has_permission('branches.view')): ?>
           <?php foreach ($sidebar_branches as $branch): ?>
             <li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=<?php echo $branch['id']; ?>"><i class="bi bi-building"></i><span><?php echo htmlspecialchars($branch['branch_name']); ?></span></a></li>
           <?php endforeach; ?>
+          <?php endif; ?>
         </ul>
                 </div>
       <hr class="sidebar-divider border-secondary m-0">
@@ -150,7 +153,7 @@ if ($sidebar_branch_result) {
                     </div>
       <div class="collapse" id="inventory" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/fuel_type_info.php"><i class="bi bi-droplet-half"></i><span>Fuel Types</span></a></li>
+          <?php if (has_permission('fuel_types.view')): ?><li><a class="nav-link" href="../public/fuel_type_info.php"><i class="bi bi-droplet-half"></i><span>Fuel Types</span></a></li><?php endif; ?>
         </ul>
                 </div>
       <hr class="sidebar-divider border-secondary m-0">
@@ -161,10 +164,10 @@ if ($sidebar_branch_result) {
                     </div>
       <div class="collapse" id="financial" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/daily_sales_summary.php"><i class="bi bi-graph-up"></i><span>Daily Sales Summary</span></a></li>
-          <li><a class="nav-link" href="../public/expenses.php"><i class="bi bi-receipt"></i><span>Expenses</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-cash"></i><span>Cash Float</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-bank"></i><span>Bank Reconciliation</span></a></li>
+          <?php if (has_permission('daily_sales_summary.view')): ?><li><a class="nav-link" href="../public/daily_sales_summary.php"><i class="bi bi-graph-up"></i><span>Daily Sales Summary</span></a></li><?php endif; ?>
+          <?php if (has_permission('expenses.view')): ?><li><a class="nav-link" href="../public/expenses.php"><i class="bi bi-receipt"></i><span>Expenses</span></a></li><?php endif; ?>
+          <?php if (has_permission('cash_float.view')): ?><li><a class="nav-link" href="#"><i class="bi bi-cash"></i><span>Cash Float</span></a></li><?php endif; ?>
+          <?php if (has_permission('bank_reconciliation.view')): ?><li><a class="nav-link" href="#"><i class="bi bi-bank"></i><span>Bank Reconciliation</span></a></li><?php endif; ?>
         </ul>
                 </div>
       <hr class="sidebar-divider border-secondary m-0">
@@ -175,8 +178,8 @@ if ($sidebar_branch_result) {
                     </div>
       <div class="collapse" id="shiftMgmt" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/shifts.php"><i class="bi bi-clock"></i><span>Shifts</span></a></li>
-          <li><a class="nav-link" href="../public/shift_assignments.php"><i class="bi bi-person-lines-fill"></i><span>Shift Assignments</span></a></li>
+          <?php if (has_permission('shifts.view')): ?><li><a class="nav-link" href="../public/shifts.php"><i class="bi bi-clock"></i><span>Shifts</span></a></li><?php endif; ?>
+          <?php if (has_permission('shift_assignments.view')): ?><li><a class="nav-link" href="../public/shift_assignments.php"><i class="bi bi-person-lines-fill"></i><span>Shift Assignments</span></a></li><?php endif; ?>
         </ul>
                 </div>
       <hr class="sidebar-divider border-secondary m-0">
@@ -187,10 +190,10 @@ if ($sidebar_branch_result) {
                     </div>
       <div class="collapse" id="maintenance" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="#"><i class="bi bi-gear"></i><span>Equipment Maintenance</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-clipboard-check"></i><span>Regulatory Compliance</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-droplet"></i><span>Fuel Quality Tests</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-exclamation-triangle"></i><span>Safety Incidents</span></a></li>
+          <?php if (has_permission('equipment_maintenance.view')): ?><li><a class="nav-link" href="#"><i class="bi bi-gear"></i><span>Equipment Maintenance</span></a></li><?php endif; ?>
+          <?php if (has_permission('regulatory_compliance.view')): ?><li><a class="nav-link" href="#"><i class="bi bi-clipboard-check"></i><span>Regulatory Compliance</span></a></li><?php endif; ?>
+          <?php if (has_permission('fuel_quality_tests.view')): ?><li><a class="nav-link" href="#"><i class="bi bi-droplet"></i><span>Fuel Quality Tests</span></a></li><?php endif; ?>
+          <?php if (has_permission('safety_incidents.view')): ?><li><a class="nav-link" href="#"><i class="bi bi-exclamation-triangle"></i><span>Safety Incidents</span></a></li><?php endif; ?>
         </ul>
                 </div>
       <hr class="sidebar-divider border-secondary m-0">
@@ -201,8 +204,8 @@ if ($sidebar_branch_result) {
                     </div>
       <div class="collapse" id="reporting" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/reports.php"><i class="bi bi-file-earmark-bar-graph"></i><span>Reports</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-credit-card"></i><span>Outstanding Credit</span></a></li>
+          <?php if (has_permission('reports.view')): ?><li><a class="nav-link" href="../public/reports.php"><i class="bi bi-file-earmark-bar-graph"></i><span>Reports</span></a></li><?php endif; ?>
+          <?php if (has_permission('outstanding_credit.view')): ?><li><a class="nav-link" href="#"><i class="bi bi-credit-card"></i><span>Outstanding Credit</span></a></li><?php endif; ?>
         </ul>
                 </div>
       <hr class="sidebar-divider border-secondary m-0">
@@ -213,9 +216,9 @@ if ($sidebar_branch_result) {
                     </div>
       <div class="collapse" id="system" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="#"><i class="bi bi-sliders"></i><span>System Settings</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-journal-text"></i><span>Audit Logs</span></a></li>
-          <li><a class="nav-link" href="../public/notifications.php"><i class="bi bi-bell"></i><span>Notifications</span></a></li>
+          <?php if (has_permission('system_settings.view')): ?><li><a class="nav-link" href="#"><i class="bi bi-sliders"></i><span>System Settings</span></a></li><?php endif; ?>
+          <?php if (has_permission('audit_logs.view')): ?><li><a class="nav-link" href="#"><i class="bi bi-journal-text"></i><span>Audit Logs</span></a></li><?php endif; ?>
+          <?php if (has_permission('notifications.view')): ?><li><a class="nav-link" href="../public/notifications.php"><i class="bi bi-bell"></i><span>Notifications</span></a></li><?php endif; ?>
         </ul>
       </div>
       <hr class="sidebar-divider border-secondary m-0">

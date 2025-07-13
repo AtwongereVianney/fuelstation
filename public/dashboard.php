@@ -27,11 +27,6 @@ while ($row = mysqli_fetch_assoc($result)) {
 }
 mysqli_stmt_close($stmt);
 
-function has_permission($perm) {
-    global $user_permissions, $role;
-    return $role === 'super_admin' || in_array($perm, $user_permissions);
-}
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
