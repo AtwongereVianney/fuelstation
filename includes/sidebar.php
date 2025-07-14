@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/db_connect.php';
+require_once __DIR__ . '/auth_helpers.php';
 $sidebar_branches = [];
 $sidebar_branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
 $sidebar_branch_result = mysqli_query($conn, $sidebar_branch_sql);
@@ -8,6 +9,7 @@ if ($sidebar_branch_result) {
         $sidebar_branches[] = $row;
     }
 }
+$sidebarModules = get_accessible_sidebar_modules();
 ?>
 <!--
   Sidebar Component for Petrol Station
@@ -112,113 +114,34 @@ if ($sidebar_branch_result) {
         <button id="sidebarToggle" class="btn btn-outline-secondary btn-sm ms-2 py-0 px-2 d-inline-flex align-items-center" style="line-height:1.1; height:1.8em;">
             <i class="bi bi-list"></i>
         </button>
-                </div>
-      <hr class="sidebar-divider border-secondary m-0">
-
-      <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#userMgmt" aria-expanded="false" aria-controls="userMgmt">
-        <i class="bi bi-people"></i><span>User Management</span>
-        <span class="collapse-arrow bi bi-caret-down-fill"></span>
-                    </div>
-      <div class="collapse" id="userMgmt" data-bs-parent=".sidebar">
-        <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/user.php"><i class="bi bi-person"></i><span>Users</span></a></li>
-          <li><a class="nav-link" href="../public/manage_roles.php"><i class="bi bi-person-badge"></i><span>Roles</span></a></li>
-          <li><a class="nav-link" href="../public/manage_permissions.php"><i class="bi bi-shield-lock"></i><span>Permissions</span></a></li>
-          <li><a class="nav-link" href="../public/manage_role_permissions.php"><i class="bi bi-shield-check"></i><span>Role Permissions</span></a></li>
-          <li><a class="nav-link" href="../public/employee_management.php"><i class="bi bi-person-workspace"></i><span>Employee Management</span></a></li>
-        </ul>
-                </div>
-      <hr class="sidebar-divider border-secondary m-0">
-
-      <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#businessBranches" aria-expanded="false" aria-controls="businessBranches">
-        <i class="bi bi-building"></i><span>Business & Branches</span>
-        <span class="collapse-arrow bi bi-caret-down-fill"></span>
-                    </div>
-      <div class="collapse" id="businessBranches" data-bs-parent=".sidebar">
-        <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/branch_dashboard.php"><i class="bi bi-diagram-3"></i><span>All Branches Dashboard</span></a></li>
-          <?php foreach ($sidebar_branches as $branch): ?>
-            <li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=<?php echo $branch['id']; ?>"><i class="bi bi-building"></i><span><?php echo htmlspecialchars($branch['branch_name']); ?></span></a></li>
-          <?php endforeach; ?>
-        </ul>
-                </div>
-      <hr class="sidebar-divider border-secondary m-0">
-
-      <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#inventory" aria-expanded="false" aria-controls="inventory">
-        <i class="bi bi-box-seam"></i><span>Inventory</span>
-        <span class="collapse-arrow bi bi-caret-down-fill"></span>
-                    </div>
-      <div class="collapse" id="inventory" data-bs-parent=".sidebar">
-        <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/fuel_type_info.php"><i class="bi bi-droplet-half"></i><span>Fuel Types</span></a></li>
-        </ul>
-                </div>
-      <hr class="sidebar-divider border-secondary m-0">
-
-      <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#financial" aria-expanded="false" aria-controls="financial">
-        <i class="bi bi-cash-stack"></i><span>Financial</span>
-        <span class="collapse-arrow bi bi-caret-down-fill"></span>
-                    </div>
-      <div class="collapse" id="financial" data-bs-parent=".sidebar">
-        <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/daily_sales_summary.php"><i class="bi bi-graph-up"></i><span>Daily Sales Summary</span></a></li>
-          <li><a class="nav-link" href="../public/expenses.php"><i class="bi bi-receipt"></i><span>Expenses</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-cash"></i><span>Cash Float</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-bank"></i><span>Bank Reconciliation</span></a></li>
-        </ul>
-                </div>
-      <hr class="sidebar-divider border-secondary m-0">
-
-      <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#shiftMgmt" aria-expanded="false" aria-controls="shiftMgmt">
-        <i class="bi bi-clock-history"></i><span>Shift Management</span>
-        <span class="collapse-arrow bi bi-caret-down-fill"></span>
-                    </div>
-      <div class="collapse" id="shiftMgmt" data-bs-parent=".sidebar">
-        <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/shifts.php"><i class="bi bi-clock"></i><span>Shifts</span></a></li>
-          <li><a class="nav-link" href="../public/shift_assignments.php"><i class="bi bi-person-lines-fill"></i><span>Shift Assignments</span></a></li>
-        </ul>
-                </div>
-      <hr class="sidebar-divider border-secondary m-0">
-
-      <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#maintenance" aria-expanded="false" aria-controls="maintenance">
-        <i class="bi bi-tools"></i><span>Maintenance & Compliance</span>
-        <span class="collapse-arrow bi bi-caret-down-fill"></span>
-                    </div>
-      <div class="collapse" id="maintenance" data-bs-parent=".sidebar">
-        <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="#"><i class="bi bi-gear"></i><span>Equipment Maintenance</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-clipboard-check"></i><span>Regulatory Compliance</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-droplet"></i><span>Fuel Quality Tests</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-exclamation-triangle"></i><span>Safety Incidents</span></a></li>
-        </ul>
-                </div>
-      <hr class="sidebar-divider border-secondary m-0">
-
-      <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#reporting" aria-expanded="false" aria-controls="reporting">
-        <i class="bi bi-bar-chart"></i><span>Reporting & Analytics</span>
-        <span class="collapse-arrow bi bi-caret-down-fill"></span>
-                    </div>
-      <div class="collapse" id="reporting" data-bs-parent=".sidebar">
-        <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="../public/reports.php"><i class="bi bi-file-earmark-bar-graph"></i><span>Reports</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-credit-card"></i><span>Outstanding Credit</span></a></li>
-        </ul>
-                </div>
-      <hr class="sidebar-divider border-secondary m-0">
-
-      <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#system" aria-expanded="false" aria-controls="system">
-        <i class="bi bi-gear-wide-connected"></i><span>System</span>
-        <span class="collapse-arrow bi bi-caret-down-fill"></span>
-                    </div>
-      <div class="collapse" id="system" data-bs-parent=".sidebar">
-        <ul class="nav flex-column mb-2">
-          <li><a class="nav-link" href="#"><i class="bi bi-sliders"></i><span>System Settings</span></a></li>
-          <li><a class="nav-link" href="#"><i class="bi bi-journal-text"></i><span>Audit Logs</span></a></li>
-          <li><a class="nav-link" href="../public/notifications.php"><i class="bi bi-bell"></i><span>Notifications</span></a></li>
-        </ul>
       </div>
       <hr class="sidebar-divider border-secondary m-0">
+
+      <?php $collapseId = 0; ?>
+      <?php foreach ($sidebarModules as $module): ?>
+        <?php $collapseId++; $collapseTarget = 'collapse' . $collapseId; ?>
+        <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#<?php echo $collapseTarget; ?>" aria-expanded="false" aria-controls="<?php echo $collapseTarget; ?>">
+          <i class="bi <?php echo htmlspecialchars($module['icon']); ?>"></i><span><?php echo htmlspecialchars($module['section']); ?></span>
+          <span class="collapse-arrow bi bi-caret-down-fill"></span>
+        </div>
+        <div class="collapse" id="<?php echo $collapseTarget; ?>" data-bs-parent=".sidebar">
+          <ul class="nav flex-column mb-2">
+            <?php if ($module['section'] === 'Business & Branches'): ?>
+              <li><a class="nav-link" href="../public/branch_dashboard.php"><i class="bi bi-diagram-3"></i><span>All Branches Dashboard</span></a></li>
+              <?php foreach ($sidebar_branches as $branch): ?>
+                <li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=<?php echo $branch['id']; ?>">
+                  <i class="bi bi-building"></i><span><?php echo htmlspecialchars($branch['branch_name']); ?></span></a></li>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <?php foreach ($module['links'] as $link): ?>
+                <li><a class="nav-link" href="<?php echo htmlspecialchars($link['url']); ?>">
+                  <i class="bi <?php echo htmlspecialchars($link['icon']); ?>"></i><span><?php echo htmlspecialchars($link['label']); ?></span></a></li>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </ul>
+        </div>
+        <hr class="sidebar-divider border-secondary m-0">
+      <?php endforeach; ?>
     </div>
     <div class="flex-shrink-0 mt-auto mb-2">
       <ul class="nav flex-column mb-2">
