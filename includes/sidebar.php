@@ -59,19 +59,19 @@ $sidebarModules = get_accessible_sidebar_modules();
 .main-content.collapsed {
     left: 64px;
     width: calc(100vw - 64px);
-}
-.sidebar .nav-link {
+  }
+  .sidebar .nav-link {
     color: #adb5bd;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.75em;
-}
-.sidebar .nav-link.active, .sidebar .nav-link:hover {
+  }
+  .sidebar .nav-link.active, .sidebar .nav-link:hover {
     color: #fff;
     background: #495057;
-}
-.sidebar .sidebar-heading {
+  }
+  .sidebar .sidebar-heading {
     padding: 1rem 1.5rem 0.5rem;
     font-size: 0.9rem;
     text-transform: uppercase;
@@ -82,44 +82,44 @@ $sidebarModules = get_accessible_sidebar_modules();
     display: flex;
     align-items: center;
     gap: 0.75em;
-}
-.sidebar .logout {
+  }
+  .sidebar .logout {
     position: absolute;
     bottom: 0;
     width: 100%;
-}
-.sidebar .collapse .nav-link {
+  }
+  .sidebar .collapse .nav-link {
     padding-left: 2.5rem;
 }
-.sidebar .sidebar-heading .collapse-arrow {
+  .sidebar .sidebar-heading .collapse-arrow {
     margin-left: auto;
     font-size: 1em;
     transition: transform 0.2s;
-}
-.sidebar .bi {
+  }
+  .sidebar .bi {
     font-size: 1.1em;
-}
-.sidebar-divider {
+  }
+  .sidebar-divider {
     border-top-width: 4px !important;
     opacity: 1;
-}
-.sidebar.collapsed .sidebar-heading span {
+  }
+  .sidebar.collapsed .sidebar-heading span {
     display: none !important;
-}
-.sidebar.collapsed .nav-link span {
+  }
+  .sidebar.collapsed .nav-link span {
     display: none !important;
-}
-.sidebar.collapsed .collapse-arrow {
+  }
+  .sidebar.collapsed .collapse-arrow {
     display: none !important;
-}
-.sidebar.collapsed .sidebar-heading {
+  }
+  .sidebar.collapsed .sidebar-heading {
     justify-content: center;
-}
-.sidebar.collapsed .nav-link {
+  }
+  .sidebar.collapsed .nav-link {
     justify-content: center;
-}
-.sidebar.collapsed .collapse,
-.sidebar.collapsed .collapsing {
+  }
+  .sidebar.collapsed .collapse,
+  .sidebar.collapsed .collapsing {
     display: none !important;
 }
 </style>

@@ -13,7 +13,7 @@ if (isset($_SESSION['user_id'])) {
     $is_super_admin = mysqli_num_rows($super_result) > 0;
 }
 if ($is_super_admin) {
-    $branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
+$branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
 } else if (isset($_SESSION['business_id'], $_SESSION['branch_id'])) {
     $user_business_id = $_SESSION['business_id'];
     $user_branch_id = $_SESSION['branch_id'];
