@@ -5,7 +5,22 @@ require_once '../includes/auth_helpers.php';
 
 // Fetch all branches for dropdown
 $branches = [];
-$branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
+$is_super_admin = false;
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+    $super_sql = "SELECT 1 FROM user_roles WHERE user_id = $user_id AND role_id = 1 AND deleted_at IS NULL LIMIT 1";
+    $super_result = mysqli_query($conn, $super_sql);
+    $is_super_admin = mysqli_num_rows($super_result) > 0;
+}
+if ($is_super_admin) {
+    $branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
+} else if (isset($_SESSION['business_id'], $_SESSION['branch_id'])) {
+    $user_business_id = $_SESSION['business_id'];
+    $user_branch_id = $_SESSION['branch_id'];
+    $branch_sql = "SELECT id, branch_name FROM branches WHERE id = $user_branch_id AND business_id = $user_business_id AND deleted_at IS NULL ORDER BY branch_name";
+} else {
+    $branch_sql = "SELECT id, branch_name FROM branches WHERE 0"; // No branches
+}
 $branch_result = mysqli_query($conn, $branch_sql);
 if ($branch_result) {
     while ($row = mysqli_fetch_assoc($branch_result)) {
@@ -23,6 +38,9 @@ $report_types = [
 
 // Get filters
 $selected_branch_id = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : ($branches[0]['id'] ?? null);
+if (!$is_super_admin && isset($_SESSION['branch_id'])) {
+    $selected_branch_id = $_SESSION['branch_id'];
+}
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
 

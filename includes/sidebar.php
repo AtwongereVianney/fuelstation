@@ -151,11 +151,29 @@ $sidebarModules = get_accessible_sidebar_modules();
         <div class="collapse" id="<?php echo $collapseTarget; ?>" data-bs-parent=".sidebar">
         <ul class="nav flex-column mb-2">
             <?php if ($module['section'] === 'Business & Branches'): ?>
-          <li><a class="nav-link" href="../public/branch_dashboard.php"><i class="bi bi-diagram-3"></i><span>All Branches Dashboard</span></a></li>
-          <?php foreach ($sidebar_branches as $branch): ?>
-                <li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=<?php echo $branch['id']; ?>">
-                  <i class="bi bi-building"></i><span><?php echo htmlspecialchars($branch['branch_name']); ?></span></a></li>
-              <?php endforeach; ?>
+          <?php
+            $is_super_admin = false;
+            if (isset($_SESSION['user_id'])) {
+                $user_id = $_SESSION['user_id'];
+                $super_sql = "SELECT 1 FROM user_roles WHERE user_id = $user_id AND role_id = 1 AND deleted_at IS NULL LIMIT 1";
+                $super_result = mysqli_query($conn, $super_sql);
+                $is_super_admin = mysqli_num_rows($super_result) > 0;
+            }
+            if ($is_super_admin) {
+                foreach ($sidebar_branches as $branch) {
+                    echo '<li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=' . $branch['id'] . '"><i class="bi bi-building"></i><span>' . htmlspecialchars($branch['branch_name']) . '</span></a></li>';
+                }
+            } else if (isset($_SESSION['business_id'], $_SESSION['branch_id'])) {
+                $user_business_id = $_SESSION['business_id'];
+                $user_branch_id = $_SESSION['branch_id'];
+                // Query the branch with both business_id and branch_id
+                $branch_sql = "SELECT id, branch_name FROM branches WHERE id = $user_branch_id AND business_id = $user_business_id AND deleted_at IS NULL LIMIT 1";
+                $branch_result = mysqli_query($conn, $branch_sql);
+                if ($branch_result && $branch = mysqli_fetch_assoc($branch_result)) {
+                    echo '<li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=' . $branch['id'] . '"><i class="bi bi-building"></i><span>' . htmlspecialchars($branch['branch_name']) . '</span></a></li>';
+                }
+            }
+          ?>
             <?php else: ?>
               <?php foreach ($module['links'] as $link): ?>
                 <li><a class="nav-link" href="<?php echo htmlspecialchars($link['url']); ?>">
