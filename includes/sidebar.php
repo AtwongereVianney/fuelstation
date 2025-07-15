@@ -25,24 +25,53 @@ $sidebarModules = get_accessible_sidebar_modules();
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <style>
 .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
     min-width: 260px;
     max-width: 260px;
-    min-height: 100vh;
+    height: 100vh;
     background: #343a40;
     color: #fff;
-  }
-  .sidebar .nav-link {
+    z-index: 1040;
+    overflow-y: auto;
+    transition: max-width 0.2s, min-width 0.2s;
+}
+.sidebar.collapsed {
+    max-width: 64px;
+    min-width: 64px;
+}
+.main-content {
+    position: fixed;
+    top: 0;
+    left: 260px;
+    width: calc(100vw - 260px);
+    height: 100vh;
+    overflow-y: auto;
+    margin-left: 0;
+    padding-left: 0;
+    transition: left 0.2s, width 0.2s;
+}
+.main-content.expanded {
+    left: 260px;
+    width: calc(100vw - 260px);
+}
+.main-content.collapsed {
+    left: 64px;
+    width: calc(100vw - 64px);
+}
+.sidebar .nav-link {
     color: #adb5bd;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 0.75em;
-  }
-  .sidebar .nav-link.active, .sidebar .nav-link:hover {
+}
+.sidebar .nav-link.active, .sidebar .nav-link:hover {
     color: #fff;
     background: #495057;
-  }
-  .sidebar .sidebar-heading {
+}
+.sidebar .sidebar-heading {
     padding: 1rem 1.5rem 0.5rem;
     font-size: 0.9rem;
     text-transform: uppercase;
@@ -53,49 +82,44 @@ $sidebarModules = get_accessible_sidebar_modules();
     display: flex;
     align-items: center;
     gap: 0.75em;
-  }
-  .sidebar .logout {
+}
+.sidebar .logout {
     position: absolute;
     bottom: 0;
     width: 100%;
-  }
-  .sidebar .collapse .nav-link {
+}
+.sidebar .collapse .nav-link {
     padding-left: 2.5rem;
 }
-  .sidebar .sidebar-heading .collapse-arrow {
+.sidebar .sidebar-heading .collapse-arrow {
     margin-left: auto;
     font-size: 1em;
     transition: transform 0.2s;
-  }
-  .sidebar .bi {
+}
+.sidebar .bi {
     font-size: 1.1em;
-  }
-  .sidebar-divider {
+}
+.sidebar-divider {
     border-top-width: 4px !important;
     opacity: 1;
 }
-  .sidebar.collapsed {
-    max-width: 64px;
-    min-width: 64px;
-    transition: max-width 0.2s, min-width 0.2s;
-  }
-  .sidebar.collapsed .sidebar-heading span {
+.sidebar.collapsed .sidebar-heading span {
     display: none !important;
-  }
-  .sidebar.collapsed .nav-link span {
+}
+.sidebar.collapsed .nav-link span {
     display: none !important;
-  }
-  .sidebar.collapsed .collapse-arrow {
+}
+.sidebar.collapsed .collapse-arrow {
     display: none !important;
-  }
-  .sidebar.collapsed .sidebar-heading {
+}
+.sidebar.collapsed .sidebar-heading {
     justify-content: center;
-  }
-  .sidebar.collapsed .nav-link {
+}
+.sidebar.collapsed .nav-link {
     justify-content: center;
-  }
-  .sidebar.collapsed .collapse,
-  .sidebar.collapsed .collapsing {
+}
+.sidebar.collapsed .collapse,
+.sidebar.collapsed .collapsing {
     display: none !important;
 }
 </style>
@@ -114,7 +138,7 @@ $sidebarModules = get_accessible_sidebar_modules();
         <button id="sidebarToggle" class="btn btn-outline-secondary btn-sm ms-2 py-0 px-2 d-inline-flex align-items-center" style="line-height:1.1; height:1.8em;">
             <i class="bi bi-list"></i>
         </button>
-      </div>
+                </div>
       <hr class="sidebar-divider border-secondary m-0">
 
       <?php $collapseId = 0; ?>
@@ -122,13 +146,13 @@ $sidebarModules = get_accessible_sidebar_modules();
         <?php $collapseId++; $collapseTarget = 'collapse' . $collapseId; ?>
         <div class="sidebar-heading collapsed" data-bs-toggle="collapse" data-bs-target="#<?php echo $collapseTarget; ?>" aria-expanded="false" aria-controls="<?php echo $collapseTarget; ?>">
           <i class="bi <?php echo htmlspecialchars($module['icon']); ?>"></i><span><?php echo htmlspecialchars($module['section']); ?></span>
-          <span class="collapse-arrow bi bi-caret-down-fill"></span>
-        </div>
+        <span class="collapse-arrow bi bi-caret-down-fill"></span>
+                    </div>
         <div class="collapse" id="<?php echo $collapseTarget; ?>" data-bs-parent=".sidebar">
-          <ul class="nav flex-column mb-2">
+        <ul class="nav flex-column mb-2">
             <?php if ($module['section'] === 'Business & Branches'): ?>
-              <li><a class="nav-link" href="../public/branch_dashboard.php"><i class="bi bi-diagram-3"></i><span>All Branches Dashboard</span></a></li>
-              <?php foreach ($sidebar_branches as $branch): ?>
+          <li><a class="nav-link" href="../public/branch_dashboard.php"><i class="bi bi-diagram-3"></i><span>All Branches Dashboard</span></a></li>
+          <?php foreach ($sidebar_branches as $branch): ?>
                 <li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=<?php echo $branch['id']; ?>">
                   <i class="bi bi-building"></i><span><?php echo htmlspecialchars($branch['branch_name']); ?></span></a></li>
               <?php endforeach; ?>
@@ -136,11 +160,11 @@ $sidebarModules = get_accessible_sidebar_modules();
               <?php foreach ($module['links'] as $link): ?>
                 <li><a class="nav-link" href="<?php echo htmlspecialchars($link['url']); ?>">
                   <i class="bi <?php echo htmlspecialchars($link['icon']); ?>"></i><span><?php echo htmlspecialchars($link['label']); ?></span></a></li>
-              <?php endforeach; ?>
+          <?php endforeach; ?>
             <?php endif; ?>
-          </ul>
-        </div>
-        <hr class="sidebar-divider border-secondary m-0">
+        </ul>
+                </div>
+      <hr class="sidebar-divider border-secondary m-0">
       <?php endforeach; ?>
     </div>
     <div class="flex-shrink-0 mt-auto mb-2">
@@ -184,6 +208,25 @@ $sidebarModules = get_accessible_sidebar_modules();
   // Sidebar expand/collapse toggle
   document.getElementById('sidebarToggle').addEventListener('click', function(e) {
     e.stopPropagation();
-    document.querySelector('.sidebar').classList.toggle('collapsed');
+    var sidebar = document.querySelector('.sidebar');
+    var mainContent = document.querySelector('.main-content');
+    sidebar.classList.toggle('collapsed');
+    if (sidebar.classList.contains('collapsed')) {
+      mainContent.classList.remove('expanded');
+      mainContent.classList.add('collapsed');
+    } else {
+      mainContent.classList.remove('collapsed');
+      mainContent.classList.add('expanded');
+    }
+  });
+  // On page load, set main-content initial state
+  window.addEventListener('DOMContentLoaded', function() {
+    var sidebar = document.querySelector('.sidebar');
+    var mainContent = document.querySelector('.main-content');
+    if (sidebar.classList.contains('collapsed')) {
+      mainContent.classList.add('collapsed');
+    } else {
+      mainContent.classList.add('expanded');
+    }
   });
 </script>

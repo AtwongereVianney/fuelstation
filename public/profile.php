@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once '../includes/auth_helpers.php';
 require_once 'db_connect.php';
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');

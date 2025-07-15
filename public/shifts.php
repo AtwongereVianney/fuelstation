@@ -1,4 +1,6 @@
 <?php
+session_start();
+require_once '../includes/auth_helpers.php';
 require_once '../config/db_connect.php';
 
 // Fetch all branches for dropdown

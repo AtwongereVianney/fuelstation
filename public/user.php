@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once '../includes/auth_helpers.php';
 include '../config/db_connect.php';
 // Handle Edit User
 $edit_success = false;
@@ -124,7 +125,7 @@ while ($row = mysqli_fetch_assoc($role_result)) {
             <?php include '../includes/sidebar.php'; ?>
         </div>
         <!-- Main content -->
-        <div class="col ps-md-4 pt-3 main-content">
+        <div>
             <!-- Mobile menu button -->
             <div class="d-md-none mb-3">
                 <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
