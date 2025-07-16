@@ -124,20 +124,20 @@ if (isset($_POST['change_password'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="dashboard.php">Uganda Fuel Station</a>
-        <div class="d-flex">
-            <a href="dashboard.php" class="btn btn-outline-light me-2">Dashboard</a>
-            <a href="logout.php" class="btn btn-outline-light">Logout</a>
-        </div>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="dashboard.php">Uganda Fuel Station</a>
+    <div class="d-flex">
+      <a href="dashboard.php" class="btn btn-outline-secondary me-2">Dashboard</a>
+      <a href="logout.php" class="btn btn-outline-secondary">Logout</a>
     </div>
+  </div>
 </nav>
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card mb-4">
-                <div class="card-header bg-info text-white">Profile Information</div>
+                <div class="card-header bg-info text-white text-center">Profile Information</div>
                 <div class="card-body">
                     <?php if (!empty($errors)): ?>
                         <div class="alert alert-danger">
