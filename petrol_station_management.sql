@@ -1271,3 +1271,33 @@ VALUES (1, 1, 1);
 -- GRANT SELECT, LOCK TABLES ON uganda_fuel_stations.* TO 'fuel_backup'@'localhost';
 
 SELECT 'Uganda Fuel Station Management System Database Setup Complete!' as Status;
+
+-- Employees Table
+CREATE TABLE employees (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NOT NULL,
+    branch_id BIGINT UNSIGNED NOT NULL,
+    employee_code VARCHAR(50) UNIQUE NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    middle_name VARCHAR(100),
+    date_of_birth DATE,
+    gender ENUM('male', 'female', 'other'),
+    national_id VARCHAR(50),
+    phone VARCHAR(20),
+    email VARCHAR(191),
+    address TEXT,
+    city VARCHAR(100),
+    district VARCHAR(100),
+    position VARCHAR(100),
+    hire_date DATE,
+    termination_date DATE,
+    status ENUM('active', 'inactive', 'terminated') DEFAULT 'active',
+    user_id BIGINT UNSIGNED,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
