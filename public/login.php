@@ -65,73 +65,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Uganda Fuel Station</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background-image: url('../images/istockphoto-153919996-1024x1024.jpg');
-      background-size: cover;           /* Fill the screen */
-      background-repeat: no-repeat;     /* Do not tile the image */
-      background-position: center;      /* Center the image */
-      background-attachment: fixed;     /* Keep image fixed on scroll */
-      margin: 0;
-      padding: 0;
-    }
-
-    /* Optional: Make text easier to read by giving it a solid background */
-    .content {
-      padding: 50px;
-      text-align: center;
-      color: white;
-      background-color: rgba(0, 0, 0, 0.7); /* semi-transparent background for contrast */
-      border-radius: 10px;
-      max-width: 600px;
-      margin: 100px auto;
-    }
-  </style>
+    <title>MMU | Login</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            background-image: url('../images/image.png'); /* Add your image path here */
+            background-size: cover; /* Ensures the image covers the whole page */
+            background-position: center; /* Centers the image */
+            background-repeat: no-repeat; /* Prevents the image from repeating */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .login-container h2 {
+            margin-bottom: 20px;
+        }
+        .login-container .form-group {
+            margin-bottom: 15px;
+        }
+        .login-container .btn {
+            width: 100%;
+        }
+        .login-container .error {
+            color: red;
+            margin-bottom: 15px;
+        }
+        .login-container .register-link {
+            margin-top: 15px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center">
-        <div class="row w-100 justify-content-center">
-            <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
-                <div class="card shadow-sm">
-                    <div class="card-header text-white text-center" style="background-color: brown;">
-                        <h4 class="mb-0">Login</h4>
-                    </div>
-
-                <div class="card-body">
-                    <?php if (!empty($errors)): ?>
-                        <div class="alert alert-danger">
-                            <?php foreach ($errors as $error) echo '<div>' . htmlspecialchars($error) . '</div>'; ?>
-                        </div>
-                    <?php endif; ?>
-                        <form method="post" action="" autocomplete="on">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username or Email</label>
-                                <input type="text" class="form-control" id="username" name="username" required autofocus>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                        </div>
-                        <button type="submit" class="btn w-100 text-white" style="background-color: brown;">Login</button>
-                    </form>
-                    <div class="mt-3 text-center">
-                        <a href="forgot_password.php">Forgot Password?</a>
-                    </div>
-                        <div class="mt-2 text-center">
-                            <span>Don't have an account? <a href="register.php">Register</a></span>
-                        </div>
-                    </div>
-                </div>
+    <div class="login-container">
+        <h2 class="text-center">Login</h2>
+        <?php if (isset($error)): ?>
+            <div class="error"><?php echo $error; ?></div>
+        <?php endif; ?>
+        <form method="post" action="login.php">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" class="form-control" required>
             </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" style="background-color: #213053; color: white;" class="btn">Login</button>
+        </form>
+        <div class="register-link">
+            <p>Forgot Password? <a href="#">Recover your password</a></p>
+        </div>
+        <div class="text-center mt-3">
+            <a href="../index.php" class="btn btn-secondary">Back</a>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

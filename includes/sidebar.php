@@ -50,6 +50,7 @@ $sidebarModules = get_accessible_sidebar_modules();
     overflow-y: auto;
     margin-left: 0;
     padding-left: 0;
+    padding-top: 0;
     transition: left 0.2s, width 0.2s;
 }
 .main-content.expanded {
@@ -69,7 +70,7 @@ $sidebarModules = get_accessible_sidebar_modules();
   }
   .sidebar .nav-link.active, .sidebar .nav-link:hover {
     color: #fff;
-    background: #495057;
+    background:rgb(87, 79, 73);
   }
   .sidebar .sidebar-heading {
     padding: 1rem 1.5rem 0.5rem;
