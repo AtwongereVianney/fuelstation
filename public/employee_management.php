@@ -11,27 +11,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_employee'])) {
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $branch_id = intval($_POST['branch_id'] ?? 0);
+    $position = trim($_POST['position'] ?? '');
+    $hire_date = $_POST['hire_date'] ?? null;
     $status = $_POST['status'] === 'active' ? 'active' : 'inactive';
-    $username = '';
-    if ($email) {
-        $username = explode('@', $email)[0];
-        // Optionally, ensure uniqueness by appending a number if needed
-        $base_username = $username;
-        $i = 1;
-        $check_username_sql = "SELECT id FROM users WHERE username=? LIMIT 1";
-        $check_username_stmt = mysqli_prepare($conn, $check_username_sql);
-        while (true) {
-            mysqli_stmt_bind_param($check_username_stmt, 's', $username);
-            mysqli_stmt_execute($check_username_stmt);
-            $check_username_result = mysqli_stmt_get_result($check_username_stmt);
-            if (!mysqli_fetch_assoc($check_username_result)) break;
-            $username = $base_username . $i;
-            $i++;
-        }
-        mysqli_stmt_close($check_username_stmt);
+    $business_id = $_SESSION['business_id'] ?? 0;
+    // Generate employee_code
+    $employee_code = '';
+    $code_sql = "SELECT employee_code FROM employees WHERE employee_code LIKE 'EMP%' ORDER BY employee_code DESC LIMIT 1";
+    $code_result = mysqli_query($conn, $code_sql);
+    if ($code_result && mysqli_num_rows($code_result) > 0) {
+        $row = mysqli_fetch_assoc($code_result);
+        $last_code = $row['employee_code'];
+        $number = intval(substr($last_code, 3)) + 1;
+        $employee_code = 'EMP' . str_pad($number, 4, '0', STR_PAD_LEFT);
+    } else {
+        $employee_code = 'EMP0001';
     }
-    if ($first_name && $last_name && $email) {
-        $check_sql = "SELECT id FROM users WHERE email=? AND deleted_at IS NULL LIMIT 1";
+    if ($first_name && $last_name && $email && $business_id && $branch_id) {
+        $check_sql = "SELECT id FROM employees WHERE email=? AND deleted_at IS NULL LIMIT 1";
         $check_stmt = mysqli_prepare($conn, $check_sql);
         mysqli_stmt_bind_param($check_stmt, 's', $email);
         mysqli_stmt_execute($check_stmt);
@@ -39,9 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_employee'])) {
         if (mysqli_fetch_assoc($check_result)) {
             $add_errors[] = 'Email already exists.';
         } else {
-            $insert_sql = "INSERT INTO users (username, first_name, last_name, email, phone, branch_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+            $insert_sql = "INSERT INTO employees (business_id, branch_id, employee_code, first_name, last_name, email, phone, position, hire_date, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
             $insert_stmt = mysqli_prepare($conn, $insert_sql);
-            mysqli_stmt_bind_param($insert_stmt, 'sssssis', $username, $first_name, $last_name, $email, $phone, $branch_id, $status);
+            mysqli_stmt_bind_param($insert_stmt, 'iissssssss', $business_id, $branch_id, $employee_code, $first_name, $last_name, $email, $phone, $position, $hire_date, $status);
             if (mysqli_stmt_execute($insert_stmt)) {
                 $add_success = true;
             } else {
@@ -51,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_employee'])) {
         }
         mysqli_stmt_close($check_stmt);
     } else {
-        $add_errors[] = 'First name, last name, and email are required.';
+        $add_errors[] = 'First name, last name, email, business, and branch are required.';
     }
 }
 
@@ -65,11 +62,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_employee'])) {
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $branch_id = intval($_POST['branch_id'] ?? 0);
+    $position = trim($_POST['position'] ?? '');
+    $hire_date = $_POST['hire_date'] ?? null;
     $status = $_POST['status'] === 'active' ? 'active' : 'inactive';
     if ($id && $first_name && $last_name && $email) {
-        $update_sql = "UPDATE users SET first_name=?, last_name=?, email=?, phone=?, branch_id=?, status=?, updated_at=NOW() WHERE id=?";
+        $update_sql = "UPDATE employees SET first_name=?, last_name=?, email=?, phone=?, branch_id=?, position=?, hire_date=?, status=?, updated_at=NOW() WHERE id=?";
         $update_stmt = mysqli_prepare($conn, $update_sql);
-        mysqli_stmt_bind_param($update_stmt, 'ssssisi', $first_name, $last_name, $email, $phone, $branch_id, $status, $id);
+        mysqli_stmt_bind_param($update_stmt, 'ssssssssi', $first_name, $last_name, $email, $phone, $branch_id, $position, $hire_date, $status, $id);
         if (mysqli_stmt_execute($update_stmt)) {
             $edit_success = true;
         } else {
@@ -85,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_employee'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_employee'])) {
     $id = intval($_POST['id'] ?? 0);
     if ($id) {
-        $sql = "UPDATE users SET deleted_at = NOW() WHERE id = ?";
+        $sql = "UPDATE employees SET deleted_at = NOW() WHERE id = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, 'i', $id);
         mysqli_stmt_execute($stmt);
@@ -93,8 +92,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_employee'])) {
     }
 }
 
-// Fetch all employees (users who are not deleted)
-$sql = "SELECT u.id, u.first_name, u.last_name, u.email, u.phone, u.status, u.created_at, u.branch_id, b.branch_name FROM users u LEFT JOIN branches b ON u.branch_id = b.id WHERE u.deleted_at IS NULL ORDER BY u.id ASC";
+// Fetch all employees (not deleted)
+$sql = "SELECT e.*, b.branch_name FROM employees e LEFT JOIN branches b ON e.branch_id = b.id WHERE e.deleted_at IS NULL ORDER BY e.id ASC";
 $result = mysqli_query($conn, $sql);
 $employees = [];
 while ($row = mysqli_fetch_assoc($result)) {
@@ -136,7 +135,7 @@ while ($row = mysqli_fetch_assoc($branch_result)) {
             <?php include '../includes/sidebar.php'; ?>
         </div>
         <!-- Main content -->
-        <div class="col ps-md-4 pt-3 main-content">
+        <div>
             <!-- Mobile menu button -->
             <div class="d-md-none mb-3">
                 <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
@@ -144,7 +143,9 @@ while ($row = mysqli_fetch_assoc($branch_result)) {
                 </button>
             </div>
             <h2 class="mb-4">Employee Management</h2>
-            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addEmployeeModal"><i class="bi bi-person-plus me-1"></i> Add New Employee</button>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                <i class="bi bi-person-plus me-1"></i> Add New Employee
+            </button>
             <?php if ($edit_success): ?>
                 <div class="alert alert-success">Employee updated successfully.</div>
             <?php endif; ?>
@@ -173,6 +174,8 @@ while ($row = mysqli_fetch_assoc($branch_result)) {
                                     <th>Email</th>
                                     <th>Phone</th>
                                     <th>Branch</th>
+                                    <th>Position</th>
+                                    <th>Hire Date</th>
                                     <th>Status</th>
                                     <th>Created At</th>
                                     <th>Actions</th>
@@ -187,6 +190,8 @@ while ($row = mysqli_fetch_assoc($branch_result)) {
                                         <td><?php echo htmlspecialchars($emp['email']); ?></td>
                                         <td><?php echo htmlspecialchars($emp['phone']); ?></td>
                                         <td><?php echo htmlspecialchars($emp['branch_name'] ?? ''); ?></td>
+                                        <td><?php echo htmlspecialchars($emp['position']); ?></td>
+                                        <td><?php echo htmlspecialchars($emp['hire_date']); ?></td>
                                         <td>
                                             <?php if ($emp['status'] === 'active'): ?>
                                                 <span class="badge bg-success">Active</span>
@@ -210,153 +215,171 @@ while ($row = mysqli_fetch_assoc($branch_result)) {
                     <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
                 </div>
             </div>
-            <!-- Modals for each employee -->
-            <?php foreach ($employees as $emp): ?>
-            <!-- View Modal -->
-            <div class="modal fade" id="viewEmployeeModal<?php echo $emp['id']; ?>" tabindex="-1" aria-labelledby="viewEmployeeModalLabel<?php echo $emp['id']; ?>" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="viewEmployeeModalLabel<?php echo $emp['id']; ?>">Employee Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <dl class="row">
-                      <dt class="col-sm-4">Name</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['first_name'] . ' ' . $emp['last_name']); ?></dd>
-                      <dt class="col-sm-4">Email</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['email']); ?></dd>
-                      <dt class="col-sm-4">Phone</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['phone']); ?></dd>
-                      <dt class="col-sm-4">Branch</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['branch_name'] ?? ''); ?></dd>
-                      <dt class="col-sm-4">Status</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['status']); ?></dd>
-                      <dt class="col-sm-4">Created At</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['created_at']); ?></dd>
-                    </dl>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- Edit Modal -->
-            <div class="modal fade" id="editEmployeeModal<?php echo $emp['id']; ?>" tabindex="-1" aria-labelledby="editEmployeeModalLabel<?php echo $emp['id']; ?>" aria-hidden="true">
-              <div class="modal-dialog">
-                <form method="post" class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="editEmployeeModalLabel<?php echo $emp['id']; ?>">Edit Employee</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <input type="hidden" name="id" value="<?php echo $emp['id']; ?>">
-                    <div class="mb-3">
-                      <label class="form-label">First Name</label>
-                      <input type="text" name="first_name" class="form-control" value="<?php echo htmlspecialchars($emp['first_name']); ?>" required>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Last Name</label>
-                      <input type="text" name="last_name" class="form-control" value="<?php echo htmlspecialchars($emp['last_name']); ?>" required>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Email</label>
-                      <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($emp['email']); ?>" required>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Phone</label>
-                      <input type="text" name="phone" class="form-control" value="<?php echo htmlspecialchars($emp['phone']); ?>">
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Branch</label>
-                      <select name="branch_id" class="form-select">
-                        <option value="">Select Branch</option>
-                        <?php foreach ($branches as $branch): ?>
-                          <option value="<?php echo $branch['id']; ?>" <?php if ($emp['branch_id'] == $branch['id']) echo 'selected'; ?>><?php echo htmlspecialchars($branch['branch_name']); ?></option>
-                        <?php endforeach; ?>
-                      </select>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Status</label>
-                      <select name="status" class="form-select">
-                        <option value="active" <?php if ($emp['status'] === 'active') echo 'selected'; ?>>Active</option>
-                        <option value="inactive" <?php if ($emp['status'] === 'inactive') echo 'selected'; ?>>Inactive</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" name="edit_employee" class="btn btn-warning">Save Changes</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-            <!-- Delete Modal -->
-            <div class="modal fade" id="deleteEmployeeModal<?php echo $emp['id']; ?>" tabindex="-1" aria-labelledby="deleteEmployeeModalLabel<?php echo $emp['id']; ?>" aria-hidden="true">
-              <div class="modal-dialog">
-                <form method="post" class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="deleteEmployeeModalLabel<?php echo $emp['id']; ?>">Delete Employee</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <input type="hidden" name="id" value="<?php echo $emp['id']; ?>">
-                    <p>Are you sure you want to delete <strong><?php echo htmlspecialchars($emp['first_name'] . ' ' . $emp['last_name']); ?></strong>?</p>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" name="delete_employee" class="btn btn-danger">Delete</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-            <?php endforeach; ?>
-            <!-- Add Employee Modal -->
-            <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
-              <div class="modal-dialog">
-                <form method="post" class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="addEmployeeModalLabel">Add New Employee</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <div class="mb-3">
-                      <label class="form-label">First Name</label>
-                      <input type="text" name="first_name" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Last Name</label>
-                      <input type="text" name="last_name" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Email</label>
-                      <input type="email" name="email" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Phone</label>
-                      <input type="text" name="phone" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Branch</label>
-                      <select name="branch_id" class="form-select">
-                        <option value="">Select Branch</option>
-                        <?php foreach ($branches as $branch): ?>
-                          <option value="<?php echo $branch['id']; ?>"><?php echo htmlspecialchars($branch['branch_name']); ?></option>
-                        <?php endforeach; ?>
-                      </select>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Status</label>
-                      <select name="status" class="form-select">
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" name="add_employee" class="btn btn-primary">Add Employee</button>
-                  </div>
-                </form>
-              </div>
-            </div>
         </div>
     </div>
+</div>
+<!-- All Employee Modals (moved to end of body) -->
+<?php foreach ($employees as $emp): ?>
+<!-- View Modal -->
+<div class="modal fade" id="viewEmployeeModal<?php echo $emp['id']; ?>" tabindex="-1" aria-labelledby="viewEmployeeModalLabel<?php echo $emp['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewEmployeeModalLabel<?php echo $emp['id']; ?>">Employee Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <dl class="row">
+          <dt class="col-sm-4">Name</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['first_name'] . ' ' . $emp['last_name']); ?></dd>
+          <dt class="col-sm-4">Email</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['email']); ?></dd>
+          <dt class="col-sm-4">Phone</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['phone']); ?></dd>
+          <dt class="col-sm-4">Branch</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['branch_name'] ?? ''); ?></dd>
+          <dt class="col-sm-4">Position</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['position']); ?></dd>
+          <dt class="col-sm-4">Hire Date</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['hire_date']); ?></dd>
+          <dt class="col-sm-4">Status</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['status']); ?></dd>
+          <dt class="col-sm-4">Created At</dt><dd class="col-sm-8"><?php echo htmlspecialchars($emp['created_at']); ?></dd>
+        </dl>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Edit Modal -->
+<div class="modal fade" id="editEmployeeModal<?php echo $emp['id']; ?>" tabindex="-1" aria-labelledby="editEmployeeModalLabel<?php echo $emp['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editEmployeeModalLabel<?php echo $emp['id']; ?>">Edit Employee</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id" value="<?php echo $emp['id']; ?>">
+        <div class="mb-3">
+          <label class="form-label">First Name</label>
+          <input type="text" name="first_name" class="form-control" value="<?php echo htmlspecialchars($emp['first_name']); ?>" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Last Name</label>
+          <input type="text" name="last_name" class="form-control" value="<?php echo htmlspecialchars($emp['last_name']); ?>" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($emp['email']); ?>" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Phone</label>
+          <input type="text" name="phone" class="form-control" value="<?php echo htmlspecialchars($emp['phone']); ?>">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Branch</label>
+          <select name="branch_id" class="form-select">
+            <option value="">Select Branch</option>
+            <?php foreach ($branches as $branch): ?>
+              <option value="<?php echo $branch['id']; ?>" <?php if ($emp['branch_id'] == $branch['id']) echo 'selected'; ?>><?php echo htmlspecialchars($branch['branch_name']); ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Position</label>
+          <input type="text" name="position" class="form-control" value="<?php echo htmlspecialchars($emp['position']); ?>">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Hire Date</label>
+          <input type="date" name="hire_date" class="form-control" value="<?php echo htmlspecialchars($emp['hire_date']); ?>">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-select">
+            <option value="active" <?php if ($emp['status'] === 'active') echo 'selected'; ?>>Active</option>
+            <option value="inactive" <?php if ($emp['status'] === 'inactive') echo 'selected'; ?>>Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" name="edit_employee" class="btn btn-warning">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteEmployeeModal<?php echo $emp['id']; ?>" tabindex="-1" aria-labelledby="deleteEmployeeModalLabel<?php echo $emp['id']; ?>" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteEmployeeModalLabel<?php echo $emp['id']; ?>">Delete Employee</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id" value="<?php echo $emp['id']; ?>">
+        <p>Are you sure you want to delete <strong><?php echo htmlspecialchars($emp['first_name'] . ' ' . $emp['last_name']); ?></strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" name="delete_employee" class="btn btn-danger">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+<?php endforeach; ?>
+<!-- Add Employee Modal (already at end of body) -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addEmployeeModalLabel">Add New Employee</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">First Name</label>
+          <input type="text" name="first_name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Last Name</label>
+          <input type="text" name="last_name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Phone</label>
+          <input type="text" name="phone" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Branch</label>
+          <select name="branch_id" class="form-select">
+            <option value="">Select Branch</option>
+            <?php foreach ($branches as $branch): ?>
+              <option value="<?php echo $branch['id']; ?>"><?php echo htmlspecialchars($branch['branch_name']); ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Position</label>
+          <input type="text" name="position" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Hire Date</label>
+          <input type="date" name="hire_date" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-select">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" name="add_employee" class="btn btn-primary">Add Employee</button>
+      </div>
+    </form>
+  </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

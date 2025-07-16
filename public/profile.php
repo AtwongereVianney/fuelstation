@@ -19,6 +19,9 @@ $result = mysqli_stmt_get_result($stmt);
 $user = mysqli_fetch_assoc($result);
 mysqli_stmt_close($stmt);
 
+// Add a safe helper for htmlspecialchars
+function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UTF-8'); }
+
 // Handle profile update
 if (isset($_POST['update_profile'])) {
     $first_name = trim($_POST['first_name']);
@@ -150,7 +153,7 @@ if (isset($_POST['change_password'])) {
                     <form method="post" action="" enctype="multipart/form-data">
                         <div class="mb-3 text-center">
                             <?php if (!empty($user['profile_photo'])): ?>
-                                <img src="<?php echo htmlspecialchars($user['profile_photo']); ?>" alt="Profile Photo" class="rounded-circle mb-2" style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #ccc;">
+                                <img src="<?php echo h($user['profile_photo']); ?>" alt="Profile Photo" class="rounded-circle mb-2" style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #ccc;">
                             <?php else: ?>
                                 <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($user['first_name'] . ' ' . $user['last_name']); ?>&background=6c757d&color=fff&size=120" alt="Profile Photo" class="rounded-circle mb-2" style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #ccc;">
                             <?php endif; ?>
@@ -161,23 +164,23 @@ if (isset($_POST['change_password'])) {
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Username</label>
-                            <input type="text" class="form-control" value="<?php echo htmlspecialchars($user['username']); ?>" disabled>
+                            <input type="text" class="form-control" value="<?php echo h($user['username']); ?>" disabled>
                         </div>
                         <div class="mb-3">
                             <label for="first_name" class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="first_name" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>" required>
+                            <input type="text" class="form-control" id="first_name" name="first_name" value="<?php echo h($user['first_name']); ?>" required>
                         </div>
                         <div class="mb-3">
                             <label for="last_name" class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="last_name" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
+                            <input type="text" class="form-control" id="last_name" name="last_name" value="<?php echo h($user['last_name']); ?>" required>
                         </div>
                         <div class="mb-3">
                             <label for="phone" class="form-label">Phone</label>
-                            <input type="text" class="form-control" id="phone" name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>">
+                            <input type="text" class="form-control" id="phone" name="phone" value="<?php echo h($user['phone']); ?>">
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                            <input type="email" class="form-control" id="email" name="email" value="<?php echo h($user['email']); ?>" required>
                         </div>
                         <button type="submit" name="update_profile" class="btn btn-info">Update Profile</button>
                     </form>
