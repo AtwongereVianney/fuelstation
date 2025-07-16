@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once '../includes/auth_helpers.php';
-require_once 'db_connect.php';
+require_once '../config/db_connect.php';
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -11,7 +11,7 @@ $errors = [];
 $success = '';
 
 // Fetch user info
-$sql = "SELECT username, email, first_name, last_name, phone FROM users WHERE id = ? LIMIT 1";
+$sql = "SELECT username, email, first_name, last_name, phone, profile_photo FROM users WHERE id = ? LIMIT 1";
 $stmt = mysqli_prepare($conn, $sql);
 mysqli_stmt_bind_param($stmt, 'i', $user_id);
 mysqli_stmt_execute($stmt);
@@ -25,6 +25,7 @@ if (isset($_POST['update_profile'])) {
     $last_name = trim($_POST['last_name']);
     $phone = trim($_POST['phone']);
     $email = trim($_POST['email']);
+    $profile_photo = $user['profile_photo'];
     if (empty($first_name) || empty($last_name) || empty($email)) {
         $errors[] = 'First name, last name, and email are required.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -41,16 +42,39 @@ if (isset($_POST['update_profile'])) {
         }
         mysqli_stmt_close($stmt);
     }
+    // Handle profile photo upload
+    if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
+        $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+        $ext = strtolower(pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowed)) {
+            $errors[] = 'Invalid image type. Only JPG, PNG, GIF allowed.';
+        } elseif ($_FILES['profile_photo']['size'] > 2 * 1024 * 1024) {
+            $errors[] = 'Image size must be less than 2MB.';
+        } else {
+            $upload_dir = __DIR__ . '/../public/uploads/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+            $new_name = 'user_' . $user_id . '_' . time() . '.' . $ext;
+            $dest = $upload_dir . $new_name;
+            if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $dest)) {
+                $profile_photo = 'uploads/' . $new_name;
+            } else {
+                $errors[] = 'Failed to upload image.';
+            }
+        }
+    }
     if (empty($errors)) {
-        $sql = "UPDATE users SET first_name=?, last_name=?, phone=?, email=? WHERE id=?";
+        $sql = "UPDATE users SET first_name=?, last_name=?, phone=?, email=?, profile_photo=? WHERE id=?";
         $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, 'ssssi', $first_name, $last_name, $phone, $email, $user_id);
+        mysqli_stmt_bind_param($stmt, 'sssssi', $first_name, $last_name, $phone, $email, $profile_photo, $user_id);
         if (mysqli_stmt_execute($stmt)) {
             $success = 'Profile updated successfully.';
             $user['first_name'] = $first_name;
             $user['last_name'] = $last_name;
             $user['phone'] = $phone;
             $user['email'] = $email;
+            $user['profile_photo'] = $profile_photo;
         } else {
             $errors[] = 'Failed to update profile.';
         }
@@ -123,7 +147,18 @@ if (isset($_POST['change_password'])) {
                     <?php if ($success): ?>
                         <div class="alert alert-success"><?php echo $success; ?></div>
                     <?php endif; ?>
-                    <form method="post" action="">
+                    <form method="post" action="" enctype="multipart/form-data">
+                        <div class="mb-3 text-center">
+                            <?php if (!empty($user['profile_photo'])): ?>
+                                <img src="<?php echo htmlspecialchars($user['profile_photo']); ?>" alt="Profile Photo" class="rounded-circle mb-2" style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #ccc;">
+                            <?php else: ?>
+                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($user['first_name'] . ' ' . $user['last_name']); ?>&background=6c757d&color=fff&size=120" alt="Profile Photo" class="rounded-circle mb-2" style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #ccc;">
+                            <?php endif; ?>
+                        </div>
+                        <div class="mb-3">
+                            <label for="profile_photo" class="form-label">Profile Photo (JPG, PNG, GIF, max 2MB)</label>
+                            <input type="file" class="form-control" id="profile_photo" name="profile_photo" accept="image/*">
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">Username</label>
                             <input type="text" class="form-control" value="<?php echo htmlspecialchars($user['username']); ?>" disabled>

@@ -25,7 +25,7 @@ if (isset($_SESSION['user_id'])) {
           <a class="nav-link" href="/public/dashboard.php"><i class="bi bi-house"></i> Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/public/profile.php"><i class="bi bi-person"></i> My Profile</a>
+          <a class="nav-link" href="../public/profile.php"><i class="bi bi-person"></i> My Profile</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#"><i class="bi bi-question-circle"></i> Help</a>
@@ -46,7 +46,7 @@ if (isset($_SESSION['user_id'])) {
             <i class="bi bi-person-circle"></i> <?php echo htmlspecialchars($user_name); ?> <span class="text-muted small">(<?php echo htmlspecialchars($role_display); ?>)</span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-            <li><a class="dropdown-item" href="/public/profile.php"><i class="bi bi-person"></i> My Profile</a></li>
+            <li><a class="dropdown-item" href="../public/profile.php"><i class="bi bi-person"></i> My Profile</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item text-danger" href="/public/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
           </ul>
