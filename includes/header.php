@@ -14,7 +14,7 @@ if (isset($_SESSION['user_id'])) {
     $is_super_admin = mysqli_num_rows($super_result) > 0;
 }
 ?>
-<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom mb-3 fixed">
+<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom mb-3">
   <div class="container-fluid">
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -37,7 +37,7 @@ if (isset($_SESSION['user_id'])) {
         <?php endif; ?>
       </ul>
       <form class="d-flex me-3" role="search" method="get" action="../public/search.php">
-        <input class="form-control me-2" type="search" name="q" placeholder="Search..." aria-label="Search">
+        <input class="form-control me-2" type="search" name="q" placeholder="Search..." aria-label="Search" value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : (isset($_REQUEST['q']) ? htmlspecialchars($_REQUEST['q']) : ''); ?>">
         <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i></button>
       </form>
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
@@ -46,7 +46,7 @@ if (isset($_SESSION['user_id'])) {
             <i class="bi bi-person-circle"></i> <?php echo htmlspecialchars($user_name); ?> <span class="text-muted small">(<?php echo htmlspecialchars($role_display); ?>)</span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-            <li><a class="dropdown-item" href="/public/profile.php"><i class="bi bi-person"></i> Profile</a></li>
+            <li><a class="dropdown-item" href="/public/profile.php"><i class="bi bi-person"></i> My Profile</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item text-danger" href="/public/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
           </ul>
@@ -54,4 +54,16 @@ if (isset($_SESSION['user_id'])) {
       </ul>
     </div>
   </div>
-</nav> 
+</nav>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var searchInput = document.querySelector('form[role="search"] input[name="q"]');
+    if (searchInput) {
+      searchInput.focus();
+      // Move cursor to end
+      var val = searchInput.value;
+      searchInput.value = '';
+      searchInput.value = val;
+    }
+  });
+</script> 
