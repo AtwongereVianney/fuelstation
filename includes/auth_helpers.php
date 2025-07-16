@@ -109,6 +109,12 @@ function get_sidebar_modules() {
                     'permission' => 'financial.view_expenses'
                 ],
                 [
+                    'label' => 'Purchases',
+                    'url' => '../public/purchases.php',
+                    'icon' => 'bi-bag-check',
+                    'permission' => 'financial.view_purchases'
+                ],
+                [
                     'label' => 'Cash Float',
                     'url' => '#',
                     'icon' => 'bi-cash',

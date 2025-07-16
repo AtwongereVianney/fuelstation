@@ -28,6 +28,37 @@ while ($row = mysqli_fetch_assoc($result)) {
 }
 mysqli_stmt_close($stmt);
 
+$business_id = $_SESSION['business_id'] ?? null;
+$current_year = date('Y');
+$income_data = $expense_data = $service_demand_data = $months = [];
+if ($role === 'super_admin' && $business_id) {
+    // Prepare months
+    for ($m = 1; $m <= 12; $m++) {
+        $months[] = date('M', mktime(0,0,0,$m,1));
+        $income_data[] = 0;
+        $expense_data[] = 0;
+        $service_demand_data[] = 0;
+    }
+    // Income (sales)
+    $sql = "SELECT MONTH(transaction_date) as m, SUM(final_amount) as total FROM sales_transactions WHERE deleted_at IS NULL AND YEAR(transaction_date) = $current_year AND branch_id IN (SELECT id FROM branches WHERE business_id = $business_id AND deleted_at IS NULL) GROUP BY m";
+    $res = mysqli_query($conn, $sql);
+    while ($row = mysqli_fetch_assoc($res)) {
+        $income_data[(int)$row['m']-1] = (float)$row['total'];
+    }
+    // Expenses
+    $sql = "SELECT MONTH(expense_date) as m, SUM(amount) as total FROM expenses WHERE deleted_at IS NULL AND YEAR(expense_date) = $current_year AND branch_id IN (SELECT id FROM branches WHERE business_id = $business_id AND deleted_at IS NULL) GROUP BY m";
+    $res = mysqli_query($conn, $sql);
+    while ($row = mysqli_fetch_assoc($res)) {
+        $expense_data[(int)$row['m']-1] = (float)$row['total'];
+    }
+    // Service demand: count of sales transactions (could be changed to another metric)
+    $sql = "SELECT MONTH(transaction_date) as m, COUNT(*) as cnt FROM sales_transactions WHERE deleted_at IS NULL AND YEAR(transaction_date) = $current_year AND branch_id IN (SELECT id FROM branches WHERE business_id = $business_id AND deleted_at IS NULL) GROUP BY m";
+    $res = mysqli_query($conn, $sql);
+    while ($row = mysqli_fetch_assoc($res)) {
+        $service_demand_data[(int)$row['m']-1] = (int)$row['cnt'];
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -121,9 +152,66 @@ mysqli_stmt_close($stmt);
                 <div class="col-md-3"><div class="card text-bg-info h-100"><div class="card-body"><h5 class="card-title"><i class="fas fa-building me-2"></i>Branches</h5><p class="card-text display-6 fw-bold"><?php echo $branches_count; ?></p></div></div></div>
             <?php }
             ?>
-
-
-</div>
+        </div>
+        <?php if ($role === 'super_admin' && $business_id): ?>
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">Income vs Expense (<?php echo $current_year; ?>)</div>
+                    <div class="card-body">
+                        <canvas id="incomeExpenseChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">Service Demand (<?php echo $current_year; ?>)</div>
+                    <div class="card-body">
+                        <canvas id="serviceDemandChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+        const months = <?php echo json_encode($months); ?>;
+        const incomeData = <?php echo json_encode($income_data); ?>;
+        const expenseData = <?php echo json_encode($expense_data); ?>;
+        const serviceDemandData = <?php echo json_encode($service_demand_data); ?>;
+        // Income vs Expense
+        new Chart(document.getElementById('incomeExpenseChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [
+                    { label: 'Income', data: incomeData, backgroundColor: 'rgba(54, 162, 235, 0.7)' },
+                    { label: 'Expense', data: expenseData, backgroundColor: 'rgba(255, 99, 132, 0.7)' }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+        // Service Demand
+        new Chart(document.getElementById('serviceDemandChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    { label: 'Service Demand', data: serviceDemandData, borderColor: 'rgba(40,167,69,0.9)', backgroundColor: 'rgba(40,167,69,0.2)', fill: true }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+        </script>
+        <?php endif; ?>
+    </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

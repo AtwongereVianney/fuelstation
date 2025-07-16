@@ -128,13 +128,13 @@ if (isset($_POST['change_password'])) {
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="dashboard.php">Uganda Fuel Station</a>
-    <div class="d-flex">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="dashboard.php">Uganda Fuel Station</a>
+        <div class="d-flex">
       <a href="dashboard.php" class="btn btn-outline-secondary me-2">Dashboard</a>
       <a href="logout.php" class="btn btn-outline-secondary">Logout</a>
+        </div>
     </div>
-  </div>
 </nav>
 <div class="container mt-5">
     <div class="row justify-content-center">
