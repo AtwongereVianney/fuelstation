@@ -102,6 +102,12 @@ if ($selected_branch_id && $start_date && $end_date) {
         </div>
         <!-- Main content -->
         <div class="col ps-md-4 pt-3 main-content">
+            <!-- Link to Overall Report -->
+            <div class="mb-4">
+                <a href="overall_report.php" class="btn btn-lg btn-outline-dark w-100">
+                    <i class="bi bi-bar-chart-steps"></i> View Overall Business Report (All Branches)
+                </a>
+            </div>
             <!-- Mobile menu button -->
             <div class="d-md-none mb-3">
                 <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">

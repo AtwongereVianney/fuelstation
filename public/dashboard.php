@@ -99,7 +99,7 @@ if ($role === 'super_admin' && $business_id) {
                   </a>
                 </div>
                 <div class="col-6 col-md-3">
-                  <a href="purchases/handle_action.php" class="btn btn-outline-success w-100 py-3">
+                  <a href="purchases.php" class="btn btn-outline-success w-100 py-3">
                     <i class="bi bi-bag-plus fs-3"></i><br>New Purchase
                   </a>
                 </div>

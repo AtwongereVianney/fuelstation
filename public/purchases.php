@@ -77,7 +77,7 @@ function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UT
             <?php include '../includes/sidebar.php'; ?>
         </div>
         <!-- Main content -->
-        <div class="col ps-md-4 pt-3 main-content">
+        <div>
             <div class="d-md-none mb-3">
                 <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
                     <i class="bi bi-list"></i> Menu

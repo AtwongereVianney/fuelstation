@@ -151,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             <?php include '../includes/sidebar.php'; ?>
         </div>
         <!-- Main content -->
-        <div class="col ps-md-4 pt-3 main-content">
+        <div>
             <!-- Mobile menu button -->
             <div class="d-md-none mb-3">
                 <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
