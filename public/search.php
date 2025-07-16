@@ -149,6 +149,19 @@ function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UT
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem 1rem;
+            min-width: 0;
+        }
+        .sidebar + .main-content {
+            transition: margin-left 0.2s;
+        }
+        .sidebar.collapsed + .main-content {
+            margin-left: 64px;
+        }
+    </style>
 </head>
 <body>
 <div class="d-flex" style="min-height:100vh;">

@@ -89,6 +89,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shifts</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        html, body { height: 100%; }
+        body { min-height: 100vh; margin: 0; padding: 0; }
+        .main-flex-container { display: flex; height: 100vh; overflow: hidden; }
+        .sidebar-fixed { width: 240px; min-width: 200px; max-width: 300px; height: 100vh; position: sticky; top: 0; left: 0; z-index: 1020; background: #f8f9fa; border-right: 1px solid #dee2e6; }
+        .main-content-scroll { flex: 1 1 0%; height: 100vh; overflow-y: auto; padding: 32px 24px 24px 24px; background: #fff; }
+        @media (max-width: 767.98px) { .main-flex-container { display: block; height: auto; } .sidebar-fixed { display: none; } .main-content-scroll { height: auto; padding: 16px 8px; } }
+    </style>
 </head>
 <body>
 <!-- Responsive Sidebar Offcanvas for mobile -->
@@ -101,153 +109,151 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php include '../includes/sidebar.php'; ?>
     </div>
 </div>
-<div class="container-fluid">
-    <div class="row flex-nowrap">
-        <!-- Sidebar for desktop -->
-        <div class="col-auto d-none d-md-block p-0">
-            <?php include '../includes/sidebar.php'; ?>
+<div class="main-flex-container">
+    <!-- Sidebar for desktop -->
+    <div class="sidebar-fixed d-none d-md-block p-0">
+        <?php include '../includes/sidebar.php'; ?>
+    </div>
+    <!-- Main content -->
+    <div class="main-content-scroll">
+        <!-- Mobile menu button -->
+        <div class="d-md-none mb-3">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                <i class="fas fa-bars"></i> Menu
+            </button>
         </div>
-        <!-- Main content -->
-        <div>
-            <!-- Mobile menu button -->
-            <div class="d-md-none mb-3">
-                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-                    <i class="fas fa-bars"></i> Menu
-                </button>
-            </div>
-            <h2 class="mb-4">Shifts</h2>
-            <form method="get" class="mb-4">
-                <div class="row g-2 align-items-end">
-                    <div class="col-12 col-md-4">
-                        <label for="branch_id" class="form-label">Select Branch:</label>
-                        <select name="branch_id" id="branch_id" class="form-select">
-                            <?php foreach ($branches as $b): ?>
-                                <option value="<?php echo $b['id']; ?>" <?php if ($b['id'] == $selected_branch_id) echo 'selected'; ?>><?php echo h($b['branch_name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <label for="start_date" class="form-label">Start Date:</label>
-                        <input type="date" name="start_date" id="start_date" class="form-control" value="<?php echo h($start_date); ?>">
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <label for="end_date" class="form-label">End Date:</label>
-                        <input type="date" name="end_date" id="end_date" class="form-control" value="<?php echo h($end_date); ?>">
-                    </div>
-                    <div class="col-12 col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">View Shifts</button>
-                    </div>
+        <h2 class="mb-4">Shifts</h2>
+        <form method="get" class="mb-4">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label for="branch_id" class="form-label">Select Branch:</label>
+                    <select name="branch_id" id="branch_id" class="form-select">
+                        <?php foreach ($branches as $b): ?>
+                            <option value="<?php echo $b['id']; ?>" <?php if ($b['id'] == $selected_branch_id) echo 'selected'; ?>><?php echo h($b['branch_name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
-            </form>
-            <div class="mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Shifts Summary</h5>
-                        <div class="row g-3">
-                            <div class="col-6 col-md-3"><strong>Total Shifts:</strong> <?php echo h($shift_summary['total']); ?></div>
-                            <div class="col-6 col-md-3"><strong>Active:</strong> <?php echo h($shift_summary['active']); ?></div>
-                            <div class="col-6 col-md-3"><strong>Inactive:</strong> <?php echo h($shift_summary['inactive']); ?></div>
-                            <div class="col-12 col-md-3">
-                                <strong>By Name:</strong>
-                                <ul class="mb-0">
-                                    <?php foreach ($shift_summary['by_name'] as $name => $count): ?>
-                                        <li><?php echo h($name); ?>: <?php echo h($count); ?></li>
-                                    <?php endforeach; ?>
-                                    <?php if (!$shift_summary['by_name']): ?><li>None</li><?php endif; ?>
-                                </ul>
-                            </div>
+                <div class="col-12 col-md-3">
+                    <label for="start_date" class="form-label">Start Date:</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" value="<?php echo h($start_date); ?>">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label for="end_date" class="form-label">End Date:</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control" value="<?php echo h($end_date); ?>">
+                </div>
+                <div class="col-12 col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">View Shifts</button>
+                </div>
+            </div>
+        </form>
+        <div class="mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Shifts Summary</h5>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3"><strong>Total Shifts:</strong> <?php echo h($shift_summary['total']); ?></div>
+                        <div class="col-6 col-md-3"><strong>Active:</strong> <?php echo h($shift_summary['active']); ?></div>
+                        <div class="col-6 col-md-3"><strong>Inactive:</strong> <?php echo h($shift_summary['inactive']); ?></div>
+                        <div class="col-12 col-md-3">
+                            <strong>By Name:</strong>
+                            <ul class="mb-0">
+                                <?php foreach ($shift_summary['by_name'] as $name => $count): ?>
+                                    <li><?php echo h($name); ?>: <?php echo h($count); ?></li>
+                                <?php endforeach; ?>
+                                <?php if (!$shift_summary['by_name']): ?><li>None</li><?php endif; ?>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
-            <h5 class="mb-3 d-flex justify-content-between align-items-center">Shifts
-                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#shiftModal" id="addShiftBtn"><i class="bi bi-plus"></i> Add Shift</button>
-            </h5>
-            <?php if ($shifts): ?>
-                <div class="table-responsive mb-4">
-                    <table class="table table-sm table-bordered align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Name</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Description</th>
-                                <th>Active</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($shifts as $s): ?>
-                                <tr>
-                                    <td><?php echo h($s['shift_name']); ?></td>
-                                    <td><?php echo h($s['start_time']); ?></td>
-                                    <td><?php echo h($s['end_time']); ?></td>
-                                    <td><?php echo h($s['description']); ?></td>
-                                    <td><?php echo $s['is_active'] ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'; ?></td>
-                                    <td class="text-end">
-                                        <button class="btn btn-sm btn-primary me-1 editShiftBtn" 
-                                            data-id="<?php echo $s['id']; ?>"
-                                            data-name="<?php echo h($s['shift_name']); ?>"
-                                            data-start="<?php echo h($s['start_time']); ?>"
-                                            data-end="<?php echo h($s['end_time']); ?>"
-                                            data-desc="<?php echo h($s['description']); ?>"
-                                            data-active="<?php echo $s['is_active']; ?>"
-                                            data-bs-toggle="modal" data-bs-target="#shiftModal">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </button>
-                                        <button class="btn btn-sm btn-danger deleteShiftBtn" 
-                                            data-id="<?php echo $s['id']; ?>" 
-                                            data-name="<?php echo h($s['shift_name']); ?>"
-                                            data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-            <?php else: ?>
-                <div class="alert alert-info">No shifts found for this branch.</div>
-            <?php endif; ?>
-            <h5 class="mb-3">Shift Assignments</h5>
-            <?php if ($assignments): ?>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Date</th>
-                                <th>Shift</th>
-                                <th>User</th>
-                                <th>Clock In</th>
-                                <th>Clock Out</th>
-                                <th>Total Hours</th>
-                                <th>Total Sales</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($assignments as $a): ?>
-                                <tr>
-                                    <td><?php echo h($a['assignment_date']); ?></td>
-                                    <td><?php echo h($a['shift_name']); ?></td>
-                                    <td><?php echo h($a['first_name'] . ' ' . $a['last_name']); ?></td>
-                                    <td><?php echo h($a['clock_in_time']); ?></td>
-                                    <td><?php echo h($a['clock_out_time']); ?></td>
-                                    <td><?php echo h($a['total_hours']); ?></td>
-                                    <td><?php echo h($a['total_sales']); ?></td>
-                                    <td><?php echo h($a['status']); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-            <?php else: ?>
-                <div class="alert alert-info">No shift assignments found for this branch and date range.</div>
-            <?php endif; ?>
         </div>
+        <h5 class="mb-3 d-flex justify-content-between align-items-center">Shifts
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#shiftModal" id="addShiftBtn"><i class="bi bi-plus"></i> Add Shift</button>
+        </h5>
+        <?php if ($shifts): ?>
+            <div class="table-responsive mb-4">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Description</th>
+                            <th>Active</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($shifts as $s): ?>
+                            <tr>
+                                <td><?php echo h($s['shift_name']); ?></td>
+                                <td><?php echo h($s['start_time']); ?></td>
+                                <td><?php echo h($s['end_time']); ?></td>
+                                <td><?php echo h($s['description']); ?></td>
+                                <td><?php echo $s['is_active'] ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'; ?></td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-primary me-1 editShiftBtn" 
+                                        data-id="<?php echo $s['id']; ?>"
+                                        data-name="<?php echo h($s['shift_name']); ?>"
+                                        data-start="<?php echo h($s['start_time']); ?>"
+                                        data-end="<?php echo h($s['end_time']); ?>"
+                                        data-desc="<?php echo h($s['description']); ?>"
+                                        data-active="<?php echo $s['is_active']; ?>"
+                                        data-bs-toggle="modal" data-bs-target="#shiftModal">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-danger deleteShiftBtn" 
+                                        data-id="<?php echo $s['id']; ?>" 
+                                        data-name="<?php echo h($s['shift_name']); ?>"
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+        <?php else: ?>
+            <div class="alert alert-info">No shifts found for this branch.</div>
+        <?php endif; ?>
+        <h5 class="mb-3">Shift Assignments</h5>
+        <?php if ($assignments): ?>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Shift</th>
+                            <th>User</th>
+                            <th>Clock In</th>
+                            <th>Clock Out</th>
+                            <th>Total Hours</th>
+                            <th>Total Sales</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($assignments as $a): ?>
+                            <tr>
+                                <td><?php echo h($a['assignment_date']); ?></td>
+                                <td><?php echo h($a['shift_name']); ?></td>
+                                <td><?php echo h($a['first_name'] . ' ' . $a['last_name']); ?></td>
+                                <td><?php echo h($a['clock_in_time']); ?></td>
+                                <td><?php echo h($a['clock_out_time']); ?></td>
+                                <td><?php echo h($a['total_hours']); ?></td>
+                                <td><?php echo h($a['total_sales']); ?></td>
+                                <td><?php echo h($a['status']); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+        <?php else: ?>
+            <div class="alert alert-info">No shift assignments found for this branch and date range.</div>
+        <?php endif; ?>
     </div>
 </div>
 

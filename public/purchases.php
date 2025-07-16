@@ -65,93 +65,106 @@ function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UT
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        .main-content { margin-left: 260px; }
-        @media (max-width: 991.98px) { .main-content { margin-left: 0; } }
+        html, body { height: 100%; }
+        body { min-height: 100vh; margin: 0; padding: 0; }
+        .main-flex-container { display: flex; height: 100vh; overflow: hidden; }
+        .sidebar-fixed { width: 240px; min-width: 200px; max-width: 300px; height: 100vh; position: sticky; top: 0; left: 0; z-index: 1020; background: #f8f9fa; border-right: 1px solid #dee2e6; }
+        .main-content-scroll { flex: 1 1 0%; height: 100vh; overflow-y: auto; padding: 32px 24px 24px 24px; background: #fff; }
+        @media (max-width: 767.98px) { .main-flex-container { display: block; height: auto; } .sidebar-fixed { display: none; } .main-content-scroll { height: auto; padding: 16px 8px; } }
     </style>
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row flex-nowrap">
-        <!-- Sidebar -->
-        <div class="col-auto d-none d-md-block p-0">
-            <?php include '../includes/sidebar.php'; ?>
+<!-- Responsive Sidebar Offcanvas for mobile -->
+<div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <?php include '../includes/sidebar.php'; ?>
+    </div>
+</div>
+<div class="main-flex-container">
+    <!-- Sidebar for desktop -->
+    <div class="sidebar-fixed d-none d-md-block p-0">
+        <?php include '../includes/sidebar.php'; ?>
+    </div>
+    <!-- Main content -->
+    <div class="main-content-scroll">
+        <!-- Mobile menu button -->
+        <div class="d-md-none mb-3">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                <i class="bi bi-list"></i> Menu
+            </button>
         </div>
-        <!-- Main content -->
-        <div>
-            <div class="d-md-none mb-3">
-                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-                    <i class="bi bi-list"></i> Menu
-                </button>
-            </div>
-            <h2 class="mb-4">Purchases Management</h2>
-            <form method="get" class="mb-4">
-                <div class="row g-2 align-items-center">
-                    <div class="col-auto">
-                        <label for="branch_id" class="form-label">Branch:</label>
-                    </div>
-                    <div class="col-auto">
-                        <select name="branch_id" id="branch_id" class="form-select" onchange="this.form.submit()">
-                            <?php foreach ($branches as $b): ?>
-                                <option value="<?php echo $b['id']; ?>" <?php if ($b['id'] == $selected_branch) echo 'selected'; ?>><?php echo h($b['branch_name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-auto">
-                        <label for="fuel_type_id" class="form-label">Fuel Type:</label>
-                    </div>
-                    <div class="col-auto">
-                        <select name="fuel_type_id" id="fuel_type_id" class="form-select" onchange="this.form.submit()">
-                            <?php foreach ($fuel_types as $ft): ?>
-                                <option value="<?php echo $ft['id']; ?>" <?php if ($ft['id'] == $selected_fuel) echo 'selected'; ?>><?php echo h($ft['name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+        <h2 class="mb-4">Purchases Management</h2>
+        <form method="get" class="mb-4">
+            <div class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <label for="branch_id" class="form-label">Branch:</label>
                 </div>
-            </form>
-            <div class="d-flex justify-content-end mb-2">
-                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addPurchaseModal"><i class="bi bi-plus"></i> Add Purchase</button>
+                <div class="col-auto">
+                    <select name="branch_id" id="branch_id" class="form-select" onchange="this.form.submit()">
+                        <?php foreach ($branches as $b): ?>
+                            <option value="<?php echo $b['id']; ?>" <?php if ($b['id'] == $selected_branch) echo 'selected'; ?>><?php echo h($b['branch_name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label for="fuel_type_id" class="form-label">Fuel Type:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="fuel_type_id" id="fuel_type_id" class="form-select" onchange="this.form.submit()">
+                        <?php foreach ($fuel_types as $ft): ?>
+                            <option value="<?php echo $ft['id']; ?>" <?php if ($ft['id'] == $selected_fuel) echo 'selected'; ?>><?php echo h($ft['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
-            <?php if ($purchases): ?>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle mb-0">
-                        <thead class="table-light">
+        </form>
+        <div class="d-flex justify-content-end mb-2">
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addPurchaseModal"><i class="bi bi-plus"></i> Add Purchase</button>
+        </div>
+        <?php if ($purchases): ?>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Branch</th>
+                            <th>Fuel Type</th>
+                            <th>Supplier</th>
+                            <th>Quantity</th>
+                            <th>Unit Cost</th>
+                            <th>Total Cost</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($purchases as $p): ?>
                             <tr>
-                                <th>Date</th>
-                                <th>Branch</th>
-                                <th>Fuel Type</th>
-                                <th>Supplier</th>
-                                <th>Quantity</th>
-                                <th>Unit Cost</th>
-                                <th>Total Cost</th>
-                                <th>Status</th>
-                                <th class="text-end">Actions</th>
+                                <td><?php echo h($p['delivery_date']); ?></td>
+                                <td><?php echo h($p['branch_name']); ?></td>
+                                <td><?php echo h($p['fuel_type_name']); ?></td>
+                                <td><?php echo h($p['supplier_name']); ?></td>
+                                <td><?php echo h($p['quantity_delivered']); ?></td>
+                                <td><?php echo h($p['unit_cost']); ?></td>
+                                <td><?php echo h($p['total_cost']); ?></td>
+                                <td><?php echo h($p['payment_status']); ?></td>
+                                <td class="text-end">
+                                    <button class="btn btn-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editPurchaseModal<?php echo $p['id']; ?>"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deletePurchaseModal<?php echo $p['id']; ?>"><i class="bi bi-trash"></i></button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($purchases as $p): ?>
-                                <tr>
-                                    <td><?php echo h($p['delivery_date']); ?></td>
-                                    <td><?php echo h($p['branch_name']); ?></td>
-                                    <td><?php echo h($p['fuel_type_name']); ?></td>
-                                    <td><?php echo h($p['supplier_name']); ?></td>
-                                    <td><?php echo h($p['quantity_delivered']); ?></td>
-                                    <td><?php echo h($p['unit_cost']); ?></td>
-                                    <td><?php echo h($p['total_cost']); ?></td>
-                                    <td><?php echo h($p['payment_status']); ?></td>
-                                    <td class="text-end">
-                                        <button class="btn btn-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editPurchaseModal<?php echo $p['id']; ?>"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deletePurchaseModal<?php echo $p['id']; ?>"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-            <?php else: ?>
-                <div class="alert alert-info">No purchases found for the selected filters.</div>
-            <?php endif; ?>
-        </div>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+        <?php else: ?>
+            <div class="alert alert-info">No purchases found for the selected filters.</div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -296,17 +309,6 @@ function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UT
   </div>
 </div>
 <?php endforeach; ?>
-
-<!-- Responsive Sidebar Offcanvas for mobile -->
-<div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
-    <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body p-0">
-        <?php include '../includes/sidebar.php'; ?>
-    </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>

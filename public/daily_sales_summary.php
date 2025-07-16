@@ -131,6 +131,14 @@ if ($res) while ($row = mysqli_fetch_assoc($res)) $users[] = $row;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Sales Summary</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        html, body { height: 100%; }
+        body { min-height: 100vh; margin: 0; padding: 0; }
+        .main-flex-container { display: flex; height: 100vh; overflow: hidden; }
+        .sidebar-fixed { width: 240px; min-width: 200px; max-width: 300px; height: 100vh; position: sticky; top: 0; left: 0; z-index: 1020; background: #f8f9fa; border-right: 1px solid #dee2e6; }
+        .main-content-scroll { flex: 1 1 0%; height: 100vh; overflow-y: auto; padding: 32px 24px 24px 24px; background: #fff; }
+        @media (max-width: 767.98px) { .main-flex-container { display: block; height: auto; } .sidebar-fixed { display: none; } .main-content-scroll { height: auto; padding: 16px 8px; } }
+    </style>
 </head>
 <body>
 <!-- Responsive Sidebar Offcanvas for mobile -->
@@ -143,141 +151,139 @@ if ($res) while ($row = mysqli_fetch_assoc($res)) $users[] = $row;
         <?php include '../includes/sidebar.php'; ?>
     </div>
 </div>
-<div class="container-fluid">
-    <div class="row flex-nowrap">
-        <!-- Sidebar for desktop -->
-        <div class="col-auto d-none d-md-block p-0">
-            <?php include '../includes/sidebar.php'; ?>
+<div class="main-flex-container">
+    <!-- Sidebar for desktop -->
+    <div class="sidebar-fixed d-none d-md-block p-0">
+        <?php include '../includes/sidebar.php'; ?>
+    </div>
+    <!-- Main content -->
+    <div class="main-content-scroll">
+        <!-- Mobile menu button -->
+        <div class="d-md-none mb-3">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                <i class="fas fa-bars"></i> Menu
+            </button>
         </div>
-        <!-- Main content -->
-        <div>
-            <!-- Mobile menu button -->
-            <div class="d-md-none mb-3">
-                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-                    <i class="fas fa-bars"></i> Menu
-                </button>
+        <h2 class="mb-4 d-flex justify-content-between align-items-center">Daily Sales Summary
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#summaryModal" id="addSummaryBtn"><i class="bi bi-plus"></i> Add Summary</button>
+        </h2>
+        <form method="get" class="mb-4">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label for="branch_id" class="form-label">Select Branch:</label>
+                    <select name="branch_id" id="branch_id" class="form-select">
+                        <?php foreach ($branches as $b): ?>
+                            <option value="<?php echo $b['id']; ?>" <?php if ($b['id'] == $selected_branch_id) echo 'selected'; ?>><?php echo h($b['branch_name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label for="business_date" class="form-label">Select Date:</label>
+                    <input type="date" name="business_date" id="business_date" class="form-control" value="<?php echo h($selected_date); ?>">
+                </div>
+                <div class="col-12 col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">View Summary</button>
+                </div>
             </div>
-            <h2 class="mb-4 d-flex justify-content-between align-items-center">Daily Sales Summary
-                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#summaryModal" id="addSummaryBtn"><i class="bi bi-plus"></i> Add Summary</button>
-            </h2>
-            <form method="get" class="mb-4">
-                <div class="row g-2 align-items-end">
-                    <div class="col-12 col-md-4">
-                        <label for="branch_id" class="form-label">Select Branch:</label>
-                        <select name="branch_id" id="branch_id" class="form-select">
-                            <?php foreach ($branches as $b): ?>
-                                <option value="<?php echo $b['id']; ?>" <?php if ($b['id'] == $selected_branch_id) echo 'selected'; ?>><?php echo h($b['branch_name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <label for="business_date" class="form-label">Select Date:</label>
-                        <input type="date" name="business_date" id="business_date" class="form-control" value="<?php echo h($selected_date); ?>">
-                    </div>
-                    <div class="col-12 col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">View Summary</button>
-                    </div>
-                </div>
-            </form>
-            <?php if ($summary): ?>
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Summary for <?php echo h($selected_date); ?>
-                            <button class="btn btn-sm btn-primary ms-2 editSummaryBtn" data-id="<?php echo $summary['id']; ?>" data-bs-toggle="modal" data-bs-target="#summaryModal"
-                                data-total_transactions="<?php echo h($summary['total_transactions']); ?>"
-                                data-total_quantity="<?php echo h($summary['total_quantity']); ?>"
-                                data-total_sales="<?php echo h($summary['total_sales']); ?>"
-                                data-cash_sales="<?php echo h($summary['cash_sales']); ?>"
-                                data-card_sales="<?php echo h($summary['card_sales']); ?>"
-                                data-mobile_money_sales="<?php echo h($summary['mobile_money_sales']); ?>"
-                                data-credit_sales="<?php echo h($summary['credit_sales']); ?>"
-                                data-total_discounts="<?php echo h($summary['total_discounts']); ?>"
-                                data-total_taxes="<?php echo h($summary['total_taxes']); ?>"
-                                data-status="<?php echo h($summary['status']); ?>"
-                                data-prepared_by="<?php echo h($summary['prepared_by']); ?>"
-                                data-approved_by="<?php echo h($summary['approved_by']); ?>"
-                            ><i class="bi bi-pencil"></i> Edit</button>
-                            <button class="btn btn-sm btn-danger ms-1 deleteSummaryBtn" data-id="<?php echo $summary['id']; ?>" data-bs-toggle="modal" data-bs-target="#deleteSummaryModal"><i class="bi bi-trash"></i> Delete</button>
-                        </h5>
-                        <div class="row g-3">
-                            <div class="col-6 col-md-3"><strong>Total Transactions:</strong> <?php echo h($summary['total_transactions']); ?></div>
-                            <div class="col-6 col-md-3"><strong>Total Quantity:</strong> <?php echo h($summary['total_quantity']); ?></div>
-                            <div class="col-6 col-md-3"><strong>Total Sales:</strong> <?php echo h($summary['total_sales']); ?></div>
-                            <div class="col-6 col-md-3"><strong>Cash Sales:</strong> <?php echo h($summary['cash_sales']); ?></div>
-                            <div class="col-6 col-md-3"><strong>Card Sales:</strong> <?php echo h($summary['card_sales']); ?></div>
-                            <div class="col-6 col-md-3"><strong>Mobile Money Sales:</strong> <?php echo h($summary['mobile_money_sales']); ?></div>
-                            <div class="col-6 col-md-3"><strong>Credit Sales:</strong> <?php echo h($summary['credit_sales']); ?></div>
-                            <div class="col-6 col-md-3"><strong>Discounts:</strong> <?php echo h($summary['total_discounts']); ?></div>
-                            <div class="col-6 col-md-3"><strong>Taxes:</strong> <?php echo h($summary['total_taxes']); ?></div>
-                            <div class="col-6 col-md-3"><strong>Status:</strong> <?php echo h($summary['status']); ?></div>
-                            <div class="col-12 col-md-6"><strong>Prepared By:</strong> <?php echo h($summary['prepared_first'] . ' ' . $summary['prepared_last']); ?></div>
-                            <div class="col-12 col-md-6"><strong>Approved By:</strong> <?php echo h($summary['approved_first'] . ' ' . $summary['approved_last']); ?></div>
-                        </div>
+        </form>
+        <?php if ($summary): ?>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Summary for <?php echo h($selected_date); ?>
+                        <button class="btn btn-sm btn-primary ms-2 editSummaryBtn" data-id="<?php echo $summary['id']; ?>" data-bs-toggle="modal" data-bs-target="#summaryModal"
+                            data-total_transactions="<?php echo h($summary['total_transactions']); ?>"
+                            data-total_quantity="<?php echo h($summary['total_quantity']); ?>"
+                            data-total_sales="<?php echo h($summary['total_sales']); ?>"
+                            data-cash_sales="<?php echo h($summary['cash_sales']); ?>"
+                            data-card_sales="<?php echo h($summary['card_sales']); ?>"
+                            data-mobile_money_sales="<?php echo h($summary['mobile_money_sales']); ?>"
+                            data-credit_sales="<?php echo h($summary['credit_sales']); ?>"
+                            data-total_discounts="<?php echo h($summary['total_discounts']); ?>"
+                            data-total_taxes="<?php echo h($summary['total_taxes']); ?>"
+                            data-status="<?php echo h($summary['status']); ?>"
+                            data-prepared_by="<?php echo h($summary['prepared_by']); ?>"
+                            data-approved_by="<?php echo h($summary['approved_by']); ?>"
+                        ><i class="bi bi-pencil"></i> Edit</button>
+                        <button class="btn btn-sm btn-danger ms-1 deleteSummaryBtn" data-id="<?php echo $summary['id']; ?>" data-bs-toggle="modal" data-bs-target="#deleteSummaryModal"><i class="bi bi-trash"></i> Delete</button>
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3"><strong>Total Transactions:</strong> <?php echo h($summary['total_transactions']); ?></div>
+                        <div class="col-6 col-md-3"><strong>Total Quantity:</strong> <?php echo h($summary['total_quantity']); ?></div>
+                        <div class="col-6 col-md-3"><strong>Total Sales:</strong> <?php echo h($summary['total_sales']); ?></div>
+                        <div class="col-6 col-md-3"><strong>Cash Sales:</strong> <?php echo h($summary['cash_sales']); ?></div>
+                        <div class="col-6 col-md-3"><strong>Card Sales:</strong> <?php echo h($summary['card_sales']); ?></div>
+                        <div class="col-6 col-md-3"><strong>Mobile Money Sales:</strong> <?php echo h($summary['mobile_money_sales']); ?></div>
+                        <div class="col-6 col-md-3"><strong>Credit Sales:</strong> <?php echo h($summary['credit_sales']); ?></div>
+                        <div class="col-6 col-md-3"><strong>Discounts:</strong> <?php echo h($summary['total_discounts']); ?></div>
+                        <div class="col-6 col-md-3"><strong>Taxes:</strong> <?php echo h($summary['total_taxes']); ?></div>
+                        <div class="col-6 col-md-3"><strong>Status:</strong> <?php echo h($summary['status']); ?></div>
+                        <div class="col-12 col-md-6"><strong>Prepared By:</strong> <?php echo h($summary['prepared_first'] . ' ' . $summary['prepared_last']); ?></div>
+                        <div class="col-12 col-md-6"><strong>Approved By:</strong> <?php echo h($summary['approved_first'] . ' ' . $summary['approved_last']); ?></div>
                     </div>
                 </div>
-            <?php else: ?>
-                <div class="alert alert-warning">No summary found for this branch and date.</div>
-            <?php endif; ?>
-            <h5 class="mb-3 d-flex justify-content-between align-items-center">Sales Transactions
-                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#saleModal" id="addSaleBtn"><i class="bi bi-plus"></i> Add Sale</button>
-            </h5>
-            <?php if ($sales): ?>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered align-middle mb-0">
-                        <thead class="table-light">
+            </div>
+        <?php else: ?>
+            <div class="alert alert-warning">No summary found for this branch and date.</div>
+        <?php endif; ?>
+        <h5 class="mb-3 d-flex justify-content-between align-items-center">Sales Transactions
+            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#saleModal" id="addSaleBtn"><i class="bi bi-plus"></i> Add Sale</button>
+        </h5>
+        <?php if ($sales): ?>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Time</th>
+                            <th>Dispenser #</th>
+                            <th>Fuel Type</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Final Amount</th>
+                            <th>Payment</th>
+                            <th>Attendant</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($sales as $s): ?>
                             <tr>
-                                <th>Time</th>
-                                <th>Dispenser #</th>
-                                <th>Fuel Type</th>
-                                <th>Quantity</th>
-                                <th>Unit Price</th>
-                                <th>Final Amount</th>
-                                <th>Payment</th>
-                                <th>Attendant</th>
-                                <th class="text-end">Actions</th>
+                                <td><?php echo h($s['transaction_time']); ?></td>
+                                <td><?php echo h($s['dispenser_number']); ?></td>
+                                <td><?php echo h($s['fuel_type']); ?></td>
+                                <td><?php echo h($s['quantity']); ?></td>
+                                <td><?php echo h($s['unit_price']); ?></td>
+                                <td><?php echo h($s['final_amount']); ?></td>
+                                <td><?php echo h($s['payment_method']); ?></td>
+                                <td><?php echo h($s['attendant_id']); ?></td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-primary me-1 editSaleBtn"
+                                        data-id="<?php echo $s['id']; ?>"
+                                        data-dispenser_id="<?php echo h($s['dispenser_id']); ?>"
+                                        data-fuel_type_id="<?php echo h($s['fuel_type_id']); ?>"
+                                        data-transaction_time="<?php echo h($s['transaction_time']); ?>"
+                                        data-quantity="<?php echo h($s['quantity']); ?>"
+                                        data-unit_price="<?php echo h($s['unit_price']); ?>"
+                                        data-final_amount="<?php echo h($s['final_amount']); ?>"
+                                        data-payment_method="<?php echo h($s['payment_method']); ?>"
+                                        data-attendant_id="<?php echo h($s['attendant_id']); ?>"
+                                        data-bs-toggle="modal" data-bs-target="#saleModal">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-danger deleteSaleBtn"
+                                        data-id="<?php echo $s['id']; ?>"
+                                        data-bs-toggle="modal" data-bs-target="#deleteSaleModal">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($sales as $s): ?>
-                                <tr>
-                                    <td><?php echo h($s['transaction_time']); ?></td>
-                                    <td><?php echo h($s['dispenser_number']); ?></td>
-                                    <td><?php echo h($s['fuel_type']); ?></td>
-                                    <td><?php echo h($s['quantity']); ?></td>
-                                    <td><?php echo h($s['unit_price']); ?></td>
-                                    <td><?php echo h($s['final_amount']); ?></td>
-                                    <td><?php echo h($s['payment_method']); ?></td>
-                                    <td><?php echo h($s['attendant_id']); ?></td>
-                                    <td class="text-end">
-                                        <button class="btn btn-sm btn-primary me-1 editSaleBtn"
-                                            data-id="<?php echo $s['id']; ?>"
-                                            data-dispenser_id="<?php echo h($s['dispenser_id']); ?>"
-                                            data-fuel_type_id="<?php echo h($s['fuel_type_id']); ?>"
-                                            data-transaction_time="<?php echo h($s['transaction_time']); ?>"
-                                            data-quantity="<?php echo h($s['quantity']); ?>"
-                                            data-unit_price="<?php echo h($s['unit_price']); ?>"
-                                            data-final_amount="<?php echo h($s['final_amount']); ?>"
-                                            data-payment_method="<?php echo h($s['payment_method']); ?>"
-                                            data-attendant_id="<?php echo h($s['attendant_id']); ?>"
-                                            data-bs-toggle="modal" data-bs-target="#saleModal">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </button>
-                                        <button class="btn btn-sm btn-danger deleteSaleBtn"
-                                            data-id="<?php echo $s['id']; ?>"
-                                            data-bs-toggle="modal" data-bs-target="#deleteSaleModal">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-            <?php else: ?>
-                <div class="alert alert-info">No sales transactions found for this branch and date.</div>
-            <?php endif; ?>
-        </div>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+        <?php else: ?>
+            <div class="alert alert-info">No sales transactions found for this branch and date.</div>
+        <?php endif; ?>
     </div>
 </div>
 <!-- Add/Edit Summary Modal -->

@@ -132,6 +132,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fuel Type Information</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        html, body { height: 100%; }
+        body { min-height: 100vh; margin: 0; padding: 0; }
+        .main-flex-container { display: flex; height: 100vh; overflow: hidden; }
+        .sidebar-fixed { width: 240px; min-width: 200px; max-width: 300px; height: 100vh; position: sticky; top: 0; left: 0; z-index: 1020; background: #f8f9fa; border-right: 1px solid #dee2e6; }
+        .main-content-scroll { flex: 1 1 0%; height: 100vh; overflow-y: auto; padding: 32px 24px 24px 24px; background: #fff; }
+        @media (max-width: 767.98px) { .main-flex-container { display: block; height: auto; } .sidebar-fixed { display: none; } .main-content-scroll { height: auto; padding: 16px 8px; } }
+    </style>
 </head>
 <body>
 <!-- Responsive Sidebar Offcanvas for mobile -->
@@ -144,166 +152,164 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <?php include '../includes/sidebar.php'; ?>
     </div>
 </div>
-<div class="container-fluid">
-    <div class="row flex-nowrap">
-        <!-- Sidebar for desktop -->
-        <div class="col-auto d-none d-md-block p-0">
-            <?php include '../includes/sidebar.php'; ?>
+<div class="main-flex-container">
+    <!-- Sidebar for desktop -->
+    <div class="sidebar-fixed d-none d-md-block p-0">
+        <?php include '../includes/sidebar.php'; ?>
+    </div>
+    <!-- Main content -->
+    <div class="main-content-scroll">
+        <!-- Mobile menu button -->
+        <div class="d-md-none mb-3">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                <i class="fas fa-bars"></i> Menu
+            </button>
         </div>
-        <!-- Main content -->
-        <div>
-            <!-- Mobile menu button -->
-            <div class="d-md-none mb-3">
-                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-                    <i class="fas fa-bars"></i> Menu
-                </button>
+        <h2 class="mb-4">Fuel Type Information</h2>
+        <form method="get" class="mb-4">
+            <div class="row g-2 align-items-center">
+                <div class="col-auto">
+                    <label for="branch_id" class="form-label">Select Branch:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="branch_id" id="branch_id" class="form-select" onchange="this.form.submit()">
+                        <?php foreach ($all_branches as $b): ?>
+                            <option value="<?php echo $b['id']; ?>" <?php if ($b['id'] == ($_GET['branch_id'] ?? '')) echo 'selected'; ?>>
+                                <?php echo htmlspecialchars($b['branch_name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label for="fuel_type_id" class="form-label">Select Fuel Type:</label>
+                </div>
+                <div class="col-auto">
+                    <select name="fuel_type_id" id="fuel_type_id" class="form-select" onchange="this.form.submit()">
+                        <?php foreach ($fuel_types as $ft): ?>
+                            <option value="<?php echo $ft['id']; ?>" <?php if ($ft['id'] == ($_GET['fuel_type_id'] ?? '')) echo 'selected'; ?>>
+                                <?php echo htmlspecialchars($ft['name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
-            <h2 class="mb-4">Fuel Type Information</h2>
-            <form method="get" class="mb-4">
-                <div class="row g-2 align-items-center">
-                    <div class="col-auto">
-                        <label for="branch_id" class="form-label">Select Branch:</label>
+        </form>
+        <?php if ($selected_fuel): ?>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-2"><?php echo h($selected_fuel['name']); ?> (<?php echo h($selected_fuel['code']); ?>)</h4>
+                    <p class="mb-1"><strong>Description:</strong> <?php echo h($selected_fuel['description']); ?></p>
+                    <p class="mb-1"><strong>Octane Rating:</strong> <?php echo h($selected_fuel['octane_rating']); ?></p>
+                    <p class="mb-1"><strong>Unit of Measure:</strong> <?php echo h($selected_fuel['unit_of_measure']); ?></p>
+                </div>
+            </div>
+            <ul class="nav nav-tabs mb-3" id="fuelTabs" role="tablist">
+                <li class="nav-item" role="presentation"><button class="nav-link active" id="tanks-tab" data-bs-toggle="tab" data-bs-target="#tanks" type="button" role="tab">Storage Tanks</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" id="dispensers-tab" data-bs-toggle="tab" data-bs-target="#dispensers" type="button" role="tab">Dispensers</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" id="purchases-tab" data-bs-toggle="tab" data-bs-target="#purchases" type="button" role="tab">Purchases</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab">Sales</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" id="price-tab" data-bs-toggle="tab" data-bs-target="#price" type="button" role="tab">Price History</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" id="quality-tab" data-bs-toggle="tab" data-bs-target="#quality" type="button" role="tab">Quality Tests</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" id="variance-tab" data-bs-toggle="tab" data-bs-target="#variance" type="button" role="tab">Variances</button></li>
+            </ul>
+            <div class="tab-content" id="fuelTabsContent">
+                <div class="tab-pane fade show active" id="tanks" role="tabpanel">
+                    <div class="d-flex justify-content-end mb-2">
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addTankModal">
+                            <i class="bi bi-plus"></i> Add Tank
+                        </button>
                     </div>
-                    <div class="col-auto">
-                        <select name="branch_id" id="branch_id" class="form-select" onchange="this.form.submit()">
-                            <?php foreach ($all_branches as $b): ?>
-                                <option value="<?php echo $b['id']; ?>" <?php if ($b['id'] == ($_GET['branch_id'] ?? '')) echo 'selected'; ?>>
-                                    <?php echo htmlspecialchars($b['branch_name']); ?>
-                                </option>
+                    <?php if ($storage_tanks): ?>
+                        <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Branch</th><th>Tank #</th><th>Capacity</th><th>Current Level</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
+                            <?php foreach ($storage_tanks as $t): ?>
+                                <tr><td><?php echo h($t['branch_name']); ?></td><td><?php echo h($t['tank_number']); ?></td><td><?php echo h($t['capacity']); ?></td><td><?php echo h($t['current_level']); ?></td><td><?php echo h($t['status']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editTankModal<?php echo $t['id']; ?>"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteTankModal<?php echo $t['id']; ?>"><i class="bi bi-trash"></i></button></td></tr>
                             <?php endforeach; ?>
-                        </select>
+                        </tbody></table></div>
+                        <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+                    <?php else: ?><div class="alert alert-info">No storage tanks found for this fuel type.</div><?php endif; ?>
+                </div>
+                <div class="tab-pane fade" id="dispensers" role="tabpanel">
+                    <div class="d-flex justify-content-end mb-2">
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addDispenserModal"><i class="bi bi-plus"></i> Add Dispenser</button>
                     </div>
-                    <div class="col-auto">
-                        <label for="fuel_type_id" class="form-label">Select Fuel Type:</label>
-                    </div>
-                    <div class="col-auto">
-                        <select name="fuel_type_id" id="fuel_type_id" class="form-select" onchange="this.form.submit()">
-                            <?php foreach ($fuel_types as $ft): ?>
-                                <option value="<?php echo $ft['id']; ?>" <?php if ($ft['id'] == ($_GET['fuel_type_id'] ?? '')) echo 'selected'; ?>>
-                                    <?php echo htmlspecialchars($ft['name']); ?>
-                                </option>
+                    <?php if ($dispensers): ?>
+                        <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Branch</th><th>Dispenser #</th><th>Tank #</th><th>Pump Price</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
+                            <?php foreach ($dispensers as $d): ?>
+                                <tr><td><?php echo h($d['branch_name']); ?></td><td><?php echo h($d['dispenser_number']); ?></td><td><?php echo h($d['tank_number']); ?></td><td><?php echo h($d['pump_price']); ?></td><td><?php echo h($d['status']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button></td></tr>
                             <?php endforeach; ?>
-                        </select>
-                    </div>
+                        </tbody></table></div>
+                        <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+                    <?php else: ?><div class="alert alert-info">No dispensers found for this fuel type.</div><?php endif; ?>
                 </div>
-            </form>
-            <?php if ($selected_fuel): ?>
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h4 class="card-title mb-2"><?php echo h($selected_fuel['name']); ?> (<?php echo h($selected_fuel['code']); ?>)</h4>
-                        <p class="mb-1"><strong>Description:</strong> <?php echo h($selected_fuel['description']); ?></p>
-                        <p class="mb-1"><strong>Octane Rating:</strong> <?php echo h($selected_fuel['octane_rating']); ?></p>
-                        <p class="mb-1"><strong>Unit of Measure:</strong> <?php echo h($selected_fuel['unit_of_measure']); ?></p>
+                <div class="tab-pane fade" id="purchases" role="tabpanel">
+                    <div class="d-flex justify-content-end mb-2">
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addPurchaseModal"><i class="bi bi-plus"></i> Add Purchase</button>
                     </div>
+                    <?php if ($purchases): ?>
+                        <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Date</th><th>Branch</th><th>Supplier</th><th>Quantity</th><th>Unit Cost</th><th>Total Cost</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
+                            <?php foreach ($purchases as $p): ?>
+                                <tr><td><?php echo h($p['delivery_date']); ?></td><td><?php echo h($p['branch_name']); ?></td><td><?php echo h($p['supplier_name']); ?></td><td><?php echo h($p['quantity_delivered']); ?></td><td><?php echo h($p['unit_cost']); ?></td><td><?php echo h($p['total_cost']); ?></td><td><?php echo h($p['payment_status']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button></td></tr>
+                            <?php endforeach; ?>
+                        </tbody></table></div>
+                        <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+                    <?php else: ?><div class="alert alert-info">No purchases found for this fuel type.</div><?php endif; ?>
                 </div>
-                <ul class="nav nav-tabs mb-3" id="fuelTabs" role="tablist">
-                    <li class="nav-item" role="presentation"><button class="nav-link active" id="tanks-tab" data-bs-toggle="tab" data-bs-target="#tanks" type="button" role="tab">Storage Tanks</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" id="dispensers-tab" data-bs-toggle="tab" data-bs-target="#dispensers" type="button" role="tab">Dispensers</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" id="purchases-tab" data-bs-toggle="tab" data-bs-target="#purchases" type="button" role="tab">Purchases</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab">Sales</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" id="price-tab" data-bs-toggle="tab" data-bs-target="#price" type="button" role="tab">Price History</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" id="quality-tab" data-bs-toggle="tab" data-bs-target="#quality" type="button" role="tab">Quality Tests</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" id="variance-tab" data-bs-toggle="tab" data-bs-target="#variance" type="button" role="tab">Variances</button></li>
-                </ul>
-                <div class="tab-content" id="fuelTabsContent">
-                    <div class="tab-pane fade show active" id="tanks" role="tabpanel">
-                        <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addTankModal">
-                                <i class="bi bi-plus"></i> Add Tank
-                            </button>
-                        </div>
-                        <?php if ($storage_tanks): ?>
-                            <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Branch</th><th>Tank #</th><th>Capacity</th><th>Current Level</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
-                                <?php foreach ($storage_tanks as $t): ?>
-                                    <tr><td><?php echo h($t['branch_name']); ?></td><td><?php echo h($t['tank_number']); ?></td><td><?php echo h($t['capacity']); ?></td><td><?php echo h($t['current_level']); ?></td><td><?php echo h($t['status']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editTankModal<?php echo $t['id']; ?>"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteTankModal<?php echo $t['id']; ?>"><i class="bi bi-trash"></i></button></td></tr>
-                                <?php endforeach; ?>
-                            </tbody></table></div>
-                            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-                        <?php else: ?><div class="alert alert-info">No storage tanks found for this fuel type.</div><?php endif; ?>
+                <div class="tab-pane fade" id="sales" role="tabpanel">
+                    <div class="d-flex justify-content-end mb-2">
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addSaleModal"><i class="bi bi-plus"></i> Add Sale</button>
                     </div>
-                    <div class="tab-pane fade" id="dispensers" role="tabpanel">
-                        <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addDispenserModal"><i class="bi bi-plus"></i> Add Dispenser</button>
-                        </div>
-                        <?php if ($dispensers): ?>
-                            <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Branch</th><th>Dispenser #</th><th>Tank #</th><th>Pump Price</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
-                                <?php foreach ($dispensers as $d): ?>
-                                    <tr><td><?php echo h($d['branch_name']); ?></td><td><?php echo h($d['dispenser_number']); ?></td><td><?php echo h($d['tank_number']); ?></td><td><?php echo h($d['pump_price']); ?></td><td><?php echo h($d['status']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button></td></tr>
-                                <?php endforeach; ?>
-                            </tbody></table></div>
-                            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-                        <?php else: ?><div class="alert alert-info">No dispensers found for this fuel type.</div><?php endif; ?>
-                    </div>
-                    <div class="tab-pane fade" id="purchases" role="tabpanel">
-                        <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addPurchaseModal"><i class="bi bi-plus"></i> Add Purchase</button>
-                        </div>
-                        <?php if ($purchases): ?>
-                            <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Date</th><th>Branch</th><th>Supplier</th><th>Quantity</th><th>Unit Cost</th><th>Total Cost</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
-                                <?php foreach ($purchases as $p): ?>
-                                    <tr><td><?php echo h($p['delivery_date']); ?></td><td><?php echo h($p['branch_name']); ?></td><td><?php echo h($p['supplier_name']); ?></td><td><?php echo h($p['quantity_delivered']); ?></td><td><?php echo h($p['unit_cost']); ?></td><td><?php echo h($p['total_cost']); ?></td><td><?php echo h($p['payment_status']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button></td></tr>
-                                <?php endforeach; ?>
-                            </tbody></table></div>
-                            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-                        <?php else: ?><div class="alert alert-info">No purchases found for this fuel type.</div><?php endif; ?>
-                    </div>
-                    <div class="tab-pane fade" id="sales" role="tabpanel">
-                        <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addSaleModal"><i class="bi bi-plus"></i> Add Sale</button>
-                        </div>
-                        <?php if ($sales): ?>
-                            <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Date</th><th>Time</th><th>Branch</th><th>Dispenser #</th><th>Quantity</th><th>Unit Price</th><th>Final Amount</th><th>Payment</th><th class="text-end">Actions</th></tr></thead><tbody>
-                                <?php foreach ($sales as $s): ?>
-                                    <tr><td><?php echo h($s['transaction_date']); ?></td><td><?php echo h($s['transaction_time']); ?></td><td><?php echo h($s['branch_name']); ?></td><td><?php echo h($s['dispenser_number']); ?></td><td><?php echo h($s['quantity']); ?></td><td><?php echo h($s['unit_price']); ?></td><td><?php echo h($s['final_amount']); ?></td><td><?php echo h($s['payment_method']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button></td></tr>
-                                <?php endforeach; ?>
-                            </tbody></table></div>
-                            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-                        <?php else: ?><div class="alert alert-info">No sales found for this fuel type.</div><?php endif; ?>
-                    </div>
-                    <div class="tab-pane fade" id="price" role="tabpanel">
-                        <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addPriceModal"><i class="bi bi-plus"></i> Add Price</button>
-                        </div>
-                        <?php if ($price_history): ?>
-                            <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Branch</th><th>Old Price</th><th>New Price</th><th>Effective Date</th><th>Changed By</th><th>Reason</th><th class="text-end">Actions</th></tr></thead><tbody>
-                                <?php foreach ($price_history as $ph): ?>
-                                    <tr><td><?php echo h($ph['branch_name']); ?></td><td><?php echo h($ph['old_price']); ?></td><td><?php echo h($ph['new_price']); ?></td><td><?php echo h($ph['effective_date']); ?></td><td><?php echo h($ph['changed_by']); ?></td><td><?php echo h($ph['reason']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button></td></tr>
-                                <?php endforeach; ?>
-                            </tbody></table></div>
-                            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-                        <?php else: ?><div class="alert alert-info">No price history found for this fuel type.</div><?php endif; ?>
-                    </div>
-                    <div class="tab-pane fade" id="quality" role="tabpanel">
-                        <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addQualityTestModal"><i class="bi bi-plus"></i> Add Test</button>
-                        </div>
-                        <?php if ($quality_tests): ?>
-                            <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Date</th><th>Branch</th><th>Tank #</th><th>Type</th><th>Density</th><th>Octane</th><th>Result</th><th>Tested By</th><th class="text-end">Actions</th></tr></thead><tbody>
-                                <?php foreach ($quality_tests as $qt): ?>
-                                    <tr><td><?php echo h($qt['test_date']); ?></td><td><?php echo h($qt['branch_name']); ?></td><td><?php echo h($qt['tank_number']); ?></td><td><?php echo h($qt['test_type']); ?></td><td><?php echo h($qt['density']); ?></td><td><?php echo h($qt['octane_rating']); ?></td><td><?php echo h($qt['test_result']); ?></td><td><?php echo h($qt['tested_by']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button></td></tr>
-                                <?php endforeach; ?>
-                            </tbody></table></div>
-                            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-                        <?php else: ?><div class="alert alert-info">No quality tests found for this fuel type.</div><?php endif; ?>
-                    </div>
-                    <div class="tab-pane fade" id="variance" role="tabpanel">
-                        <div class="d-flex justify-content-end mb-2">
-                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addVarianceModal"><i class="bi bi-plus"></i> Add Variance</button>
-                        </div>
-                        <?php if ($variances): ?>
-                            <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Date</th><th>Branch</th><th>Tank #</th><th>Expected Qty</th><th>Actual Qty</th><th>Variance</th><th>Type</th><th>Reason</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
-                                <?php foreach ($variances as $v): ?>
-                                    <tr><td><?php echo h($v['variance_date']); ?></td><td><?php echo h($v['branch_name']); ?></td><td><?php echo h($v['tank_number']); ?></td><td><?php echo h($v['expected_quantity']); ?></td><td><?php echo h($v['actual_quantity']); ?></td><td><?php echo h($v['variance_quantity']); ?></td><td><?php echo h($v['variance_type']); ?></td><td><?php echo h($v['variance_reason']); ?></td><td><?php echo h($v['status']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button></td></tr>
-                                <?php endforeach; ?>
-                            </tbody></table></div>
-                            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-                        <?php else: ?><div class="alert alert-info">No variances found for this fuel type.</div><?php endif; ?>
-                    </div>
+                    <?php if ($sales): ?>
+                        <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Date</th><th>Time</th><th>Branch</th><th>Dispenser #</th><th>Quantity</th><th>Unit Price</th><th>Final Amount</th><th>Payment</th><th class="text-end">Actions</th></tr></thead><tbody>
+                            <?php foreach ($sales as $s): ?>
+                                <tr><td><?php echo h($s['transaction_date']); ?></td><td><?php echo h($s['transaction_time']); ?></td><td><?php echo h($s['branch_name']); ?></td><td><?php echo h($s['dispenser_number']); ?></td><td><?php echo h($s['quantity']); ?></td><td><?php echo h($s['unit_price']); ?></td><td><?php echo h($s['final_amount']); ?></td><td><?php echo h($s['payment_method']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button></td></tr>
+                            <?php endforeach; ?>
+                        </tbody></table></div>
+                        <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+                    <?php else: ?><div class="alert alert-info">No sales found for this fuel type.</div><?php endif; ?>
                 </div>
-            <?php else: ?>
-                <div class="alert alert-warning">No fuel type selected or available.</div>
-            <?php endif; ?>
-        </div>
+                <div class="tab-pane fade" id="price" role="tabpanel">
+                    <div class="d-flex justify-content-end mb-2">
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addPriceModal"><i class="bi bi-plus"></i> Add Price</button>
+                    </div>
+                    <?php if ($price_history): ?>
+                        <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Branch</th><th>Old Price</th><th>New Price</th><th>Effective Date</th><th>Changed By</th><th>Reason</th><th class="text-end">Actions</th></tr></thead><tbody>
+                            <?php foreach ($price_history as $ph): ?>
+                                <tr><td><?php echo h($ph['branch_name']); ?></td><td><?php echo h($ph['old_price']); ?></td><td><?php echo h($ph['new_price']); ?></td><td><?php echo h($ph['effective_date']); ?></td><td><?php echo h($ph['changed_by']); ?></td><td><?php echo h($ph['reason']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button></td></tr>
+                            <?php endforeach; ?>
+                        </tbody></table></div>
+                        <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+                    <?php else: ?><div class="alert alert-info">No price history found for this fuel type.</div><?php endif; ?>
+                </div>
+                <div class="tab-pane fade" id="quality" role="tabpanel">
+                    <div class="d-flex justify-content-end mb-2">
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addQualityTestModal"><i class="bi bi-plus"></i> Add Test</button>
+                    </div>
+                    <?php if ($quality_tests): ?>
+                        <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Date</th><th>Branch</th><th>Tank #</th><th>Type</th><th>Density</th><th>Octane</th><th>Result</th><th>Tested By</th><th class="text-end">Actions</th></tr></thead><tbody>
+                            <?php foreach ($quality_tests as $qt): ?>
+                                <tr><td><?php echo h($qt['test_date']); ?></td><td><?php echo h($qt['branch_name']); ?></td><td><?php echo h($qt['tank_number']); ?></td><td><?php echo h($qt['test_type']); ?></td><td><?php echo h($qt['density']); ?></td><td><?php echo h($qt['octane_rating']); ?></td><td><?php echo h($qt['test_result']); ?></td><td><?php echo h($qt['tested_by']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button></td></tr>
+                            <?php endforeach; ?>
+                        </tbody></table></div>
+                        <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+                    <?php else: ?><div class="alert alert-info">No quality tests found for this fuel type.</div><?php endif; ?>
+                </div>
+                <div class="tab-pane fade" id="variance" role="tabpanel">
+                    <div class="d-flex justify-content-end mb-2">
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addVarianceModal"><i class="bi bi-plus"></i> Add Variance</button>
+                    </div>
+                    <?php if ($variances): ?>
+                        <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead><tr><th>Date</th><th>Branch</th><th>Tank #</th><th>Expected Qty</th><th>Actual Qty</th><th>Variance</th><th>Type</th><th>Reason</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
+                            <?php foreach ($variances as $v): ?>
+                                <tr><td><?php echo h($v['variance_date']); ?></td><td><?php echo h($v['branch_name']); ?></td><td><?php echo h($v['tank_number']); ?></td><td><?php echo h($v['expected_quantity']); ?></td><td><?php echo h($v['actual_quantity']); ?></td><td><?php echo h($v['variance_quantity']); ?></td><td><?php echo h($v['variance_type']); ?></td><td><?php echo h($v['variance_reason']); ?></td><td><?php echo h($v['status']); ?></td><td class="text-end"><button class="btn btn-primary btn-sm me-1"><i class="bi bi-pencil"></i></button><button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button></td></tr>
+                            <?php endforeach; ?>
+                        </tbody></table></div>
+                        <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+                    <?php else: ?><div class="alert alert-info">No variances found for this fuel type.</div><?php endif; ?>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="alert alert-warning">No fuel type selected or available.</div>
+        <?php endif; ?>
     </div>
 </div>
 <!-- Add Tank Modal -->
