@@ -108,46 +108,62 @@ if ($role === 'super_admin' && $business_id) {
                 <div class="card-body">
                   <h5 class="card-title mb-3"><i class="bi bi-lightning-charge-fill text-warning"></i> Quick Start</h5>
                   <div class="row g-3">
+                    <?php if ($role === 'super_admin' || in_array('financial.view_sales', $user_permissions)): ?>
                     <div class="col-6 col-md-3">
-                  <a href="daily_sales_summary.php" class="btn btn-outline-primary w-100 py-3">
+                      <a href="daily_sales_summary.php" class="btn btn-outline-primary w-100 py-3">
                         <i class="bi bi-cash-coin fs-3"></i><br>New Sale
                       </a>
                     </div>
+                    <?php endif; ?>
+                    <?php if ($role === 'super_admin' || in_array('financial.view_purchases', $user_permissions)): ?>
                     <div class="col-6 col-md-3">
-                  <a href="purchases.php" class="btn btn-outline-success w-100 py-3">
+                      <a href="purchases.php" class="btn btn-outline-success w-100 py-3">
                         <i class="bi bi-bag-plus fs-3"></i><br>New Purchase
                       </a>
                     </div>
+                    <?php endif; ?>
+                    <?php if ($role === 'super_admin' || in_array('employee.manage', $user_permissions)): ?>
                     <div class="col-6 col-md-3">
                       <a href="employee_management.php" class="btn btn-outline-info w-100 py-3">
                         <i class="bi bi-person-plus fs-3"></i><br>Add Employee
                       </a>
                     </div>
+                    <?php endif; ?>
+                    <?php if ($role === 'super_admin' || in_array('reports.view', $user_permissions)): ?>
                     <div class="col-6 col-md-3">
                       <a href="reports.php" class="btn btn-outline-dark w-100 py-3">
                         <i class="bi bi-bar-chart-line fs-3"></i><br>View Reports
                       </a>
                     </div>
+                    <?php endif; ?>
+                    <?php if ($role === 'super_admin' || in_array('financial.view_expenses', $user_permissions)): ?>
                     <div class="col-6 col-md-3">
                       <a href="expenses.php" class="btn btn-outline-warning w-100 py-3">
                         <i class="bi bi-currency-exchange fs-3"></i><br>Add Expense
                       </a>
                     </div>
+                    <?php endif; ?>
+                    <?php if ($role === 'super_admin' || in_array('shift.assign', $user_permissions)): ?>
                     <div class="col-6 col-md-3">
                       <a href="shift_assignments.php" class="btn btn-outline-secondary w-100 py-3">
                         <i class="bi bi-clock-history fs-3"></i><br>Assign Shift
                       </a>
                     </div>
+                    <?php endif; ?>
+                    <?php if ($role === 'super_admin' || in_array('inventory.view', $user_permissions)): ?>
                     <div class="col-6 col-md-3">
-                  <a href="fuel_type_info.php" class="btn btn-outline-danger w-100 py-3">
+                      <a href="fuel_type_info.php" class="btn btn-outline-danger w-100 py-3">
                         <i class="bi bi-droplet-half fs-3"></i><br>Storage Tanks
                       </a>
                     </div>
+                    <?php endif; ?>
+                    <?php if ($role === 'super_admin' || in_array('notifications.view', $user_permissions)): ?>
                     <div class="col-6 col-md-3">
                       <a href="notifications.php" class="btn btn-outline-primary w-100 py-3">
                         <i class="bi bi-bell fs-3"></i><br>Notifications
                       </a>
                     </div>
+                    <?php endif; ?>
                   </div>
                 </div>
               </div>
