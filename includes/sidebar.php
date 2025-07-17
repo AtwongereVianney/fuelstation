@@ -161,6 +161,7 @@ $sidebarModules = get_accessible_sidebar_modules();
                 $is_super_admin = mysqli_num_rows($super_result) > 0;
             }
             if ($is_super_admin) {
+                echo '<li><a class="nav-link" href="../public/manage_businesses.php"><i class="bi bi-diagram-3"></i><span>Manage Businesses</span></a></li>';
                 foreach ($sidebar_branches as $branch) {
                     echo '<li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=' . $branch['id'] . '"><i class="bi bi-building"></i><span>' . htmlspecialchars($branch['branch_name']) . '</span></a></li>';
                 }
