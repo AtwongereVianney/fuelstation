@@ -136,13 +136,13 @@ function get_sidebar_modules() {
                     'label' => 'Shifts',
                     'url' => '../public/shifts.php',
                     'icon' => 'bi-clock',
-                    'permission' => 'shift.view'
+                    'permission' => 'shifts.view'
                 ],
                 [
                     'label' => 'Shift Assignments',
                     'url' => '../public/shift_assignments.php',
                     'icon' => 'bi-person-lines-fill',
-                    'permission' => 'shift.assign'
+                    'permission' => 'shift_assignments.view'
                 ],
             ]
         ],

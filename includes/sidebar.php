@@ -161,9 +161,32 @@ $sidebarModules = get_accessible_sidebar_modules();
                 $is_super_admin = mysqli_num_rows($super_result) > 0;
             }
             if ($is_super_admin) {
+                // Fetch all businesses and their branches
+                $sidebar_businesses = [];
+                $biz_res = mysqli_query($conn, "SELECT id, business_name FROM businesses WHERE deleted_at IS NULL ORDER BY business_name");
+                while ($biz_row = mysqli_fetch_assoc($biz_res)) {
+                    $sidebar_businesses[] = $biz_row;
+                }
+                $branches_by_business = [];
+                $branch_res = mysqli_query($conn, "SELECT id, branch_name, business_id FROM branches WHERE deleted_at IS NULL ORDER BY branch_name");
+                while ($branch_row = mysqli_fetch_assoc($branch_res)) {
+                    $branches_by_business[$branch_row['business_id']][] = $branch_row;
+                }
                 echo '<li><a class="nav-link" href="../public/manage_businesses.php"><i class="bi bi-diagram-3"></i><span>Manage Businesses</span></a></li>';
-                foreach ($sidebar_branches as $branch) {
-                    echo '<li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=' . $branch['id'] . '"><i class="bi bi-building"></i><span>' . htmlspecialchars($branch['branch_name']) . '</span></a></li>';
+                foreach ($sidebar_businesses as $biz) {
+                    $collapseId = 'bizBranches' . $biz['id'];
+                    echo '<li>';
+                    echo '<a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#' . $collapseId . '" role="button" aria-expanded="false" aria-controls="' . $collapseId . '"><span><i class="bi bi-building"></i> ' . htmlspecialchars($biz['business_name']) . '</span><i class="bi bi-caret-down-fill small"></i></a>';
+                    echo '<ul class="collapse list-unstyled ps-3" id="' . $collapseId . '">';
+                    if (!empty($branches_by_business[$biz['id']])) {
+                        foreach ($branches_by_business[$biz['id']] as $branch) {
+                            echo '<li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=' . $branch['id'] . '"><i class="bi bi-chevron-right"></i><span>' . htmlspecialchars($branch['branch_name']) . '</span></a></li>';
+                        }
+                    } else {
+                        echo '<li><span class="nav-link text-muted">No branches</span></li>';
+                    }
+                    echo '</ul>';
+                    echo '</li>';
                 }
             } else if (isset($_SESSION['business_id'], $_SESSION['branch_id'])) {
                 $user_business_id = $_SESSION['business_id'];

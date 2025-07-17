@@ -128,134 +128,134 @@ mysqli_stmt_close($summary_stmt);
         <!-- Main content -->
     <div class="main-content-scroll">
         <?php include '../includes/header.php'; ?>
-        <!-- Mobile menu button -->
-        <div class="d-md-none mb-3">
-            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-                <i class="fas fa-bars"></i> Menu
-            </button>
-        </div>
-        <h2 class="mb-4">Branch Dashboard: <?php echo htmlspecialchars($branch_name); ?></h2>
-        <div class="row mb-4 g-3">
-            <div class="col-12 col-md-3">
-                <div class="card text-bg-primary mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Sales</h5>
-                        <p class="card-text fs-4">UGX <?php echo number_format($total_sales, 2); ?></p>
+            <!-- Mobile menu button -->
+            <div class="d-md-none mb-3">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                    <i class="fas fa-bars"></i> Menu
+                </button>
+            </div>
+            <h2 class="mb-4">Branch Dashboard: <?php echo htmlspecialchars($branch_name); ?></h2>
+            <div class="row mb-4 g-3">
+                <div class="col-12 col-md-3">
+                    <div class="card text-bg-primary mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Sales</h5>
+                            <p class="card-text fs-4">UGX <?php echo number_format($total_sales, 2); ?></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="card text-bg-success mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Today's Sales</h5>
+                            <p class="card-text fs-4">UGX <?php echo number_format($daily_sales, 2); ?></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="card text-bg-warning mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Expenses</h5>
+                            <p class="card-text fs-4">UGX <?php echo number_format($total_expenses, 2); ?></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="card text-bg-info mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Transactions</h5>
+                            <p class="card-text fs-4"><?php echo number_format($summary['total_transactions'] ?? 0); ?></p>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-md-3">
-                <div class="card text-bg-success mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Today's Sales</h5>
-                        <p class="card-text fs-4">UGX <?php echo number_format($daily_sales, 2); ?></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-3">
-                <div class="card text-bg-warning mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Expenses</h5>
-                        <p class="card-text fs-4">UGX <?php echo number_format($total_expenses, 2); ?></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-3">
-                <div class="card text-bg-info mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Transactions</h5>
-                        <p class="card-text fs-4"><?php echo number_format($summary['total_transactions'] ?? 0); ?></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">Attendants</div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>ID</th>
-                                <th>Username</th>
-                                <th>Name</th>
-                                <th>Status</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($attendants)): ?>
-                                <?php foreach ($attendants as $attendant): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($attendant['id']); ?></td>
-                                        <td><?php echo htmlspecialchars($attendant['username']); ?></td>
-                                        <td><?php echo htmlspecialchars($attendant['first_name'] . ' ' . $attendant['last_name']); ?></td>
-                                        <td><?php echo htmlspecialchars($attendant['status']); ?></td>
-                                        <td class="text-end">
-                                            <a href="#" class="btn btn-sm btn-primary me-1"><i class="bi bi-pencil"></i> Edit</a>
-                                            <a href="#" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Delete</a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">Attendants</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                            <thead class="table-light">
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted">No attendants found for this branch</td>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
                                 </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-            </div>
-        </div>
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">Shifts & Assignments</div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Shift Name</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Attendant</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($shifts)): ?>
-                                <?php foreach ($shifts as $shift): ?>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($attendants)): ?>
+                                    <?php foreach ($attendants as $attendant): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($attendant['id']); ?></td>
+                                            <td><?php echo htmlspecialchars($attendant['username']); ?></td>
+                                            <td><?php echo htmlspecialchars($attendant['first_name'] . ' ' . $attendant['last_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($attendant['status']); ?></td>
+                                            <td class="text-end">
+                                                <a href="#" class="btn btn-sm btn-primary me-1"><i class="bi bi-pencil"></i> Edit</a>
+                                                <a href="#" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Delete</a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($shift['shift_name']); ?></td>
-                                        <td><?php echo htmlspecialchars($shift['start_time']); ?></td>
-                                        <td><?php echo htmlspecialchars($shift['end_time']); ?></td>
-                                        <td><?php echo htmlspecialchars(($shift['first_name'] ?? '') . ' ' . ($shift['last_name'] ?? '')); ?></td>
-                                        <td class="text-end">
-                                            <a href="#" class="btn btn-sm btn-primary me-1"><i class="bi bi-eye"></i> View</a>
-                                            <a href="#" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Delete</a>
-                                        </td>
+                                        <td colspan="5" class="text-center text-muted">No attendants found for this branch</td>
                                     </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted">No shifts found for this branch</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
                 </div>
-                <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
             </div>
-        </div>
-        <div class="card mb-4">
-            <div class="card-header bg-warning text-dark">Financial Performance</div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Total Sales: <strong>UGX <?php echo number_format($summary['total_sales'] ?? 0, 2); ?></strong></li>
-                    <li class="list-group-item">Total Expenses: <strong>UGX <?php echo number_format($summary['total_expenses'] ?? 0, 2); ?></strong></li>
-                    <li class="list-group-item">Total Transactions: <strong><?php echo number_format($summary['total_transactions'] ?? 0); ?></strong></li>
-                    <li class="list-group-item">Total Users: <strong><?php echo number_format($summary['total_users'] ?? 0); ?></strong></li>
-                </ul>
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">Shifts & Assignments</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Shift Name</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Attendant</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($shifts)): ?>
+                                    <?php foreach ($shifts as $shift): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($shift['shift_name']); ?></td>
+                                            <td><?php echo htmlspecialchars($shift['start_time']); ?></td>
+                                            <td><?php echo htmlspecialchars($shift['end_time']); ?></td>
+                                            <td><?php echo htmlspecialchars(($shift['first_name'] ?? '') . ' ' . ($shift['last_name'] ?? '')); ?></td>
+                                            <td class="text-end">
+                                                <a href="#" class="btn btn-sm btn-primary me-1"><i class="bi bi-eye"></i> View</a>
+                                                <a href="#" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Delete</a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No shifts found for this branch</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+                </div>
+            </div>
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">Financial Performance</div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Total Sales: <strong>UGX <?php echo number_format($summary['total_sales'] ?? 0, 2); ?></strong></li>
+                        <li class="list-group-item">Total Expenses: <strong>UGX <?php echo number_format($summary['total_expenses'] ?? 0, 2); ?></strong></li>
+                        <li class="list-group-item">Total Transactions: <strong><?php echo number_format($summary['total_transactions'] ?? 0); ?></strong></li>
+                        <li class="list-group-item">Total Users: <strong><?php echo number_format($summary['total_users'] ?? 0); ?></strong></li>
+                    </ul>
             </div>
         </div>
     </div>

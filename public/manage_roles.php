@@ -110,22 +110,22 @@ if (!$result) {
     </div>
     <div class="offcanvas-body p-0">
         <?php include '../includes/sidebar.php'; ?>
-    </div>
+      </div>
 </div>
 <div class="main-flex-container">
-    <!-- Sidebar for desktop -->
+        <!-- Sidebar for desktop -->
     <div class="sidebar-fixed d-none d-md-block p-0">
-        <?php include '../includes/sidebar.php'; ?>
-    </div>
-    <!-- Main content -->
+            <?php include '../includes/sidebar.php'; ?>
+        </div>
+        <!-- Main content -->
     <div class="main-content-scroll">
         <?php include '../includes/header.php'; ?>
-        <!-- Mobile menu button -->
-        <div class="d-md-none mb-3">
-            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+            <!-- Mobile menu button -->
+            <div class="d-md-none mb-3">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
                 <i class="bi bi-list"></i> Menu
-            </button>
-        </div>
+                </button>
+            </div>
         <h2 class="mb-4">Roles Management</h2>
         <!-- Success/Error Messages -->
         <?php if (isset($_SESSION['success_message'])): ?>
@@ -142,7 +142,7 @@ if (!$result) {
         <?php endif; ?>
         <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addRoleModal">Add New Role</button>
         <div class="table-responsive">
-          <table class="table table-sm table-bordered table-hover align-middle mb-0">
+              <table class="table table-sm table-bordered table-hover align-middle mb-0">
             <thead class="table-light">
               <tr>
                 <th>S/N</th>
@@ -188,10 +188,10 @@ if (!$result) {
             </tbody>
           </table>
         </div>
-        <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
         <!-- Modals and scripts remain unchanged -->
     </div>
-</div>
+  </div>
   <!-- Add Role Modal -->
   <div class="modal fade" id="addRoleModal" tabindex="-1" aria-labelledby="addRoleModalLabel" aria-hidden="true">
     <div class="modal-dialog">

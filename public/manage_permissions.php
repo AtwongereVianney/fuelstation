@@ -98,58 +98,58 @@ if ($result) {
         <!-- Main content -->
     <div class="main-content-scroll">
         <?php include '../includes/header.php'; ?>
-        <!-- Mobile menu button -->
-        <div class="d-md-none mb-3">
-            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-                <i class="fas fa-bars"></i> Menu
-            </button>
-        </div>
-        <h2 class="mb-4">Permissions Management</h2>
-        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addPermissionModal">Add New Permission</button>
-        <?php
-        // Group permissions by module
-        $modules = [];
-        foreach ($permissions as $perm) {
-            $module = $perm['module'] ?: 'Other';
-            $modules[$module][] = $perm;
-        }
-        ?>
-        <div class="container-fluid px-0">
-          <div class="row g-3">
-            <?php foreach ($modules as $moduleName => $modulePerms): ?>
-              <div class="col-12 col-md-6 col-lg-4">
-                <div class="card h-100">
-                  <div class="card-header bg-primary text-white">
-                    <?php echo htmlspecialchars($moduleName); ?>
+            <!-- Mobile menu button -->
+            <div class="d-md-none mb-3">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                    <i class="fas fa-bars"></i> Menu
+                </button>
+            </div>
+            <h2 class="mb-4">Permissions Management</h2>
+            <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addPermissionModal">Add New Permission</button>
+            <?php
+            // Group permissions by module
+            $modules = [];
+            foreach ($permissions as $perm) {
+                $module = $perm['module'] ?: 'Other';
+                $modules[$module][] = $perm;
+            }
+            ?>
+            <div class="container-fluid px-0">
+              <div class="row g-3">
+                <?php foreach ($modules as $moduleName => $modulePerms): ?>
+                  <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100">
+                      <div class="card-header bg-primary text-white">
+                        <?php echo htmlspecialchars($moduleName); ?>
+                      </div>
+                      <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                          <?php foreach ($modulePerms as $perm): ?>
+                            <li class="list-group-item">
+                              <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                                <div>
+                                  <div class="fw-semibold"><?php echo htmlspecialchars($perm['display_name']); ?></div>
+                                  <?php if (!empty($perm['description'])): ?>
+                                    <div class="text-muted small"><?php echo htmlspecialchars($perm['description']); ?></div>
+                                  <?php endif; ?>
+                                  <div class="text-muted small">Name: <span class="fst-italic"><?php echo htmlspecialchars($perm['name']); ?></span></div>
+                                </div>
+                                <div class="mt-2 mt-md-0 ms-md-2 text-nowrap">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewPermissionModal<?php echo $perm['id']; ?>">View</button>
+                                    <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editPermissionModal<?php echo $perm['id']; ?>">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deletePermissionModal<?php echo $perm['id']; ?>">Delete</button>
+                                </div>
+                              </div>
+                            </li>
+                          <?php endforeach; ?>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
-                  <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                      <?php foreach ($modulePerms as $perm): ?>
-                        <li class="list-group-item">
-                          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-                            <div>
-                              <div class="fw-semibold"><?php echo htmlspecialchars($perm['display_name']); ?></div>
-                              <?php if (!empty($perm['description'])): ?>
-                                <div class="text-muted small"><?php echo htmlspecialchars($perm['description']); ?></div>
-                              <?php endif; ?>
-                              <div class="text-muted small">Name: <span class="fst-italic"><?php echo htmlspecialchars($perm['name']); ?></span></div>
-                            </div>
-                            <div class="mt-2 mt-md-0 ms-md-2 text-nowrap">
-                                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewPermissionModal<?php echo $perm['id']; ?>">View</button>
-                                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editPermissionModal<?php echo $perm['id']; ?>">Edit</button>
-                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deletePermissionModal<?php echo $perm['id']; ?>">Delete</button>
-                            </div>
-                          </div>
-                        </li>
-                      <?php endforeach; ?>
-                    </ul>
-                  </div>
-                </div>
+                    <?php endforeach; ?>
               </div>
-                <?php endforeach; ?>
-          </div>
-        </div>
-        <div class="d-block d-md-none small text-muted mt-2">Cards are scrollable. Tap a card to see more permissions.</div>
+            </div>
+            <div class="d-block d-md-none small text-muted mt-2">Cards are scrollable. Tap a card to see more permissions.</div>
     </div>
 </div>
 <!-- Modals rendered outside the table for all permissions -->
