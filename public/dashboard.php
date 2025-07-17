@@ -91,7 +91,7 @@ if ($role === 'super_admin' && $business_id) {
 <div class="main-flex-container">
     <!-- Sidebar for desktop -->
     <div class="sidebar-fixed d-none d-md-block p-0">
-        <?php include '../includes/sidebar.php'; ?>
+    <?php include '../includes/sidebar.php'; ?>
     </div>
     <!-- Main content -->
     <div class="main-content-scroll">
@@ -100,7 +100,7 @@ if ($role === 'super_admin' && $business_id) {
             <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
                 <i class="bi bi-list"></i> Menu
             </button>
-        </div>
+                </div>
         <?php include '../includes/header.php'; ?>
             <!-- Quick Start Section -->
             <div class="mb-4">
