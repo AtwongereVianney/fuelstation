@@ -140,15 +140,7 @@ if (isset($_POST['change_password'])) {
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="dashboard.php">Uganda Fuel Station</a>
-        <div class="d-flex">
-      <a href="dashboard.php" class="btn btn-outline-secondary me-2">Dashboard</a>
-      <a href="logout.php" class="btn btn-outline-secondary">Logout</a>
-        </div>
-    </div>
-</nav>
+<?php include '../includes/header.php'; ?>
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-8">

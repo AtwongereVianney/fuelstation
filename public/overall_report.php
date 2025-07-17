@@ -107,6 +107,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     </div>
     <!-- Main content -->
     <div class="main-content-scroll">
+        <?php include '../includes/header.php'; ?>
         <!-- Mobile menu button -->
         <div class="d-md-none mb-3">
             <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
