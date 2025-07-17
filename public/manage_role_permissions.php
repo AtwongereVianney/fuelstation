@@ -126,68 +126,68 @@ if ($selected_role_id) {
     </div>
 </div>
 <div class="main-flex-container">
-    <!-- Sidebar for desktop -->
+        <!-- Sidebar for desktop -->
     <div class="sidebar-fixed d-none d-md-block p-0">
-        <?php include '../includes/sidebar.php'; ?>
-    </div>
-    <!-- Main content -->
-    <div class="main-content-scroll">
-        <!-- Mobile menu button -->
-        <div class="d-md-none mb-3">
-            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-                <i class="fas fa-bars"></i> Menu
-            </button>
+            <?php include '../includes/sidebar.php'; ?>
         </div>
-        <h2 class="mb-4">Role Permissions Management</h2>
-        <form method="get" class="mb-3">
-            <div class="row g-2 align-items-center">
-                <div class="col-auto">
-                    <label for="role_id" class="col-form-label">Select Role:</label>
-                </div>
-                <div class="col-auto">
-                    <select name="role_id" id="role_id" class="form-select" onchange="this.form.submit()">
-                        <?php foreach ($roles as $role): ?>
-                            <option value="<?php echo $role['id']; ?>" <?php if ($role['id'] == $selected_role_id) echo 'selected'; ?>><?php echo htmlspecialchars($role['display_name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+        <!-- Main content -->
+    <div class="main-content-scroll">
+            <!-- Mobile menu button -->
+            <div class="d-md-none mb-3">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                    <i class="fas fa-bars"></i> Menu
+                </button>
             </div>
-        </form>
-        <form method="post">
-            <input type="hidden" name="role_id" value="<?php echo $selected_role_id; ?>">
-            <div class="accordion mb-3" id="permissionsAccordion">
-                <?php foreach ($permissions_by_module as $module => $perms): ?>
-                    <div class="accordion-item mb-2">
-                        <h2 class="accordion-header d-flex align-items-center justify-content-between" id="heading-<?php echo htmlspecialchars($module); ?>">
-                            <button class="accordion-button collapsed flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<?php echo htmlspecialchars($module); ?>" aria-expanded="false" aria-controls="collapse-<?php echo htmlspecialchars($module); ?>">
-                                <?php echo ucwords(str_replace('_', ' ', $module)); ?>
-                            </button>
-                            <div class="form-check ms-3 me-3">
-                                <input class="form-check-input module-checkbox" type="checkbox" id="module-check-<?php echo htmlspecialchars($module); ?>" data-module="<?php echo htmlspecialchars($module); ?>">
-                                <label class="form-check-label small" for="module-check-<?php echo htmlspecialchars($module); ?>"></label>
-                            </div>
-                        </h2>
-                        <div id="collapse-<?php echo htmlspecialchars($module); ?>" class="accordion-collapse collapse" aria-labelledby="heading-<?php echo htmlspecialchars($module); ?>" data-bs-parent="#permissionsAccordion">
-                            <div class="accordion-body p-2">
-                                <div class="row">
-                                    <?php foreach ($perms as $perm): ?>
-                                        <div class="col-12 col-sm-6 col-lg-4 mb-2">
-                                            <div class="form-check">
-                                                <input class="form-check-input perm-checkbox perm-checkbox-<?php echo htmlspecialchars($module); ?>" type="checkbox" name="permissions[]" value="<?php echo $perm['id']; ?>" id="perm-<?php echo $perm['id']; ?>" <?php if (in_array($perm['id'], $current_permissions)) echo 'checked'; ?>>
-                                                <label class="form-check-label" for="perm-<?php echo $perm['id']; ?>">
-                                                    <?php echo htmlspecialchars($perm['display_name']); ?>
-                                                </label>
+            <h2 class="mb-4">Role Permissions Management</h2>
+            <form method="get" class="mb-3">
+                <div class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <label for="role_id" class="col-form-label">Select Role:</label>
+                    </div>
+                    <div class="col-auto">
+                        <select name="role_id" id="role_id" class="form-select" onchange="this.form.submit()">
+                            <?php foreach ($roles as $role): ?>
+                                <option value="<?php echo $role['id']; ?>" <?php if ($role['id'] == $selected_role_id) echo 'selected'; ?>><?php echo htmlspecialchars($role['display_name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+            </form>
+            <form method="post">
+                <input type="hidden" name="role_id" value="<?php echo $selected_role_id; ?>">
+                <div class="accordion mb-3" id="permissionsAccordion">
+                    <?php foreach ($permissions_by_module as $module => $perms): ?>
+                        <div class="accordion-item mb-2">
+                            <h2 class="accordion-header d-flex align-items-center justify-content-between" id="heading-<?php echo htmlspecialchars($module); ?>">
+                                <button class="accordion-button collapsed flex-grow-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<?php echo htmlspecialchars($module); ?>" aria-expanded="false" aria-controls="collapse-<?php echo htmlspecialchars($module); ?>">
+                                    <?php echo ucwords(str_replace('_', ' ', $module)); ?>
+                                </button>
+                                <div class="form-check ms-3 me-3">
+                                    <input class="form-check-input module-checkbox" type="checkbox" id="module-check-<?php echo htmlspecialchars($module); ?>" data-module="<?php echo htmlspecialchars($module); ?>">
+                                    <label class="form-check-label small" for="module-check-<?php echo htmlspecialchars($module); ?>"></label>
+                                </div>
+                            </h2>
+                            <div id="collapse-<?php echo htmlspecialchars($module); ?>" class="accordion-collapse collapse" aria-labelledby="heading-<?php echo htmlspecialchars($module); ?>" data-bs-parent="#permissionsAccordion">
+                                <div class="accordion-body p-2">
+                                    <div class="row">
+                                        <?php foreach ($perms as $perm): ?>
+                                            <div class="col-12 col-sm-6 col-lg-4 mb-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input perm-checkbox perm-checkbox-<?php echo htmlspecialchars($module); ?>" type="checkbox" name="permissions[]" value="<?php echo $perm['id']; ?>" id="perm-<?php echo $perm['id']; ?>" <?php if (in_array($perm['id'], $current_permissions)) echo 'checked'; ?>>
+                                                    <label class="form-check-label" for="perm-<?php echo $perm['id']; ?>">
+                                                        <?php echo htmlspecialchars($perm['display_name']); ?>
+                                                    </label>
+                                                </div>
                                             </div>
-                                        </div>
-                                    <?php endforeach; ?>
+                                        <?php endforeach; ?>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-            <button type="submit" class="btn btn-success mt-3">Save Permissions</button>
-        </form>
+                    <?php endforeach; ?>
+                </div>
+                <button type="submit" class="btn btn-success mt-3">Save Permissions</button>
+            </form>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

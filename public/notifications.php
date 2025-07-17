@@ -88,115 +88,115 @@ if ($res) {
     </div>
 </div>
 <div class="main-flex-container">
-    <!-- Sidebar for desktop -->
+        <!-- Sidebar for desktop -->
     <div class="sidebar-fixed d-none d-md-block p-0">
-        <?php include '../includes/sidebar.php'; ?>
-    </div>
-    <!-- Main content -->
-    <div class="main-content-scroll">
-        <!-- Mobile menu button -->
-        <div class="d-md-none mb-3">
-            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-                <i class="fas fa-bars"></i> Menu
-            </button>
+            <?php include '../includes/sidebar.php'; ?>
         </div>
-        <h2 class="mb-4">Notifications</h2>
-        <form method="get" class="mb-4">
-            <div class="row g-2 align-items-end">
-                <div class="col-12 col-md-3">
-                    <label for="branch_id" class="form-label">Branch:</label>
-                    <select name="branch_id" id="branch_id" class="form-select">
-                        <option value="">All</option>
-                        <?php foreach ($branches as $b): ?>
-                            <option value="<?php echo $b['id']; ?>" <?php if ($b['id'] == $selected_branch_id) echo 'selected'; ?>><?php echo h($b['branch_name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-12 col-md-2">
-                    <label for="notification_type" class="form-label">Type:</label>
-                    <select name="notification_type" id="notification_type" class="form-select">
-                        <?php foreach ($notification_types as $val => $label): ?>
-                            <option value="<?php echo h($val); ?>" <?php if ($val === $selected_type) echo 'selected'; ?>><?php echo h($label); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-12 col-md-2">
-                    <label for="start_date" class="form-label">Start Date:</label>
-                    <input type="date" name="start_date" id="start_date" class="form-control" value="<?php echo h($start_date); ?>">
-                </div>
-                <div class="col-12 col-md-2">
-                    <label for="end_date" class="form-label">End Date:</label>
-                    <input type="date" name="end_date" id="end_date" class="form-control" value="<?php echo h($end_date); ?>">
-                </div>
-                <div class="col-12 col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Filter</button>
-                </div>
+        <!-- Main content -->
+    <div class="main-content-scroll">
+            <!-- Mobile menu button -->
+            <div class="d-md-none mb-3">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                    <i class="fas fa-bars"></i> Menu
+                </button>
             </div>
-        </form>
-        <div class="mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Notifications Summary</h5>
-                    <div class="row g-3">
-                        <div class="col-12 col-md-3"><strong>Total:</strong> <?php echo h($summary['total']); ?></div>
-                        <div class="col-12 col-md-3">
-                            <strong>By Type:</strong>
-                            <ul class="mb-0">
-                                <?php foreach ($summary['by_type'] as $type => $count): ?>
-                                    <li><?php echo h(ucfirst($type)); ?>: <?php echo h($count); ?></li>
-                                <?php endforeach; ?>
-                                <?php if (!$summary['by_type']): ?><li>None</li><?php endif; ?>
-                            </ul>
-                        </div>
-                        <div class="col-12 col-md-3">
-                            <strong>By Status:</strong>
-                            <ul class="mb-0">
-                                <?php foreach ($summary['by_status'] as $status => $count): ?>
-                                    <li><?php echo h($status); ?>: <?php echo h($count); ?></li>
-                                <?php endforeach; ?>
-                                <?php if (!$summary['by_status']): ?><li>None</li><?php endif; ?>
-                            </ul>
+            <h2 class="mb-4">Notifications</h2>
+            <form method="get" class="mb-4">
+                <div class="row g-2 align-items-end">
+                    <div class="col-12 col-md-3">
+                        <label for="branch_id" class="form-label">Branch:</label>
+                        <select name="branch_id" id="branch_id" class="form-select">
+                            <option value="">All</option>
+                            <?php foreach ($branches as $b): ?>
+                                <option value="<?php echo $b['id']; ?>" <?php if ($b['id'] == $selected_branch_id) echo 'selected'; ?>><?php echo h($b['branch_name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label for="notification_type" class="form-label">Type:</label>
+                        <select name="notification_type" id="notification_type" class="form-select">
+                            <?php foreach ($notification_types as $val => $label): ?>
+                                <option value="<?php echo h($val); ?>" <?php if ($val === $selected_type) echo 'selected'; ?>><?php echo h($label); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label for="start_date" class="form-label">Start Date:</label>
+                        <input type="date" name="start_date" id="start_date" class="form-control" value="<?php echo h($start_date); ?>">
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label for="end_date" class="form-label">End Date:</label>
+                        <input type="date" name="end_date" id="end_date" class="form-control" value="<?php echo h($end_date); ?>">
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </div>
+            </form>
+            <div class="mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Notifications Summary</h5>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-3"><strong>Total:</strong> <?php echo h($summary['total']); ?></div>
+                            <div class="col-12 col-md-3">
+                                <strong>By Type:</strong>
+                                <ul class="mb-0">
+                                    <?php foreach ($summary['by_type'] as $type => $count): ?>
+                                        <li><?php echo h(ucfirst($type)); ?>: <?php echo h($count); ?></li>
+                                    <?php endforeach; ?>
+                                    <?php if (!$summary['by_type']): ?><li>None</li><?php endif; ?>
+                                </ul>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <strong>By Status:</strong>
+                                <ul class="mb-0">
+                                    <?php foreach ($summary['by_status'] as $status => $count): ?>
+                                        <li><?php echo h($status); ?>: <?php echo h($count); ?></li>
+                                    <?php endforeach; ?>
+                                    <?php if (!$summary['by_status']): ?><li>None</li><?php endif; ?>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <h5 class="mb-3">Notifications</h5>
-        <?php if ($notifications): ?>
-            <div class="table-responsive">
-                <table class="table table-sm table-bordered align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Date</th>
-                            <th>Type</th>
-                            <th>Title</th>
-                            <th>Message</th>
-                            <th>User</th>
-                            <th>Branch</th>
-                            <th>Status</th>
-                            <th>Action URL</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($notifications as $n): ?>
+            <h5 class="mb-3">Notifications</h5>
+            <?php if ($notifications): ?>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <td><?php echo h($n['created_at']); ?></td>
-                                <td><?php echo h(ucfirst($n['notification_type'])); ?></td>
-                                <td><?php echo h($n['title']); ?></td>
-                                <td><?php echo h($n['message']); ?></td>
-                                <td><?php echo h(trim($n['first_name'] . ' ' . $n['last_name'])); ?></td>
-                                <td><?php echo h($n['branch_name']); ?></td>
-                                <td><?php echo $n['is_read'] ? '<span class="badge bg-success">Read</span>' : '<span class="badge bg-warning text-dark">Unread</span>'; ?></td>
-                                <td><?php if ($n['action_url']): ?><a href="<?php echo h($n['action_url']); ?>" target="_blank">Link</a><?php endif; ?></td>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Title</th>
+                                <th>Message</th>
+                                <th>User</th>
+                                <th>Branch</th>
+                                <th>Status</th>
+                                <th>Action URL</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-        <?php else: ?>
-            <div class="alert alert-info">No notifications found for the selected filters.</div>
-        <?php endif; ?>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($notifications as $n): ?>
+                                <tr>
+                                    <td><?php echo h($n['created_at']); ?></td>
+                                    <td><?php echo h(ucfirst($n['notification_type'])); ?></td>
+                                    <td><?php echo h($n['title']); ?></td>
+                                    <td><?php echo h($n['message']); ?></td>
+                                    <td><?php echo h(trim($n['first_name'] . ' ' . $n['last_name'])); ?></td>
+                                    <td><?php echo h($n['branch_name']); ?></td>
+                                    <td><?php echo $n['is_read'] ? '<span class="badge bg-success">Read</span>' : '<span class="badge bg-warning text-dark">Unread</span>'; ?></td>
+                                    <td><?php if ($n['action_url']): ?><a href="<?php echo h($n['action_url']); ?>" target="_blank">Link</a><?php endif; ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+            <?php else: ?>
+                <div class="alert alert-info">No notifications found for the selected filters.</div>
+            <?php endif; ?>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

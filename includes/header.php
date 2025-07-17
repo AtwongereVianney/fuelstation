@@ -14,7 +14,7 @@ if (isset($_SESSION['user_id'])) {
     $is_super_admin = mysqli_num_rows($super_result) > 0;
 }
 ?>
-<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom mb-3">
+<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom sticky-top" style="z-index: 1040;">
   <div class="container-fluid">
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>

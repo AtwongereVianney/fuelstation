@@ -137,91 +137,91 @@ while ($row = mysqli_fetch_assoc($branch_result)) {
     </div>
 </div>
 <div class="main-flex-container">
-    <!-- Sidebar for desktop -->
+        <!-- Sidebar for desktop -->
     <div class="sidebar-fixed d-none d-md-block p-0">
-        <?php include '../includes/sidebar.php'; ?>
-    </div>
-    <!-- Main content -->
-    <div class="main-content-scroll">
-        <!-- Mobile menu button -->
-        <div class="d-md-none mb-3">
-            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-                <i class="bi bi-list"></i> Menu
-            </button>
+            <?php include '../includes/sidebar.php'; ?>
         </div>
-        <h2 class="mb-4">Employee Management</h2>
+        <!-- Main content -->
+    <div class="main-content-scroll">
+            <!-- Mobile menu button -->
+            <div class="d-md-none mb-3">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                    <i class="bi bi-list"></i> Menu
+                </button>
+            </div>
+            <h2 class="mb-4">Employee Management</h2>
         <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
             <i class="bi bi-person-plus me-1"></i> Add New Employee
         </button>
-        <?php if ($edit_success): ?>
-            <div class="alert alert-success">Employee updated successfully.</div>
-        <?php endif; ?>
-        <?php if (!empty($edit_errors)): ?>
-            <div class="alert alert-danger">
-                <?php foreach ($edit_errors as $error) echo '<div>' . htmlspecialchars($error) . '</div>'; ?>
-            </div>
-        <?php endif; ?>
-        <?php if ($add_success): ?>
-            <div class="alert alert-success">Employee added successfully.</div>
-        <?php endif; ?>
-        <?php if (!empty($add_errors)): ?>
-            <div class="alert alert-danger">
-                <?php foreach ($add_errors as $error) echo '<div>' . htmlspecialchars($error) . '</div>'; ?>
-            </div>
-        <?php endif; ?>
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">All Employees</div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Branch</th>
+            <?php if ($edit_success): ?>
+                <div class="alert alert-success">Employee updated successfully.</div>
+            <?php endif; ?>
+            <?php if (!empty($edit_errors)): ?>
+                <div class="alert alert-danger">
+                    <?php foreach ($edit_errors as $error) echo '<div>' . htmlspecialchars($error) . '</div>'; ?>
+                </div>
+            <?php endif; ?>
+            <?php if ($add_success): ?>
+                <div class="alert alert-success">Employee added successfully.</div>
+            <?php endif; ?>
+            <?php if (!empty($add_errors)): ?>
+                <div class="alert alert-danger">
+                    <?php foreach ($add_errors as $error) echo '<div>' . htmlspecialchars($error) . '</div>'; ?>
+                </div>
+            <?php endif; ?>
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">All Employees</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Branch</th>
                                 <th>Position</th>
                                 <th>Hire Date</th>
-                                <th>Status</th>
-                                <th>Created At</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php $serial = 1; ?>
-                            <?php foreach ($employees as $emp): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($serial++); ?></td>
-                                    <td><?php echo htmlspecialchars($emp['first_name'] . ' ' . $emp['last_name']); ?></td>
-                                    <td><?php echo htmlspecialchars($emp['email']); ?></td>
-                                    <td><?php echo htmlspecialchars($emp['phone']); ?></td>
-                                    <td><?php echo htmlspecialchars($emp['branch_name'] ?? ''); ?></td>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php $serial = 1; ?>
+                                <?php foreach ($employees as $emp): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($serial++); ?></td>
+                                        <td><?php echo htmlspecialchars($emp['first_name'] . ' ' . $emp['last_name']); ?></td>
+                                        <td><?php echo htmlspecialchars($emp['email']); ?></td>
+                                        <td><?php echo htmlspecialchars($emp['phone']); ?></td>
+                                        <td><?php echo htmlspecialchars($emp['branch_name'] ?? ''); ?></td>
                                     <td><?php echo htmlspecialchars($emp['position']); ?></td>
                                     <td><?php echo htmlspecialchars($emp['hire_date']); ?></td>
-                                    <td>
-                                        <?php if ($emp['status'] === 'active'): ?>
-                                            <span class="badge bg-success">Active</span>
-                                        <?php else: ?>
-                                            <span class="badge bg-secondary">Inactive</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td><?php echo htmlspecialchars($emp['created_at']); ?></td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewEmployeeModal<?php echo $emp['id']; ?>" title="View"><i class="bi bi-eye"></i></button>
-                                            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editEmployeeModal<?php echo $emp['id']; ?>" title="Edit"><i class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal<?php echo $emp['id']; ?>" title="Delete"><i class="bi bi-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                                        <td>
+                                            <?php if ($emp['status'] === 'active'): ?>
+                                                <span class="badge bg-success">Active</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($emp['created_at']); ?></td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewEmployeeModal<?php echo $emp['id']; ?>" title="View"><i class="bi bi-eye"></i></button>
+                                                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editEmployeeModal<?php echo $emp['id']; ?>" title="Edit"><i class="bi bi-pencil"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal<?php echo $emp['id']; ?>" title="Delete"><i class="bi bi-trash"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
                 </div>
-                <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
             </div>
-        </div>
     </div>
 </div>
 <!-- All Employee Modals (moved to end of body) -->
@@ -294,7 +294,7 @@ while ($row = mysqli_fetch_assoc($branch_result)) {
         <div class="mb-3">
           <label class="form-label">Hire Date</label>
           <input type="date" name="hire_date" class="form-control" value="<?php echo htmlspecialchars($emp['hire_date']); ?>">
-        </div>
+                    </div>
                     <div class="mb-3">
                       <label class="form-label">Status</label>
                       <select name="status" class="form-select">
@@ -371,7 +371,7 @@ while ($row = mysqli_fetch_assoc($branch_result)) {
         <div class="mb-3">
           <label class="form-label">Hire Date</label>
           <input type="date" name="hire_date" class="form-control">
-        </div>
+                    </div>
                     <div class="mb-3">
                       <label class="form-label">Status</label>
                       <select name="status" class="form-select">

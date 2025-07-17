@@ -91,6 +91,15 @@ if (!$result) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manage Roles</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    html, body { height: 100%; }
+    body { min-height: 100vh; margin: 0; padding: 0; }
+    .main-flex-container { display: flex; height: 100vh; overflow: hidden; }
+    .sidebar-fixed { width: 240px; min-width: 200px; max-width: 300px; height: 100vh; position: sticky; top: 0; left: 0; z-index: 1020; background: #f8f9fa; border-right: 1px solid #dee2e6; }
+    .main-content-scroll { flex: 1 1 0%; height: 100vh; overflow-y: auto; padding: 32px 24px 24px 24px; background: #fff; }
+    @media (max-width: 767.98px) { .main-flex-container { display: block; height: auto; } .sidebar-fixed { display: none; } .main-content-scroll { height: auto; padding: 16px 8px; } }
+  </style>
 </head>
 <body>
 <!-- Responsive Sidebar Offcanvas for mobile -->
@@ -101,22 +110,21 @@ if (!$result) {
     </div>
     <div class="offcanvas-body p-0">
         <?php include '../includes/sidebar.php'; ?>
-      </div>
+    </div>
 </div>
-<div class="container-fluid">
-    <div class="row flex-nowrap">
-        <!-- Sidebar for desktop -->
-        <div class="col-auto d-none d-md-block p-0">
-            <?php include '../includes/sidebar.php'; ?>
+<div class="main-flex-container">
+    <!-- Sidebar for desktop -->
+    <div class="sidebar-fixed d-none d-md-block p-0">
+        <?php include '../includes/sidebar.php'; ?>
+    </div>
+    <!-- Main content -->
+    <div class="main-content-scroll">
+        <!-- Mobile menu button -->
+        <div class="d-md-none mb-3">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                <i class="bi bi-list"></i> Menu
+            </button>
         </div>
-        <!-- Main content -->
-        <div>
-            <!-- Mobile menu button -->
-            <div class="d-md-none mb-3">
-                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-                    <i class="fas fa-bars"></i> Menu
-                </button>
-            </div>
         <h2 class="mb-4">Roles Management</h2>
         <!-- Success/Error Messages -->
         <?php if (isset($_SESSION['success_message'])): ?>
@@ -133,7 +141,7 @@ if (!$result) {
         <?php endif; ?>
         <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addRoleModal">Add New Role</button>
         <div class="table-responsive">
-              <table class="table table-sm table-bordered table-hover align-middle mb-0">
+          <table class="table table-sm table-bordered table-hover align-middle mb-0">
             <thead class="table-light">
               <tr>
                 <th>S/N</th>
@@ -179,10 +187,10 @@ if (!$result) {
             </tbody>
           </table>
         </div>
-            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-      </div>
+        <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+        <!-- Modals and scripts remain unchanged -->
     </div>
-  </div>
+</div>
   <!-- Add Role Modal -->
   <div class="modal fade" id="addRoleModal" tabindex="-1" aria-labelledby="addRoleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
