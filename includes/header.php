@@ -48,7 +48,7 @@ if (isset($_SESSION['user_id'])) {
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
             <li><a class="dropdown-item" href="../public/profile.php"><i class="bi bi-person"></i> My Profile</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item text-danger" href="/public/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+            <li><a class="dropdown-item text-danger" href="../public/logout.php"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
           </ul>
         </li>
       </ul>
