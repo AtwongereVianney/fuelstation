@@ -205,7 +205,7 @@ while ($row = mysqli_fetch_assoc($branch_result)) {
         <!-- Sidebar for desktop -->
     <div class="sidebar-fixed d-none d-md-block p-0">
             <?php include '../includes/sidebar.php'; ?>
-        </div>
+    </div>
         <!-- Main content -->
     <div class="main-content-scroll">
             <?php include '../includes/header.php'; ?>

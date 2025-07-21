@@ -14,7 +14,59 @@ if (isset($_SESSION['user_id'])) {
     $is_super_admin = mysqli_num_rows($super_result) > 0;
 }
 ?>
-<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom sticky-top" style="z-index: 1040;">
+
+<style>
+.main-header {
+    position: fixed;
+    top: 0;
+    left: 260px;
+    width: calc(100vw - 260px);
+    z-index: 1039;
+    transition: left 0.2s, width 0.2s;
+}
+
+.main-header.collapsed {
+    left: 64px;
+    width: calc(100vw - 64px);
+}
+
+/* Ensure content doesn't overlap with fixed header and add responsive spacing */
+.main-content {
+    margin-top: calc(70px + 2rem); /* Dynamic spacing: header height + responsive gap */
+    transition: margin-top 0.2s;
+}
+
+/* Responsive spacing adjustments */
+@media (max-width: 768px) {
+    .main-header {
+        left: 0;
+        width: 100vw;
+    }
+    
+    .main-header.collapsed {
+        left: 0;
+        width: 100vw;
+    }
+    
+    .main-content {
+        margin-top: calc(70px + 1.5rem); /* Slightly less spacing on mobile */
+    }
+}
+
+@media (max-width: 576px) {
+    .main-content {
+        margin-top: calc(70px + 1rem); /* Even less spacing on smaller screens */
+    }
+}
+
+@media (min-width: 1200px) {
+    .main-content {
+        margin-top: calc(70px + 2.5rem); /* More spacing on larger screens */
+    }
+}
+</style>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom main-header" >
   <div class="container-fluid">
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -55,8 +107,10 @@ if (isset($_SESSION['user_id'])) {
     </div>
   </div>
 </nav>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Handle search input focus
     var searchInput = document.querySelector('form[role="search"] input[name="q"]');
     if (searchInput) {
       searchInput.focus();
@@ -65,5 +119,34 @@ if (isset($_SESSION['user_id'])) {
       searchInput.value = '';
       searchInput.value = val;
     }
+
+    // Sync header with sidebar toggle state
+    function syncHeaderWithSidebar() {
+      var sidebar = document.querySelector('.sidebar');
+      var header = document.querySelector('.main-header');
+      
+      if (sidebar && header) {
+        if (sidebar.classList.contains('collapsed')) {
+          header.classList.add('collapsed');
+        } else {
+          header.classList.remove('collapsed');
+        }
+      }
+    }
+
+    // Initial sync
+    syncHeaderWithSidebar();
+
+    // Listen for sidebar toggle events
+    var sidebarToggle = document.getElementById('sidebarToggle');
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener('click', function() {
+        // Small delay to allow sidebar animation to start
+        setTimeout(syncHeaderWithSidebar, 10);
+      });
+    }
+
+    // Fallback: periodically check sidebar state
+    setInterval(syncHeaderWithSidebar, 500);
   });
-</script> 
+</script>

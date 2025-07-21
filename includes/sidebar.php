@@ -36,6 +36,12 @@ $sidebarModules = get_accessible_sidebar_modules();
     z-index: 1040;
     overflow-y: auto;
     transition: max-width 0.2s, min-width 0.2s;
+    /* Hide scrollbar for webkit browsers (Chrome, Safari, Edge) */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer and Edge */
+}
+.sidebar::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for webkit browsers */
 }
 .sidebar.collapsed {
     max-width: 64px;
