@@ -71,6 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
                 mysqli_stmt_execute($role_insert_stmt);
                 mysqli_stmt_close($role_insert_stmt);
                 $add_success = true;
+
+                // Send welcome email with credentials
+                require_once '../includes/email_helper.php';
+                $welcome_subject = 'Welcome to Fuel Station Management System';
+                $welcome_body = "Dear $username,\n\nYour account has been created.\n\nLogin Email: $email\nPassword: $password\n\nFor your security, please log in and change your password as soon as possible.\n\nRegards,\nFuel Station Management Team";
+                send_email($email, $welcome_subject, $welcome_body);
             } else {
                 $add_errors[] = 'Failed to add user.';
             }
