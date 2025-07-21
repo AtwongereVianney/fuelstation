@@ -2,6 +2,7 @@
 session_start();
 require_once '../includes/auth_helpers.php';
 require_once '../config/db_connect.php';
+require_once '../includes/email_helper.php';
 
 if (!has_permission('shift_assignments.view')) {
     header('Location: login.php?error=unauthorized');
@@ -34,25 +35,42 @@ $summary = [
     'by_shift' => [],
     'by_user' => []
 ];
+
 if ($selected_branch_id && $start_date && $end_date) {
-    $sql = "SELECT sa.*, s.shift_name, u.first_name, u.last_name FROM shift_assignments sa JOIN shifts s ON sa.shift_id = s.id JOIN users u ON sa.user_id = u.id WHERE s.branch_id = $selected_branch_id AND sa.assignment_date BETWEEN '" . mysqli_real_escape_string($conn, $start_date) . "' AND '" . mysqli_real_escape_string($conn, $end_date) . "' AND sa.deleted_at IS NULL ORDER BY sa.assignment_date DESC, s.start_time";
+    // Fixed SQL query to include email field
+    $sql = "SELECT sa.*, s.shift_name, u.first_name, u.last_name, u.email 
+            FROM shift_assignments sa 
+            JOIN shifts s ON sa.shift_id = s.id 
+            JOIN users u ON sa.user_id = u.id 
+            WHERE s.branch_id = $selected_branch_id 
+            AND sa.assignment_date BETWEEN '" . mysqli_real_escape_string($conn, $start_date) . "' 
+            AND '" . mysqli_real_escape_string($conn, $end_date) . "' 
+            AND sa.deleted_at IS NULL 
+            ORDER BY sa.assignment_date DESC, s.start_time";
+    
     $res = mysqli_query($conn, $sql);
     if ($res) {
         while ($row = mysqli_fetch_assoc($res)) {
             $assignments[] = $row;
             $summary['total']++;
+            
+            // Build summary data
             $status = $row['status'];
             $shift = $row['shift_name'];
             $user = $row['first_name'] . ' ' . $row['last_name'];
+            
             if (!isset($summary['by_status'][$status])) $summary['by_status'][$status] = 0;
             $summary['by_status'][$status]++;
+            
             if (!isset($summary['by_shift'][$shift])) $summary['by_shift'][$shift] = 0;
             $summary['by_shift'][$shift]++;
+            
             if (!isset($summary['by_user'][$user])) $summary['by_user'][$user] = 0;
             $summary['by_user'][$user]++;
         }
     }
 }
+
 
 // Fetch shifts and users for dropdowns
 $shifts = [];
@@ -103,8 +121,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($user_email) {
                 $subject = "Shift Assignment Notification";
                 $message = "Dear $user_name,\n\nYou have been assigned to the shift: $shift_name on $assignment_date ($shift_time).\n\nPlease report accordingly.\n\nThank you.";
-                $headers = "From: no-reply@yourdomain.com\r\n";
-                mail($user_email, $subject, $message, $headers);
+                
+                // Use the proper email function instead of mail()
+                $email_sent = send_email($user_email, $subject, $message);
+                
+                // Optional: Add error handling
+                if (!$email_sent) {
+                    // Log the error or set a session message
+                    error_log("Failed to send email to: $user_email");
+                    // You could also set a session flash message to show the user
+                    $_SESSION['email_error'] = "Assignment created but email notification failed to send.";
+                } else {
+                    $_SESSION['email_success'] = "Assignment created and email notification sent successfully.";
+                }
             }
         } elseif (isset($_POST['edit_assignment'])) {
             $sql = "UPDATE shift_assignments SET shift_id=$shift_id, user_id=$user_id, assignment_date='$assignment_date', status='$status', notes='$notes', opening_cash=$opening_cash, closing_cash=$closing_cash, cash_difference=$cash_difference, clock_in_time='$clock_in_time', clock_out_time='$clock_out_time', total_hours=$total_hours, total_sales=$total_sales WHERE id=$assignment_id";

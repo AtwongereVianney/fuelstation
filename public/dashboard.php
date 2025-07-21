@@ -322,7 +322,7 @@ if ($role === 'super_admin' && $business_id) {
                 <i class="bi bi-list me-2"></i> 
                 <span class="responsive-text">Menu</span>
             </button>
-        </div>
+                </div>
         <?php include '../includes/header.php'; ?>
             <!-- Quick Start Section -->
             <div class="mb-4">
@@ -413,7 +413,7 @@ if ($role === 'super_admin' && $business_id) {
                     <div class="card-header bg-primary text-white">
                         <span class="responsive-text">Income vs Expense (<?php echo $current_year; ?>)</span>
                     </div>
-                    <div class="card-body">
+                            <div class="card-body">
                         <canvas id="incomeExpenseChart"></canvas>
                     </div>
                 </div>
@@ -422,13 +422,13 @@ if ($role === 'super_admin' && $business_id) {
                 <div class="card h-100 shadow-sm">
                     <div class="card-header bg-success text-white">
                         <span class="responsive-text">Service Demand (<?php echo $current_year; ?>)</span>
-                    </div>
+                </div>
                     <div class="card-body">
                         <canvas id="serviceDemandChart"></canvas>
-                    </div>
+            </div>
                 </div>
             </div>
-        </div>
+                </div>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
         const months = <?php echo json_encode($months); ?>;
@@ -496,7 +496,7 @@ if ($role === 'super_admin' && $business_id) {
             options: chartOptions
         });
         </script>
-        <?php endif; ?>
+            <?php endif; ?>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -538,4 +538,4 @@ if ($role === 'super_admin' && $business_id) {
     }
 </script>
 </body>
-</html>
+</html> 
