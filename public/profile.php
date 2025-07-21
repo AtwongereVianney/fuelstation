@@ -125,81 +125,116 @@ if (isset($_POST['change_password'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile - Uganda Fuel Station</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        html, body { height: 100%; }
+        body { min-height: 100vh; margin: 0; padding: 0; }
+        .main-flex-container { display: flex; height: 100vh; overflow: hidden; }
+        .sidebar-fixed { width: 240px; min-width: 200px; max-width: 300px; height: 100vh; position: sticky; top: 0; left: 0; z-index: 1020; background: #f8f9fa; border-right: 1px solid #dee2e6; }
+        .main-content-scroll { flex: 1 1 0%; height: 100vh; overflow-y: auto; padding: 32px 24px 24px 24px; background: #fff; }
+        @media (max-width: 767.98px) { .main-flex-container { display: block; height: auto; } .sidebar-fixed { display: none; } .main-content-scroll { height: auto; padding: 16px 8px; } }
+    </style>
 </head>
 <body>
-<?php include '../includes/header.php'; ?>
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white text-center">Profile Information</div>
-                <div class="card-body">
-                    <?php if (!empty($errors)): ?>
-                        <div class="alert alert-danger">
-                            <?php foreach ($errors as $error) echo '<div>' . $error . '</div>'; ?>
-                        </div>
-                    <?php endif; ?>
-                    <?php if ($success): ?>
-                        <div class="alert alert-success"><?php echo $success; ?></div>
-                    <?php endif; ?>
-                    <form method="post" action="" enctype="multipart/form-data">
-                        <div class="mb-3 text-center">
-                            <?php if (!empty($user['profile_photo'])): ?>
-                                <img src="<?php echo h($user['profile_photo']); ?>" alt="Profile Photo" class="rounded-circle mb-2" style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #ccc;">
-                            <?php else: ?>
-                                <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($user['first_name'] . ' ' . $user['last_name']); ?>&background=6c757d&color=fff&size=120" alt="Profile Photo" class="rounded-circle mb-2" style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #ccc;">
+<!-- Responsive Sidebar Offcanvas for mobile -->
+<div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <?php include '../includes/sidebar.php'; ?>
+    </div>
+</div>
+<div class="main-flex-container">
+    <!-- Sidebar for desktop -->
+    <div class="sidebar-fixed d-none d-md-block p-0">
+        <?php include '../includes/sidebar.php'; ?>
+    </div>
+    <!-- Main content -->
+    <div class="main-content-scroll mt-5">
+        <?php include '../includes/header.php'; ?>
+        <!-- Mobile menu button -->
+        <div class="d-md-none mb-3">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                <i class="bi bi-list"></i> Menu
+            </button>
+        </div>
+        <h2 class="mb-4">My Profile</h2>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white text-center">Profile Information</div>
+                        <div class="card-body">
+                            <?php if (!empty($errors)): ?>
+                                <div class="alert alert-danger">
+                                    <?php foreach ($errors as $error) echo '<div>' . $error . '</div>'; ?>
+                                </div>
                             <?php endif; ?>
+                            <?php if ($success): ?>
+                                <div class="alert alert-success"><?php echo $success; ?></div>
+                            <?php endif; ?>
+                            <form method="post" action="" enctype="multipart/form-data">
+                                <div class="mb-3 text-center">
+                                    <?php if (!empty($user['profile_photo'])): ?>
+                                        <img src="<?php echo h($user['profile_photo']); ?>" alt="Profile Photo" class="rounded-circle mb-2" style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #ccc;">
+                                    <?php else: ?>
+                                        <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($user['first_name'] . ' ' . $user['last_name']); ?>&background=6c757d&color=fff&size=120" alt="Profile Photo" class="rounded-circle mb-2" style="width: 120px; height: 120px; object-fit: cover; border: 2px solid #ccc;">
+                                    <?php endif; ?>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profile_photo" class="form-label">Profile Photo (JPG, PNG, GIF, max 2MB)</label>
+                                    <input type="file" class="form-control" id="profile_photo" name="profile_photo" accept="image/*">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Username</label>
+                                    <input type="text" class="form-control" value="<?php echo h($user['username']); ?>" disabled>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="first_name" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" value="<?php echo h($user['first_name']); ?>" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="last_name" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" value="<?php echo h($user['last_name']); ?>" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone</label>
+                                    <input type="text" class="form-control" id="phone" name="phone" value="<?php echo h($user['phone']); ?>">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="<?php echo h($user['email']); ?>" required>
+                                </div>
+                                <button type="submit" name="update_profile" class="btn btn-info">Update Profile</button>
+                            </form>
                         </div>
-                        <div class="mb-3">
-                            <label for="profile_photo" class="form-label">Profile Photo (JPG, PNG, GIF, max 2MB)</label>
-                            <input type="file" class="form-control" id="profile_photo" name="profile_photo" accept="image/*">
+                    </div>
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">Change Password</div>
+                        <div class="card-body">
+                            <form method="post" action="">
+                                <div class="mb-3">
+                                    <label for="current_password" class="form-label">Current Password</label>
+                                    <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="new_password" class="form-label">New Password</label>
+                                    <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                </div>
+                                <button type="submit" name="change_password" class="btn btn-warning">Change Password</button>
+                            </form>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" class="form-control" value="<?php echo h($user['username']); ?>" disabled>
-                        </div>
-                        <div class="mb-3">
-                            <label for="first_name" class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="first_name" name="first_name" value="<?php echo h($user['first_name']); ?>" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="last_name" class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="last_name" name="last_name" value="<?php echo h($user['last_name']); ?>" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="phone" class="form-label">Phone</label>
-                            <input type="text" class="form-control" id="phone" name="phone" value="<?php echo h($user['phone']); ?>">
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" value="<?php echo h($user['email']); ?>" required>
-                        </div>
-                        <button type="submit" name="update_profile" class="btn btn-info">Update Profile</button>
-                    </form>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header bg-warning text-dark">Change Password</div>
-                <div class="card-body">
-                    <form method="post" action="">
-                        <div class="mb-3">
-                            <label for="current_password" class="form-label">Current Password</label>
-                            <input type="password" class="form-control" id="current_password" name="current_password" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="new_password" class="form-label">New Password</label>
-                            <input type="password" class="form-control" id="new_password" name="new_password" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="confirm_password" class="form-label">Confirm New Password</label>
-                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
-                        </div>
-                        <button type="submit" name="change_password" class="btn btn-warning">Change Password</button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html> 
