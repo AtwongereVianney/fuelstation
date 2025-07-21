@@ -93,7 +93,7 @@ if ($res) {
             <?php include '../includes/sidebar.php'; ?>
         </div>
         <!-- Main content -->
-    <div class="main-content-scroll">
+    <div class="main-content-scroll mt-5">
             <?php include '../includes/header.php'; ?>
             <!-- Mobile menu button -->
             <div class="d-md-none mb-3">

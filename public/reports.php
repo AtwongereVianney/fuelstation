@@ -108,7 +108,7 @@ if ($selected_branch_id && $start_date && $end_date) {
             <?php include '../includes/sidebar.php'; ?>
         </div>
         <!-- Main content -->
-    <div class="main-content-scroll ps-md-4 pt-3">
+    <div class="main-content-scroll ps-md-4 pt-3 mt-5">
         <?php include '../includes/header.php'; ?>
         <!-- Link to Overall Report -->
         <div class="mb-4">

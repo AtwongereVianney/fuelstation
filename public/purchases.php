@@ -90,7 +90,7 @@ function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UT
         <?php include '../includes/sidebar.php'; ?>
     </div>
     <!-- Main content -->
-    <div class="main-content-scroll">
+    <div class="main-content-scroll mt-5">
         <?php include '../includes/header.php'; ?>
         <!-- Mobile menu button -->
         <div class="d-md-none mb-3">
