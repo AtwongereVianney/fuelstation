@@ -41,6 +41,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_employee'])) {
             mysqli_stmt_bind_param($insert_stmt, 'iissssssss', $business_id, $branch_id, $employee_code, $first_name, $last_name, $email, $phone, $position, $hire_date, $status);
             if (mysqli_stmt_execute($insert_stmt)) {
                 $add_success = true;
+
+                // Send congratulatory email to the new employee
+                require_once '../includes/email_helper.php';
+                $congrats_subject = 'Congratulations! You are now part of our team';
+                $congrats_body = "Dear $first_name $last_name,\n\nCongratulations! You have been added as an employee at our fuel station. We are excited to have you as part of our team.\n\nIf you have any questions, please contact your supervisor.\n\nBest regards,\nFuel Station Management Team";
+                send_email($email, $congrats_subject, $congrats_body);
             } else {
                 $add_errors[] = 'Failed to add employee.';
             }
@@ -89,6 +95,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_employee'])) {
         mysqli_stmt_bind_param($stmt, 'i', $id);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
+    }
+}
+
+// Handle Convert Employee to User
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['convert_to_user'])) {
+    $emp_id = intval($_POST['emp_id'] ?? 0);
+    if ($emp_id) {
+        // Fetch employee details
+        $emp_sql = "SELECT * FROM employees WHERE id = ? AND deleted_at IS NULL LIMIT 1";
+        $emp_stmt = mysqli_prepare($conn, $emp_sql);
+        mysqli_stmt_bind_param($emp_stmt, 'i', $emp_id);
+        mysqli_stmt_execute($emp_stmt);
+        $emp_result = mysqli_stmt_get_result($emp_stmt);
+        $emp = mysqli_fetch_assoc($emp_result);
+        mysqli_stmt_close($emp_stmt);
+        if ($emp) {
+            // Check if already a user
+            $check_sql = "SELECT id FROM users WHERE email = ? AND deleted_at IS NULL LIMIT 1";
+            $check_stmt = mysqli_prepare($conn, $check_sql);
+            mysqli_stmt_bind_param($check_stmt, 's', $emp['email']);
+            mysqli_stmt_execute($check_stmt);
+            $check_result = mysqli_stmt_get_result($check_stmt);
+            $already_user = mysqli_fetch_assoc($check_result);
+            mysqli_stmt_close($check_stmt);
+            if ($already_user) {
+                $add_errors[] = 'Employee is already a user.';
+            } else {
+                // Generate username and password
+                $username = strtolower(preg_replace('/\s+/', '', $emp['first_name'] . $emp['last_name']));
+                $password = substr(bin2hex(random_bytes(4)), 0, 8); // 8-char random password
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $status = 'active';
+                // Insert into users
+                $insert_sql = "INSERT INTO users (business_id, branch_id, username, email, phone, password, first_name, last_name, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+                $insert_stmt = mysqli_prepare($conn, $insert_sql);
+                mysqli_stmt_bind_param($insert_stmt, 'iisssssss', $emp['business_id'], $emp['branch_id'], $username, $emp['email'], $emp['phone'], $hashed_password, $emp['first_name'], $emp['last_name'], $status);
+                if (mysqli_stmt_execute($insert_stmt)) {
+                    $new_user_id = mysqli_insert_id($conn);
+                    // Assign default role (fuel_attendant, id=5)
+                    $role_id = 5;
+                    $role_insert_sql = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
+                    $role_insert_stmt = mysqli_prepare($conn, $role_insert_sql);
+                    mysqli_stmt_bind_param($role_insert_stmt, 'ii', $new_user_id, $role_id);
+                    mysqli_stmt_execute($role_insert_stmt);
+                    mysqli_stmt_close($role_insert_stmt);
+                    // Email credentials
+                    require_once '../includes/email_helper.php';
+                    $subject = 'Your User Account Has Been Created';
+                    $body = "Dear {$emp['first_name']} {$emp['last_name']},\n\nYou have been granted access to the Fuel Station Management System.\n\nLogin Username: $username\nLogin Email: {$emp['email']}\nPassword: $password\n\nPlease log in and change your password as soon as possible.\n\nBest regards,\nFuel Station Management Team";
+                    send_email($emp['email'], $subject, $body);
+                    $add_success = true;
+                } else {
+                    $add_errors[] = 'Failed to convert employee to user.';
+                }
+                mysqli_stmt_close($insert_stmt);
+            }
+        } else {
+            $add_errors[] = 'Employee not found.';
+        }
     }
 }
 
@@ -214,6 +279,25 @@ while ($row = mysqli_fetch_assoc($branch_result)) {
                                                 <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editEmployeeModal<?php echo $emp['id']; ?>" title="Edit"><i class="bi bi-pencil"></i></button>
                                                 <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal<?php echo $emp['id']; ?>" title="Delete"><i class="bi bi-trash"></i></button>
                                             </div>
+                                            <!-- Convert to User button -->
+                                            <?php
+                                            // Check if employee is already a user
+                                            $is_user = false;
+                                            $check_user_sql = "SELECT id FROM users WHERE email = ? AND deleted_at IS NULL LIMIT 1";
+                                            $check_user_stmt = mysqli_prepare($conn, $check_user_sql);
+                                            mysqli_stmt_bind_param($check_user_stmt, 's', $emp['email']);
+                                            mysqli_stmt_execute($check_user_stmt);
+                                            mysqli_stmt_store_result($check_user_stmt);
+                                            if (mysqli_stmt_num_rows($check_user_stmt) > 0) $is_user = true;
+                                            mysqli_stmt_close($check_user_stmt);
+                                            if (!$is_user): ?>
+                                            <form method="post" style="display:inline;">
+                                                <input type="hidden" name="emp_id" value="<?php echo $emp['id']; ?>">
+                                                <button type="submit" name="convert_to_user" class="btn btn-sm btn-success" onclick="return confirm('Convert this employee to a user?');">Convert to User</button>
+                                            </form>
+                                            <?php else: ?>
+                                            <span class="text-muted">User</span>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
