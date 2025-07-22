@@ -3,6 +3,62 @@ session_start();
 require_once '../includes/auth_helpers.php';
 require_once '../config/db_connect.php';
 
+function createRecurringShifts($conn, $shift_id, $start_date, $end_date, $weekdays_only = true) {
+    // Get the original shift details
+    $shift_sql = "SELECT * FROM shifts WHERE id = $shift_id AND deleted_at IS NULL";
+    $shift_result = mysqli_query($conn, $shift_sql);
+    $shift = mysqli_fetch_assoc($shift_result);
+    
+    if (!$shift) {
+        return false;
+    }
+    
+    // Get current assignments for this shift (to copy the same people)
+    $assignment_sql = "SELECT user_id FROM shift_assignments 
+                      WHERE shift_id = $shift_id AND deleted_at IS NULL 
+                      GROUP BY user_id";
+    $assignment_result = mysqli_query($conn, $assignment_sql);
+    $assigned_users = [];
+    while ($row = mysqli_fetch_assoc($assignment_result)) {
+        $assigned_users[] = $row['user_id'];
+    }
+    
+    $current_date = new DateTime($start_date);
+    $end_datetime = new DateTime($end_date);
+    
+    while ($current_date <= $end_datetime) {
+        $day_of_week = $current_date->format('N'); // 1-7 (Monday-Sunday)
+        
+        // Skip weekends if weekdays_only is true (6=Saturday, 7=Sunday)
+        if ($weekdays_only && ($day_of_week == 6 || $day_of_week == 7)) {
+            $current_date->add(new DateInterval('P1D'));
+            continue;
+        }
+        
+        $assignment_date = $current_date->format('Y-m-d');
+        
+        // Check if assignment already exists for this date
+        $check_sql = "SELECT id FROM shift_assignments 
+                     WHERE shift_id = $shift_id 
+                     AND assignment_date = '$assignment_date' 
+                     AND deleted_at IS NULL";
+        $check_result = mysqli_query($conn, $check_sql);
+        
+        if (mysqli_num_rows($check_result) == 0) {
+            // Create assignments for each user
+            foreach ($assigned_users as $user_id) {
+                $insert_sql = "INSERT INTO shift_assignments 
+                              (shift_id, user_id, assignment_date, status, created_at) 
+                              VALUES ($shift_id, $user_id, '$assignment_date', 'scheduled', NOW())";
+                mysqli_query($conn, $insert_sql);
+            }
+        }
+        
+        $current_date->add(new DateInterval('P1D'));
+    }
+    
+    return true;
+
 if (!has_permission('shifts.view')) {
     header('Location: login.php?error=unauthorized');
     exit;
