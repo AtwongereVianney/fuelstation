@@ -13,8 +13,24 @@ if ($branch_result) {
     }
 }
 
+// Check if user is superadmin
+function is_super_admin() {
+    global $conn;
+    if (!isset($_SESSION['user_id'])) return false;
+    $user_id = $_SESSION['user_id'];
+    $super_sql = "SELECT 1 FROM user_roles WHERE user_id = $user_id AND role_id = 1 AND deleted_at IS NULL LIMIT 1";
+    $super_result = mysqli_query($conn, $super_sql);
+    return mysqli_num_rows($super_result) > 0;
+}
+
+$super_admin = is_super_admin();
+
 // Get selected branch and date
-$selected_branch_id = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : ($branches[0]['id'] ?? null);
+if ($super_admin) {
+    $selected_branch_id = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : ($branches[0]['id'] ?? null);
+} else {
+    $selected_branch_id = isset($_SESSION['branch_id']) ? intval($_SESSION['branch_id']) : ($branches[0]['id'] ?? null);
+}
 $selected_date = isset($_GET['business_date']) ? $_GET['business_date'] : date('Y-m-d');
 
 // Helper for safe output
@@ -170,6 +186,7 @@ if ($res) while ($row = mysqli_fetch_assoc($res)) $users[] = $row;
             </h2>
             <form method="get" class="mb-4">
                 <div class="row g-2 align-items-end">
+                    <?php if ($super_admin): ?>
                     <div class="col-12 col-md-4">
                         <label for="branch_id" class="form-label">Select Branch:</label>
                         <select name="branch_id" id="branch_id" class="form-select">
@@ -178,6 +195,9 @@ if ($res) while ($row = mysqli_fetch_assoc($res)) $users[] = $row;
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <?php else: ?>
+                    <input type="hidden" name="branch_id" value="<?php echo $selected_branch_id; ?>">
+                    <?php endif; ?>
                     <div class="col-12 col-md-3">
                         <label for="business_date" class="form-label">Select Date:</label>
                         <input type="date" name="business_date" id="business_date" class="form-control" value="<?php echo h($selected_date); ?>">

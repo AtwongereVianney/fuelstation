@@ -13,6 +13,8 @@ USE uganda_fuel_stations;
 -- Business/Company Table
 CREATE TABLE businesses (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NULL,
     business_name VARCHAR(255) NOT NULL,
     business_type ENUM('individual', 'partnership', 'limited_company', 'corporation') NOT NULL,
     registration_number VARCHAR(100) UNIQUE,
@@ -32,13 +34,16 @@ CREATE TABLE businesses (
     established_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL
 );
 
 -- Branch/Station Table
 CREATE TABLE branches (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     business_id BIGINT UNSIGNED NOT NULL,
+    branch_id BIGINT UNSIGNED NULL,
     branch_code VARCHAR(20) UNIQUE NOT NULL,
     branch_name VARCHAR(255) NOT NULL,
     branch_type ENUM('main', 'sub_branch') DEFAULT 'sub_branch',
@@ -58,7 +63,8 @@ CREATE TABLE branches (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
-    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL
 );
 
 -- =====================================================
@@ -68,6 +74,8 @@ CREATE TABLE branches (
 -- Roles Table
 CREATE TABLE roles (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NULL,
     name VARCHAR(191) UNIQUE NOT NULL,  -- Reduced from 100 to 191
     display_name VARCHAR(190) NOT NULL,
     description TEXT,
@@ -75,30 +83,40 @@ CREATE TABLE roles (
     is_system_role BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL
 );
 
 -- Permissions Table
 CREATE TABLE permissions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NULL,
     name VARCHAR(100) UNIQUE NOT NULL,
     display_name VARCHAR(255) NOT NULL,
     description TEXT,
     module VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL
 );
 
 -- Role Permissions Junction Table
 CREATE TABLE role_permissions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NULL,
     role_id BIGINT UNSIGNED NOT NULL,
     permission_id BIGINT UNSIGNED NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL,
     UNIQUE KEY unique_role_permission (role_id, permission_id)
 );
 
@@ -140,6 +158,8 @@ CREATE TABLE users (
 -- User Roles Junction Table
 CREATE TABLE user_roles (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NULL,
     user_id BIGINT UNSIGNED NOT NULL,
     role_id BIGINT UNSIGNED NOT NULL,
     assigned_by BIGINT UNSIGNED,
@@ -150,6 +170,8 @@ CREATE TABLE user_roles (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
     FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL,
     UNIQUE KEY unique_user_role (user_id, role_id)
 );
 
@@ -160,6 +182,8 @@ CREATE TABLE user_roles (
 -- Fuel Types Table
 CREATE TABLE fuel_types (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NULL,
     name VARCHAR(100) UNIQUE NOT NULL,
     code VARCHAR(20) UNIQUE NOT NULL,
     description TEXT,
@@ -170,12 +194,16 @@ CREATE TABLE fuel_types (
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL
 );
 
 -- Suppliers Table
 CREATE TABLE suppliers (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NULL,
     name VARCHAR(255) NOT NULL,
     company_registration VARCHAR(100),
     tin_number VARCHAR(50),
@@ -193,12 +221,15 @@ CREATE TABLE suppliers (
     rating TINYINT UNSIGNED DEFAULT 5,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL
 );
 
 -- Storage Tanks Table
 CREATE TABLE storage_tanks (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     tank_number VARCHAR(50) NOT NULL,
     fuel_type_id BIGINT UNSIGNED NOT NULL,
@@ -214,6 +245,7 @@ CREATE TABLE storage_tanks (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (fuel_type_id) REFERENCES fuel_types(id) ON DELETE RESTRICT,
     UNIQUE KEY unique_branch_tank (branch_id, tank_number)
@@ -222,6 +254,7 @@ CREATE TABLE storage_tanks (
 -- Fuel Dispensers/Pumps Table
 CREATE TABLE fuel_dispensers (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     tank_id BIGINT UNSIGNED NOT NULL,
     dispenser_number VARCHAR(50) NOT NULL,
@@ -236,6 +269,7 @@ CREATE TABLE fuel_dispensers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (tank_id) REFERENCES storage_tanks(id) ON DELETE CASCADE,
     UNIQUE KEY unique_branch_dispenser (branch_id, dispenser_number)
@@ -248,6 +282,7 @@ CREATE TABLE fuel_dispensers (
 -- Fuel Purchases/Deliveries Table
 CREATE TABLE fuel_purchases (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     supplier_id BIGINT UNSIGNED NOT NULL,
     fuel_type_id BIGINT UNSIGNED NOT NULL,
@@ -268,6 +303,7 @@ CREATE TABLE fuel_purchases (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE RESTRICT,
     FOREIGN KEY (fuel_type_id) REFERENCES fuel_types(id) ON DELETE RESTRICT,
@@ -278,6 +314,8 @@ CREATE TABLE fuel_purchases (
 -- Tank Readings Table
 CREATE TABLE tank_readings (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NOT NULL,
     tank_id BIGINT UNSIGNED NOT NULL,
     reading_date DATE NOT NULL,
     reading_time TIME NOT NULL,
@@ -290,6 +328,8 @@ CREATE TABLE tank_readings (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (tank_id) REFERENCES storage_tanks(id) ON DELETE CASCADE,
     FOREIGN KEY (taken_by) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -301,6 +341,7 @@ CREATE TABLE tank_readings (
 -- Sales Transactions Table
 CREATE TABLE sales_transactions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     dispenser_id BIGINT UNSIGNED NOT NULL,
     fuel_type_id BIGINT UNSIGNED NOT NULL,
@@ -326,6 +367,7 @@ CREATE TABLE sales_transactions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (dispenser_id) REFERENCES fuel_dispensers(id) ON DELETE CASCADE,
     FOREIGN KEY (fuel_type_id) REFERENCES fuel_types(id) ON DELETE RESTRICT,
@@ -336,6 +378,7 @@ CREATE TABLE sales_transactions (
 CREATE TABLE customer_accounts (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     business_id BIGINT UNSIGNED NOT NULL,
+    branch_id BIGINT UNSIGNED NULL,
     customer_code VARCHAR(50) UNIQUE NOT NULL,
     company_name VARCHAR(255),
     contact_person VARCHAR(255),
@@ -352,12 +395,15 @@ CREATE TABLE customer_accounts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
-    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE CASCADE,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL
 );
 
 -- Credit Sales Table
 CREATE TABLE credit_sales (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NULL,
     customer_account_id BIGINT UNSIGNED NOT NULL,
     transaction_id BIGINT UNSIGNED NOT NULL,
     credit_amount DECIMAL(15,2) NOT NULL,
@@ -369,6 +415,8 @@ CREATE TABLE credit_sales (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL,
     FOREIGN KEY (customer_account_id) REFERENCES customer_accounts(id) ON DELETE CASCADE,
     FOREIGN KEY (transaction_id) REFERENCES sales_transactions(id) ON DELETE CASCADE,
     FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
@@ -381,6 +429,7 @@ CREATE TABLE credit_sales (
 -- Daily Sales Summary Table
 CREATE TABLE daily_sales_summary (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     business_date DATE NOT NULL,
     total_transactions INT DEFAULT 0,
@@ -398,6 +447,7 @@ CREATE TABLE daily_sales_summary (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (prepared_by) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL,
@@ -407,6 +457,7 @@ CREATE TABLE daily_sales_summary (
 -- Expenses Table
 CREATE TABLE expenses (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     expense_category VARCHAR(100) NOT NULL,
     description TEXT NOT NULL,
@@ -421,6 +472,7 @@ CREATE TABLE expenses (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -432,6 +484,7 @@ CREATE TABLE expenses (
 -- Shifts Table
 CREATE TABLE shifts (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     shift_name VARCHAR(100) NOT NULL,
     start_time TIME NOT NULL,
@@ -441,12 +494,15 @@ CREATE TABLE shifts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE
 );
 
 -- Shift Assignments Table
 CREATE TABLE shift_assignments (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NULL,
     shift_id BIGINT UNSIGNED NOT NULL,
     user_id BIGINT UNSIGNED NOT NULL,
     assignment_date DATE NOT NULL,
@@ -462,6 +518,8 @@ CREATE TABLE shift_assignments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL,
     FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE KEY unique_shift_user_date (shift_id, user_id, assignment_date)
@@ -474,6 +532,7 @@ CREATE TABLE shift_assignments (
 -- Equipment Maintenance Table
 CREATE TABLE equipment_maintenance (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     equipment_type ENUM('tank', 'dispenser', 'generator', 'safety_equipment', 'other') NOT NULL,
     equipment_id BIGINT UNSIGNED,
@@ -491,6 +550,7 @@ CREATE TABLE equipment_maintenance (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (performed_by) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
@@ -499,6 +559,7 @@ CREATE TABLE equipment_maintenance (
 -- Regulatory Compliance Table
 CREATE TABLE regulatory_compliance (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     compliance_type VARCHAR(100) NOT NULL,
     requirement_description TEXT NOT NULL,
@@ -514,6 +575,7 @@ CREATE TABLE regulatory_compliance (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (responsible_person) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -525,9 +587,10 @@ CREATE TABLE regulatory_compliance (
 -- Reports Table
 CREATE TABLE reports (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED,
     report_name VARCHAR(255) NOT NULL,
     report_type VARCHAR(100) NOT NULL,
-    branch_id BIGINT UNSIGNED,
     date_from DATE,
     date_to DATE,
     parameters JSON,
@@ -538,6 +601,7 @@ CREATE TABLE reports (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (generated_by) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -549,6 +613,8 @@ CREATE TABLE reports (
 -- System Settings Table
 CREATE TABLE system_settings (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NULL,
     setting_key VARCHAR(255) UNIQUE NOT NULL,
     setting_value TEXT,
     setting_type ENUM('string', 'number', 'boolean', 'json') DEFAULT 'string',
@@ -556,12 +622,16 @@ CREATE TABLE system_settings (
     is_editable BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE SET NULL
 );
 
 -- Audit Logs Table
 CREATE TABLE audit_logs (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED,
     user_id BIGINT UNSIGNED,
     action VARCHAR(100) NOT NULL,
     table_name VARCHAR(100),
@@ -572,6 +642,8 @@ CREATE TABLE audit_logs (
     user_agent TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
@@ -700,6 +772,7 @@ INSERT INTO system_settings (setting_key, setting_value, setting_type, descripti
 -- Price History Table
 CREATE TABLE fuel_price_history (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     fuel_type_id BIGINT UNSIGNED NOT NULL,
     old_price DECIMAL(10,2),
@@ -709,6 +782,7 @@ CREATE TABLE fuel_price_history (
     reason TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (fuel_type_id) REFERENCES fuel_types(id) ON DELETE CASCADE,
     FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE SET NULL
@@ -717,8 +791,9 @@ CREATE TABLE fuel_price_history (
 -- Notifications Table
 CREATE TABLE notifications (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT UNSIGNED,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED,
+    user_id BIGINT UNSIGNED,
     notification_type ENUM('info', 'warning', 'error', 'success') DEFAULT 'info',
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
@@ -729,15 +804,17 @@ CREATE TABLE notifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Fuel Vouchers Table
 CREATE TABLE fuel_vouchers (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    voucher_code VARCHAR(100) UNIQUE NOT NULL,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
+    voucher_code VARCHAR(100) UNIQUE NOT NULL,
     fuel_type_id BIGINT UNSIGNED NOT NULL,
     quantity DECIMAL(10,2) NOT NULL,
     unit_price DECIMAL(10,2) NOT NULL,
@@ -755,6 +832,7 @@ CREATE TABLE fuel_vouchers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (fuel_type_id) REFERENCES fuel_types(id) ON DELETE CASCADE,
     FOREIGN KEY (issued_by) REFERENCES users(id) ON DELETE SET NULL,
@@ -765,6 +843,8 @@ CREATE TABLE fuel_vouchers (
 -- Loyalty Program Table
 CREATE TABLE loyalty_customers (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NOT NULL,
     customer_code VARCHAR(50) UNIQUE NOT NULL,
     phone VARCHAR(20) UNIQUE NOT NULL,
     first_name VARCHAR(100) NOT NULL,
@@ -779,12 +859,16 @@ CREATE TABLE loyalty_customers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (registration_branch_id) REFERENCES branches(id) ON DELETE CASCADE
 );
 
 -- Loyalty Points History Table
 CREATE TABLE loyalty_points_history (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
+    branch_id BIGINT UNSIGNED NOT NULL,
     customer_id BIGINT UNSIGNED NOT NULL,
     transaction_id BIGINT UNSIGNED,
     points_earned INT DEFAULT 0,
@@ -794,6 +878,8 @@ CREATE TABLE loyalty_points_history (
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (customer_id) REFERENCES loyalty_customers(id) ON DELETE CASCADE,
     FOREIGN KEY (transaction_id) REFERENCES sales_transactions(id) ON DELETE SET NULL
 );
@@ -801,6 +887,7 @@ CREATE TABLE loyalty_points_history (
 -- Fuel Quality Tests Table
 CREATE TABLE fuel_quality_tests (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     fuel_type_id BIGINT UNSIGNED NOT NULL,
     tank_id BIGINT UNSIGNED,
@@ -819,6 +906,7 @@ CREATE TABLE fuel_quality_tests (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (fuel_type_id) REFERENCES fuel_types(id) ON DELETE CASCADE,
     FOREIGN KEY (tank_id) REFERENCES storage_tanks(id) ON DELETE SET NULL
@@ -827,6 +915,7 @@ CREATE TABLE fuel_quality_tests (
 -- Incidents/Safety Reports Table
 CREATE TABLE safety_incidents (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     incident_type ENUM('spill', 'fire', 'injury', 'equipment_failure', 'security', 'other') NOT NULL,
     incident_date DATE NOT NULL,
@@ -847,6 +936,7 @@ CREATE TABLE safety_incidents (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (reported_by) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (investigated_by) REFERENCES users(id) ON DELETE SET NULL
@@ -855,6 +945,7 @@ CREATE TABLE safety_incidents (
 -- Cash Float Management Table
 CREATE TABLE cash_float (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     float_date DATE NOT NULL,
     opening_float DECIMAL(10,2) DEFAULT 0.00,
@@ -876,6 +967,7 @@ CREATE TABLE cash_float (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (prepared_by) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (verified_by) REFERENCES users(id) ON DELETE SET NULL,
@@ -885,6 +977,7 @@ CREATE TABLE cash_float (
 -- Bank Reconciliation Table
 CREATE TABLE bank_reconciliation (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     bank_name VARCHAR(255) NOT NULL,
     account_number VARCHAR(100) NOT NULL,
@@ -903,6 +996,7 @@ CREATE TABLE bank_reconciliation (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (reconciled_by) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
@@ -911,6 +1005,7 @@ CREATE TABLE bank_reconciliation (
 -- Fuel Losses/Variances Table
 CREATE TABLE fuel_variances (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    business_id BIGINT UNSIGNED NULL,
     branch_id BIGINT UNSIGNED NOT NULL,
     tank_id BIGINT UNSIGNED NOT NULL,
     variance_date DATE NOT NULL,
@@ -928,6 +1023,7 @@ CREATE TABLE fuel_variances (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (business_id) REFERENCES businesses(id) ON DELETE SET NULL,
     FOREIGN KEY (branch_id) REFERENCES branches(id) ON DELETE CASCADE,
     FOREIGN KEY (tank_id) REFERENCES storage_tanks(id) ON DELETE CASCADE,
     FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
