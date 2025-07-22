@@ -27,7 +27,7 @@ $super_admin = is_super_admin();
 
 // Get selected branch and date
 if ($super_admin) {
-    $selected_branch_id = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : ($branches[0]['id'] ?? null);
+$selected_branch_id = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : ($branches[0]['id'] ?? null);
 } else {
     $selected_branch_id = isset($_SESSION['branch_id']) ? intval($_SESSION['branch_id']) : ($branches[0]['id'] ?? null);
 }
@@ -201,9 +201,6 @@ if ($res) while ($row = mysqli_fetch_assoc($res)) $users[] = $row;
                     <div class="col-12 col-md-3">
                         <label for="business_date" class="form-label">Select Date:</label>
                         <input type="date" name="business_date" id="business_date" class="form-control" value="<?php echo h($selected_date); ?>">
-                    </div>
-                    <div class="col-12 col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">View Summary</button>
                     </div>
                 </div>
             </form>
@@ -412,6 +409,31 @@ if ($res) while ($row = mysqli_fetch_assoc($res)) $users[] = $row;
   </div>
 </div>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const branchSelect = document.getElementById('branch_id');
+    const dateSelect = document.getElementById('business_date');
+    const form = document.querySelector('form[method="get"]');
+
+    function updateUrlAndReload() {
+        const branchIdEl = branchSelect || form.querySelector('input[name="branch_id"]');
+        if (!branchIdEl || !dateSelect || !dateSelect.value) {
+            return;
+        }
+
+        const branchId = branchIdEl.value;
+        const businessDate = dateSelect.value;
+        
+        window.location.href = `daily_sales_summary.php?branch_id=${branchId}&business_date=${businessDate}`;
+    }
+
+    if (branchSelect) {
+        branchSelect.addEventListener('change', updateUrlAndReload);
+    }
+    if (dateSelect) {
+        dateSelect.addEventListener('change', updateUrlAndReload);
+    }
+});
+
 // Summary Modal logic
 const summaryModal = document.getElementById('summaryModal');
 const addSummaryBtn = document.getElementById('addSummaryBtn');
