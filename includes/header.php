@@ -21,8 +21,10 @@ if (isset($_SESSION['user_id'])) {
     top: 0;
     left: 260px;
     width: calc(100vw - 260px);
-    z-index: 1039;
+    z-index: 1040; /* Increased for safety */
     transition: left 0.2s, width 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    background: #fff;
 }
 
 .main-header.collapsed {
@@ -64,13 +66,27 @@ if (isset($_SESSION['user_id'])) {
         margin-top: calc(70px + 2.5rem); /* More spacing on larger screens */
     }
 }
+
+@media (max-width: 991.98px) {
+    .main-header,
+    .main-header.collapsed {
+        left: 0 !important;
+        width: 100vw !important;
+        z-index: 1040;
+    }
+}
+@media (max-width: 991.98px) {
+    #headerToggle {
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 0.25rem;
+    }
+}
 </style>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom main-header" >
-  <div class="container-fluid">
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+  <div class="container-fluid position-relative">
+
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">

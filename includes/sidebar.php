@@ -129,6 +129,20 @@ $sidebarModules = get_accessible_sidebar_modules();
   .sidebar.collapsed .collapsing {
     display: none !important;
 }
+/* Hide sidebar toggle on desktop, show on mobile */
+#sidebarToggle {
+    display: none;
+}
+@media (max-width: 991.98px) {
+    #sidebarToggle {
+        display: inline-block;
+        margin-right: 8px; /* Space from left edge */
+        vertical-align: middle;
+    }
+    .navbar-toggler {
+        margin-left: 8px; /* Space from sidebar toggle */
+    }
+}
 </style>
 
 <div id="sidebar-wrapper" class="d-flex">
@@ -142,10 +156,7 @@ $sidebarModules = get_accessible_sidebar_modules();
       <div class="sidebar-heading d-flex align-items-center">
         <i class="bi bi-speedometer2 me-2"></i>
         <a href="../public/dashboard.php" class="text-white text-decoration-none flex-grow-1">Dashboard</a>
-        <button id="sidebarToggle" class="btn btn-outline-secondary btn-sm ms-2 py-0 px-2 d-inline-flex align-items-center" style="line-height:1.1; height:1.8em;">
-            <i class="bi bi-list"></i>
-        </button>
-                </div>
+      </div>
       <hr class="sidebar-divider border-secondary m-0">
 
       <?php $collapseId = 0; ?>
