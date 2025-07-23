@@ -12,7 +12,7 @@ function createRecurringShifts($conn, $shift_id, $start_date, $end_date, $weekda
     if (!$shift) {
         return false;
     }
-    
+
     // Get current assignments for this shift (to copy the same people)
     $assignment_sql = "SELECT user_id FROM shift_assignments 
                       WHERE shift_id = $shift_id AND deleted_at IS NULL 
@@ -58,6 +58,7 @@ function createRecurringShifts($conn, $shift_id, $start_date, $end_date, $weekda
     }
     
     return true;
+}
 
 if (!has_permission('shifts.view')) {
     header('Location: login.php?error=unauthorized');
