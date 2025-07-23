@@ -3,50 +3,39 @@ session_start();
 require_once '../includes/auth_helpers.php';
 require_once '../config/db_connect.php';
 
-function createRecurringShifts($conn, $shift_id, $start_date, $end_date, $weekdays_only = true) {
-    // Get the original shift details
-    $shift_sql = "SELECT * FROM shifts WHERE id = $shift_id AND deleted_at IS NULL";
-    $shift_result = mysqli_query($conn, $shift_sql);
-    $shift = mysqli_fetch_assoc($shift_result);
-    
-    if (!$shift) {
-        return false;
-    }
-
-    // Get current assignments for this shift (to copy the same people)
-    $assignment_sql = "SELECT user_id FROM shift_assignments 
-                      WHERE shift_id = $shift_id AND deleted_at IS NULL 
-                      GROUP BY user_id";
-    $assignment_result = mysqli_query($conn, $assignment_sql);
-    $assigned_users = [];
-    while ($row = mysqli_fetch_assoc($assignment_result)) {
-        $assigned_users[] = $row['user_id'];
-    }
-    
+function createRecurringShifts(
+    $conn, 
+    $shift_id, 
+    $start_date, 
+    $end_date, 
+    $weekday_user_ids = [], 
+    $weekend_user_ids = []
+) {
     $current_date = new DateTime($start_date);
     $end_datetime = new DateTime($end_date);
     
     while ($current_date <= $end_datetime) {
-        $day_of_week = $current_date->format('N'); // 1-7 (Monday-Sunday)
-        
-        // Skip weekends if weekdays_only is true (6=Saturday, 7=Sunday)
-        if ($weekdays_only && ($day_of_week == 6 || $day_of_week == 7)) {
-            $current_date->add(new DateInterval('P1D'));
-            continue;
-        }
-        
+        $day_of_week = $current_date->format('N'); // 1=Mon, 7=Sun
         $assignment_date = $current_date->format('Y-m-d');
         
-        // Check if assignment already exists for this date
+        // Choose users based on day
+        if ($day_of_week >= 6) { // 6=Sat, 7=Sun
+            $user_ids = $weekend_user_ids;
+        } else {
+            $user_ids = $weekday_user_ids;
+        }
+
+        // Assign each user for this day
+        foreach ($user_ids as $user_id) {
+            // Check if assignment already exists
         $check_sql = "SELECT id FROM shift_assignments 
                      WHERE shift_id = $shift_id 
+                          AND user_id = $user_id
                      AND assignment_date = '$assignment_date' 
                      AND deleted_at IS NULL";
         $check_result = mysqli_query($conn, $check_sql);
         
         if (mysqli_num_rows($check_result) == 0) {
-            // Create assignments for each user
-            foreach ($assigned_users as $user_id) {
                 $insert_sql = "INSERT INTO shift_assignments 
                               (shift_id, user_id, assignment_date, status, created_at) 
                               VALUES ($shift_id, $user_id, '$assignment_date', 'scheduled', NOW())";
@@ -56,9 +45,11 @@ function createRecurringShifts($conn, $shift_id, $start_date, $end_date, $weekda
         
         $current_date->add(new DateInterval('P1D'));
     }
-    
     return true;
 }
+// Example usage:
+// createRecurringShifts($conn, 1, '2024-06-01', '2024-06-30', [2,3], [4,5]);
+// This will assign users 2,3 on weekdays and 4,5 on weekends for shift_id 1 between June 1 and June 30, 2024.
 
 if (!has_permission('shifts.view')) {
     header('Location: login.php?error=unauthorized');
@@ -141,6 +132,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_query($conn, $sql);
         header('Location: shifts.php?branch_id=' . $selected_branch_id . '&start_date=' . urlencode($start_date) . '&end_date=' . urlencode($end_date));
         exit;
+    }
+}
+// Handle Recurring Shift Creation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_recurring_shifts'])) {
+    $shift_id = intval($_POST['recurring_shift_id']);
+    $start_date = $_POST['recurring_start_date'];
+    $end_date = $_POST['recurring_end_date'];
+    $weekday_user_ids = array_map('intval', $_POST['weekday_user_ids'] ?? []);
+    $weekend_user_ids = array_map('intval', $_POST['weekend_user_ids'] ?? []);
+    if ($shift_id && $start_date && $end_date && $weekday_user_ids && $weekend_user_ids) {
+        createRecurringShifts($conn, $shift_id, $start_date, $end_date, $weekday_user_ids, $weekend_user_ids);
+        $_SESSION['recurring_success'] = "Recurring shifts created!";
+    } else {
+        $_SESSION['recurring_error'] = "Please fill all fields.";
+    }
+    header('Location: shifts.php?branch_id=' . $selected_branch_id . '&start_date=' . urlencode($start_date) . '&end_date=' . urlencode($end_date));
+    exit;
+}
+// Fetch all users for dropdown
+$users = [];
+$user_sql = "SELECT id, first_name, last_name FROM users WHERE deleted_at IS NULL ORDER BY first_name, last_name";
+$user_result = mysqli_query($conn, $user_sql);
+if ($user_result) {
+    while ($row = mysqli_fetch_assoc($user_result)) {
+        $users[] = $row;
     }
 }
 ?>
@@ -234,6 +250,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h5 class="mb-3 d-flex justify-content-between align-items-center">Shifts
                 <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#shiftModal" id="addShiftBtn"><i class="bi bi-plus"></i> Add Shift</button>
             </h5>
+            <?php include __DIR__ . '/models/recurring_shift_modal.php'; ?>
+            <?php if (!empty($_SESSION['recurring_success'])): ?>
+              <div class="alert alert-success"><?php echo $_SESSION['recurring_success']; unset($_SESSION['recurring_success']); ?></div>
+            <?php endif; ?>
+            <?php if (!empty($_SESSION['recurring_error'])): ?>
+              <div class="alert alert-danger"><?php echo $_SESSION['recurring_error']; unset($_SESSION['recurring_error']); ?></div>
+            <?php endif; ?>
             <?php if ($shifts): ?>
                 <div class="table-responsive mb-4">
                     <table class="table table-sm table-bordered align-middle mb-0">
