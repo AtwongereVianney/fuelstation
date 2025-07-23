@@ -11,13 +11,21 @@ function createRecurringShifts(
     $weekday_user_ids = [], 
     $weekend_user_ids = []
 ) {
+    // Fetch shift times
+    $shift_sql = "SELECT start_time, end_time FROM shifts WHERE id = $shift_id AND deleted_at IS NULL";
+    $shift_result = mysqli_query($conn, $shift_sql);
+    $shift = mysqli_fetch_assoc($shift_result);
+    if (!$shift) return false;
+    $start_time = $shift['start_time'];
+    $end_time = $shift['end_time'];
+
     $current_date = new DateTime($start_date);
     $end_datetime = new DateTime($end_date);
-    
+
     while ($current_date <= $end_datetime) {
         $day_of_week = $current_date->format('N'); // 1=Mon, 7=Sun
         $assignment_date = $current_date->format('Y-m-d');
-        
+
         // Choose users based on day
         if ($day_of_week >= 6) { // 6=Sat, 7=Sun
             $user_ids = $weekend_user_ids;
@@ -28,21 +36,21 @@ function createRecurringShifts(
         // Assign each user for this day
         foreach ($user_ids as $user_id) {
             // Check if assignment already exists
-        $check_sql = "SELECT id FROM shift_assignments 
-                     WHERE shift_id = $shift_id 
+            $check_sql = "SELECT id FROM shift_assignments 
+                          WHERE shift_id = $shift_id 
                           AND user_id = $user_id
-                     AND assignment_date = '$assignment_date' 
-                     AND deleted_at IS NULL";
-        $check_result = mysqli_query($conn, $check_sql);
-        
-        if (mysqli_num_rows($check_result) == 0) {
+                          AND assignment_date = '$assignment_date' 
+                          AND deleted_at IS NULL";
+            $check_result = mysqli_query($conn, $check_sql);
+
+            if (mysqli_num_rows($check_result) == 0) {
                 $insert_sql = "INSERT INTO shift_assignments 
-                              (shift_id, user_id, assignment_date, status, created_at) 
-                              VALUES ($shift_id, $user_id, '$assignment_date', 'scheduled', NOW())";
+                              (shift_id, user_id, assignment_date, status, created_at, clock_in_time, clock_out_time) 
+                              VALUES ($shift_id, $user_id, '$assignment_date', 'scheduled', NOW(), '$start_time', '$end_time')";
                 mysqli_query($conn, $insert_sql);
             }
         }
-        
+
         $current_date->add(new DateInterval('P1D'));
     }
     return true;

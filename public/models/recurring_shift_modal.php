@@ -14,11 +14,25 @@
       <div class="modal-body">
         <div class="mb-2">
           <label class="form-label">Shift</label>
-          <select class="form-select" name="recurring_shift_id" required>
+          <select class="form-select" name="recurring_shift_id" id="recurring_shift_id" required>
             <?php foreach ($shifts as $s): ?>
-              <option value="<?php echo $s['id']; ?>"><?php echo h($s['shift_name']); ?></option>
+              <option 
+                value="<?php echo $s['id']; ?>"
+                data-start_time="<?php echo h($s['start_time']); ?>"
+                data-end_time="<?php echo h($s['end_time']); ?>"
+              >
+                <?php echo h($s['shift_name']); ?>
+              </option>
             <?php endforeach; ?>
           </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Clock In</label>
+          <input type="time" class="form-control" name="recurring_clock_in_time" id="recurring_clock_in_time" readonly>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Clock Out</label>
+          <input type="time" class="form-control" name="recurring_clock_out_time" id="recurring_clock_out_time" readonly>
         </div>
         <div class="mb-2">
           <label class="form-label">Start Date</label>
@@ -54,3 +68,25 @@
     </form>
   </div>
 </div> 
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var shiftSelect = document.getElementById('recurring_shift_id');
+  var clockInInput = document.getElementById('recurring_clock_in_time');
+  var clockOutInput = document.getElementById('recurring_clock_out_time');
+
+  function updateTimes() {
+    var selected = shiftSelect.options[shiftSelect.selectedIndex];
+    var start = selected.getAttribute('data-start_time');
+    var end = selected.getAttribute('data-end_time');
+    clockInInput.value = start || '';
+    clockOutInput.value = end || '';
+  }
+
+  if (shiftSelect) {
+    shiftSelect.addEventListener('change', updateTimes);
+    // Set initial values on page load
+    updateTimes();
+  }
+});
+</script> 
