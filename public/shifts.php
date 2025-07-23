@@ -55,9 +55,6 @@ function createRecurringShifts(
     }
     return true;
 }
-// Example usage:
-// createRecurringShifts($conn, 1, '2024-06-01', '2024-06-30', [2,3], [4,5]);
-// This will assign users 2,3 on weekdays and 4,5 on weekends for shift_id 1 between June 1 and June 30, 2024.
 
 if (!has_permission('shifts.view')) {
     header('Location: login.php?error=unauthorized');
