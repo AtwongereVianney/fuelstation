@@ -144,7 +144,7 @@ function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UT
                                         <option value="">Select branch</option>
                                         <?php foreach ($branches as $b): ?>
                                             <option value="<?php echo $b['id']; ?>"><?php echo h($b['branch_name']); ?></option>
-                                        <?php endforeach; ?>
+                                    <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="mb-3">
@@ -156,7 +156,7 @@ function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UT
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                                 <button type="submit" class="btn btn-primary">Add Notification</button>
-                            </div>
+                        </div>
                         </form>
                     </div>
                 </div>
@@ -165,7 +165,7 @@ function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UT
             <nav>
                 <ul class="pagination" id="pagination"></ul>
             </nav>
-            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
+                <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

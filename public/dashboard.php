@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/db_connect.php';
 require_once '../includes/auth_helpers.php';
+require_once '../includes/notifications_helper.php';
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -57,6 +58,14 @@ if ($role === 'super_admin' && $business_id) {
     while ($row = mysqli_fetch_assoc($res)) {
         $service_demand_data[(int)$row['m']-1] = (int)$row['cnt'];
     }
+}
+
+// Fetch the 5 latest notifications for this user
+$notif_filters = ['user_id' => $user_id];
+$latest_notifications = get_notifications($conn, $notif_filters, 1, 5);
+$unread_count = 0;
+foreach ($latest_notifications as $n) {
+    if (!$n['is_read']) $unread_count++;
 }
 ?>
 <!DOCTYPE html>
@@ -312,6 +321,19 @@ if ($role === 'super_admin' && $business_id) {
                 padding: 0.5rem;
             }
         }
+
+        @keyframes bell-shake {
+          0% { transform: rotate(0); }
+          20% { transform: rotate(-15deg); }
+          40% { transform: rotate(10deg); }
+          60% { transform: rotate(-10deg); }
+          80% { transform: rotate(5deg); }
+          100% { transform: rotate(0); }
+        }
+        .bell-shake {
+          animation: bell-shake 0.7s 2;
+          color: #ffc107;
+        }
     </style>
 </head>
 <body>
@@ -415,8 +437,13 @@ if ($role === 'super_admin' && $business_id) {
                                 <?php endif; ?>
                                 <?php if ($role === 'super_admin' || in_array('notifications.view', $user_permissions)): ?>
                                 <div class="col-6 col-md-3">
-                                    <a href="notifications.php" class="btn btn-outline-primary w-100 py-3">
-                                        <i class="bi bi-bell"></i>
+                                    <a href="notifications.php" class="btn btn-outline-primary w-100 py-3 position-relative">
+                                        <i class="bi bi-bell<?php echo $unread_count ? ' bell-shake' : ''; ?>" id="notifBell"></i>
+                                        <?php if ($unread_count): ?>
+                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                                <?php echo $unread_count; ?>
+                                            </span>
+                                        <?php endif; ?>
                                         <span class="responsive-text">Notifications</span>
                                     </a>
                                 </div>
@@ -619,6 +646,17 @@ if ($role === 'super_admin' && $business_id) {
     if ('ontouchstart' in window) {
         document.addEventListener('touchstart', function() {}, true);
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var bell = document.getElementById('notifBell');
+        if (bell) {
+            bell.addEventListener('click', function() {
+                bell.classList.remove('bell-shake');
+                void bell.offsetWidth; // trigger reflow
+                bell.classList.add('bell-shake');
+            });
+        }
+    });
     </script>
 </body>
 </html>
