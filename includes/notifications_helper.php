@@ -84,6 +84,13 @@ function mark_notification_as_read($conn, $notification_id, $user_id = null) {
     return mysqli_query($conn, $sql);
 }
 
+function mark_notification_as_unread($conn, $notification_id, $user_id = null) {
+    $id = intval($notification_id);
+    $user_sql = $user_id ? " AND user_id = " . intval($user_id) : '';
+    $sql = "UPDATE notifications SET is_read = 0 WHERE id = $id $user_sql LIMIT 1";
+    return mysqli_query($conn, $sql);
+}
+
 function add_notification($conn, $data) {
     $user_id = intval($data['user_id']);
     $branch_id = intval($data['branch_id']);

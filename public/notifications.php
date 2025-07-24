@@ -173,11 +173,11 @@ function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UT
 const summaryDiv = document.getElementById('notifications-summary');
 const tableDiv = document.getElementById('notifications-table');
 const paginationUl = document.getElementById('pagination');
-const filterForm = document.getElementById('filterForm');
 let currentPage = 1;
 let perPage = 20;
 
 function getFilters() {
+    const filterForm = document.getElementById('filterForm');
     const params = new URLSearchParams(new FormData(filterForm));
     params.set('page', currentPage);
     params.set('per_page', perPage);
@@ -237,7 +237,16 @@ function renderTable(notifications) {
             <td>${escapeHtml(n.branch_name)}</td>
             <td>${n.is_read ? '<span class="badge bg-success">Read</span>' : '<span class="badge bg-warning text-dark">Unread</span>'}</td>
             <td>${n.action_url ? `<a href="${escapeHtml(n.action_url)}" target="_blank">Link</a>` : ''}</td>
-            <td>${!n.is_read ? `<button class="btn btn-sm btn-success mark-read-btn" data-id="${n.id}">Mark as Read</button>` : ''}</td>
+            <td>
+  ${!n.is_read
+    ? `<button class="btn btn-sm btn-success mark-read-btn" data-id="${n.id}">Mark as Read</button>`
+    : `<button class="btn btn-sm btn-warning mark-unread-btn" data-id="${n.id}">Mark as Unread</button>`
+  }
+  ${n.action_url
+    ? `<a href="${escapeHtml(n.action_url)}" target="_blank" class="btn btn-sm btn-info ms-1">Go to Link</a>`
+    : ''
+  }
+</td>
         </tr>`;
     }
     html += '</tbody></table></div>';
@@ -246,6 +255,11 @@ function renderTable(notifications) {
         btn.addEventListener('click', function() {
             markAsRead(this.dataset.id);
         });
+    });
+    document.querySelectorAll('.mark-unread-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        markAsUnread(this.dataset.id);
+      });
     });
 }
 
@@ -276,6 +290,23 @@ function markAsRead(id) {
     });
 }
 
+function markAsUnread(id) {
+  fetch('mark_notification_unread.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'notification_id=' + encodeURIComponent(id)
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log('Mark as Unread response:', data);
+    if (data.success) fetchNotifications();
+    else alert('Failed to mark as unread: ' + (data.error || 'Unknown error'));
+  })
+  .catch(err => {
+    alert('AJAX error: ' + err);
+  });
+}
+
 function escapeHtml(text) {
     if (!text) return '';
     return text.replace(/[&<>"']/g, function(m) {
@@ -287,46 +318,51 @@ function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-const addNotificationForm = document.getElementById('addNotificationForm');
-const addNotifError = document.getElementById('addNotifError');
-addNotificationForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    addNotifError.classList.add('d-none');
-    const formData = new FormData(addNotificationForm);
-    fetch('add_notification.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addNotificationModal'));
-            modal.hide();
-            setTimeout(() => {
-              document.body.classList.remove('modal-open');
-              document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-            }, 300); // Wait for modal animation
-            addNotificationForm.reset();
-            fetchNotifications();
-        } else {
-            addNotifError.textContent = data.error || 'Failed to add notification.';
-            addNotifError.classList.remove('d-none');
-        }
-    })
-    .catch(() => {
-        addNotifError.textContent = 'Failed to add notification.';
-        addNotifError.classList.remove('d-none');
-    });
-});
-
-filterForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    currentPage = 1;
-    fetchNotifications();
-});
-
 document.addEventListener('DOMContentLoaded', function() {
+    const addNotificationForm = document.getElementById('addNotificationForm');
+    const addNotifError = document.getElementById('addNotifError');
+    const filterForm = document.getElementById('filterForm');
+
     fetchNotifications();
+
+    if (addNotificationForm) {
+        addNotificationForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            addNotifError.classList.add('d-none');
+            const formData = new FormData(addNotificationForm);
+            fetch('add_notification.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addNotificationModal'));
+                    modal.hide();
+                    setTimeout(() => {
+                      document.body.classList.remove('modal-open');
+                      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                    }, 300); // Wait for modal animation
+                    addNotificationForm.reset();
+                    fetchNotifications();
+                } else {
+                    addNotifError.textContent = data.error || 'Failed to add notification.';
+                    addNotifError.classList.remove('d-none');
+                }
+            })
+            .catch(() => {
+                addNotifError.textContent = 'Failed to add notification.';
+                addNotifError.classList.remove('d-none');
+            });
+        });
+    }
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentPage = 1;
+            fetchNotifications();
+        });
+    }
 });
 </script>
 </body>
