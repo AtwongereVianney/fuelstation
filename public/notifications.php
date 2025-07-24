@@ -2,7 +2,6 @@
 session_start();
 require_once '../config/db_connect.php';
 require_once '../includes/auth_helpers.php';
-require_once '../includes/notification_helper.php';
 
 // Fetch all branches for dropdown
 $branches = [];
@@ -23,67 +22,14 @@ $notification_types = [
     'success' => 'Success'
 ];
 
-// Get filters
+// Get filters (for form default values)
 $selected_branch_id = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : '';
 $selected_type = isset($_GET['notification_type']) ? $_GET['notification_type'] : '';
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
 
-// Fetch all users for recipient selection
-$users = [];
-$user_sql = "SELECT id, first_name, last_name, email FROM users WHERE deleted_at IS NULL AND status = 'active' ORDER BY first_name, last_name";
-$user_result = mysqli_query($conn, $user_sql);
-if ($user_result) {
-    while ($row = mysqli_fetch_assoc($user_result)) {
-        $users[] = $row;
-    }
-}
-
-// Handle notification send POST
-$notif_feedback = null;
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_notification'])) {
-    $notif_type = $_POST['notif_type'] ?? 'info';
-    $notif_title = $_POST['notif_title'] ?? '';
-    $notif_message = $_POST['notif_message'] ?? '';
-    $notif_action_url = $_POST['notif_action_url'] ?? '';
-    $recipient_type = $_POST['recipient_type'] ?? 'all';
-    $user_ids = isset($_POST['user_ids']) ? (array)$_POST['user_ids'] : [];
-    $branch_ids = isset($_POST['branch_ids']) ? (array)$_POST['branch_ids'] : [];
-    $result = send_notification($notif_type, $notif_title, $notif_message, $notif_action_url, $recipient_type, $user_ids, $branch_ids);
-    $notif_feedback = $result['message'];
-}
-
 // Helper for safe output
 function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UTF-8'); }
-
-// Build query
-$where = ["n.deleted_at IS NULL"];
-if ($selected_branch_id) $where[] = "n.branch_id = $selected_branch_id";
-if ($selected_type) $where[] = "n.notification_type = '" . mysqli_real_escape_string($conn, $selected_type) . "'";
-if ($start_date && $end_date) $where[] = "DATE(n.created_at) BETWEEN '" . mysqli_real_escape_string($conn, $start_date) . "' AND '" . mysqli_real_escape_string($conn, $end_date) . "'";
-$where_sql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
-
-// Fetch notifications
-$notifications = [];
-$summary = [
-    'total' => 0,
-    'by_type' => [],
-    'by_status' => []
-];
-$sql = "SELECT n.*, u.first_name, u.last_name, b.branch_name FROM notifications n LEFT JOIN users u ON n.user_id = u.id LEFT JOIN branches b ON n.branch_id = b.id $where_sql ORDER BY n.created_at DESC, n.id DESC LIMIT 100";
-$res = mysqli_query($conn, $sql);
-if ($res) {
-    while ($row = mysqli_fetch_assoc($res)) {
-        $notifications[] = $row;
-        $summary['total']++;
-        $type = $row['notification_type'];
-        $status = $row['is_read'] ? 'Read' : 'Unread';
-        if (!isset($summary['by_type'][$type])) $summary['by_type'][$type] = 0;
-        $summary['by_type'][$type]++;
-        if (!isset($summary['by_status'][$status])) $summary['by_status'][$status] = 0;
-        $summary['by_status'][$status]++;
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -127,81 +73,7 @@ if ($res) {
                 </button>
             </div>
             <h2 class="mb-4">Notifications</h2>
-            <?php if ($notif_feedback): ?>
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    <?php echo h($notif_feedback); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            <?php endif; ?>
-            <!-- Notification Send Form -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Send Notification</h5>
-                    <form method="post" class="row g-3">
-                        <div class="col-md-3">
-                            <label for="notif_type" class="form-label">Type</label>
-                            <select name="notif_type" id="notif_type" class="form-select" required>
-                                <option value="info">Info</option>
-                                <option value="warning">Warning</option>
-                                <option value="error">Error</option>
-                                <option value="success">Success</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="notif_title" class="form-label">Title</label>
-                            <input type="text" name="notif_title" id="notif_title" class="form-control" required>
-                        </div>
-                        <div class="col-md-5">
-                            <label for="notif_action_url" class="form-label">Action URL (optional)</label>
-                            <input type="url" name="notif_action_url" id="notif_action_url" class="form-control">
-                        </div>
-                        <div class="col-12">
-                            <label for="notif_message" class="form-label">Message</label>
-                            <textarea name="notif_message" id="notif_message" class="form-control" rows="2" required></textarea>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Recipients</label>
-                            <select name="recipient_type" id="recipient_type" class="form-select" onchange="toggleRecipientFields()" required>
-                                <option value="all">All Users</option>
-                                <option value="users">Specific User(s)</option>
-                                <option value="branches">All Users in Branch(es)</option>
-                                <option value="combination">Combination</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4" id="userSelectDiv" style="display:none;">
-                            <label for="user_ids" class="form-label">Select User(s)</label>
-                            <select name="user_ids[]" id="user_ids" class="form-select" multiple>
-                                <?php foreach ($users as $u): ?>
-                                    <option value="<?php echo $u['id']; ?>"><?php echo h($u['first_name'] . ' ' . $u['last_name'] . ' (' . $u['email'] . ')'); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-4" id="branchSelectDiv" style="display:none;">
-                            <label for="branch_ids" class="form-label">Select Branch(es)</label>
-                            <select name="branch_ids[]" id="branch_ids" class="form-select" multiple>
-                                <?php foreach ($branches as $b): ?>
-                                    <option value="<?php echo $b['id']; ?>"><?php echo h($b['branch_name']); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <button type="submit" name="send_notification" class="btn btn-primary">Send Notification</button>
-                        </div>
-                    </form>
-                    <script>
-                    function toggleRecipientFields() {
-                        var type = document.getElementById('recipient_type').value;
-                        document.getElementById('userSelectDiv').style.display = (type === 'users' || type === 'combination') ? '' : 'none';
-                        document.getElementById('branchSelectDiv').style.display = (type === 'branches' || type === 'combination') ? '' : 'none';
-                    }
-                    document.addEventListener('DOMContentLoaded', function() {
-                        toggleRecipientFields();
-                        document.getElementById('recipient_type').addEventListener('change', toggleRecipientFields);
-                    });
-                    </script>
-                </div>
-            </div>
-            <form method="get" class="mb-4">
+            <form method="get" class="mb-4" id="filterForm">
                 <div class="row g-2 align-items-end">
                     <div class="col-12 col-md-3">
                         <label for="branch_id" class="form-label">Branch:</label>
@@ -233,72 +105,143 @@ if ($res) {
                     </div>
                 </div>
             </form>
-            <div class="mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Notifications Summary</h5>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-3"><strong>Total:</strong> <?php echo h($summary['total']); ?></div>
-                            <div class="col-12 col-md-3">
-                                <strong>By Type:</strong>
-                                <ul class="mb-0">
-                                    <?php foreach ($summary['by_type'] as $type => $count): ?>
-                                        <li><?php echo h(ucfirst($type)); ?>: <?php echo h($count); ?></li>
-                                    <?php endforeach; ?>
-                                    <?php if (!$summary['by_type']): ?><li>None</li><?php endif; ?>
-                                </ul>
-                            </div>
-                            <div class="col-12 col-md-3">
-                                <strong>By Status:</strong>
-                                <ul class="mb-0">
-                                    <?php foreach ($summary['by_status'] as $status => $count): ?>
-                                        <li><?php echo h($status); ?>: <?php echo h($count); ?></li>
-                                    <?php endforeach; ?>
-                                    <?php if (!$summary['by_status']): ?><li>None</li><?php endif; ?>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="mb-4" id="notifications-summary"></div>
             <h5 class="mb-3">Notifications</h5>
-            <?php if ($notifications): ?>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Date</th>
-                                <th>Type</th>
-                                <th>Title</th>
-                                <th>Message</th>
-                                <th>User</th>
-                                <th>Branch</th>
-                                <th>Status</th>
-                                <th>Action URL</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($notifications as $n): ?>
-                                <tr>
-                                    <td><?php echo h($n['created_at']); ?></td>
-                                    <td><?php echo h(ucfirst($n['notification_type'])); ?></td>
-                                    <td><?php echo h($n['title']); ?></td>
-                                    <td><?php echo h($n['message']); ?></td>
-                                    <td><?php echo h(trim($n['first_name'] . ' ' . $n['last_name'])); ?></td>
-                                    <td><?php echo h($n['branch_name']); ?></td>
-                                    <td><?php echo $n['is_read'] ? '<span class="badge bg-success">Read</span>' : '<span class="badge bg-warning text-dark">Unread</span>'; ?></td>
-                                    <td><?php if ($n['action_url']): ?><a href="<?php echo h($n['action_url']); ?>" target="_blank">Link</a><?php endif; ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
-            <?php else: ?>
-                <div class="alert alert-info">No notifications found for the selected filters.</div>
-            <?php endif; ?>
+            <div id="notifications-table"></div>
+            <nav>
+                <ul class="pagination" id="pagination"></ul>
+            </nav>
+            <div class="d-block d-md-none small text-muted mt-2">Swipe left/right to see more columns.</div>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const summaryDiv = document.getElementById('notifications-summary');
+const tableDiv = document.getElementById('notifications-table');
+const paginationUl = document.getElementById('pagination');
+const filterForm = document.getElementById('filterForm');
+let currentPage = 1;
+let perPage = 20;
+
+function getFilters() {
+    const params = new URLSearchParams(new FormData(filterForm));
+    params.set('page', currentPage);
+    params.set('per_page', perPage);
+    return params;
+}
+
+function fetchNotifications() {
+    const params = getFilters();
+    fetch('notifications_data.php?' + params.toString())
+        .then(res => res.json())
+        .then(data => {
+            renderSummary(data.summary);
+            renderTable(data.notifications);
+            renderPagination(data.pagination);
+        });
+}
+
+function renderSummary(summary) {
+    let html = `<div class="card"><div class="card-body">
+        <h5 class="card-title mb-3">Notifications Summary</h5>
+        <div class="row g-3">
+            <div class="col-12 col-md-3"><strong>Total:</strong> ${summary.total}</div>
+            <div class="col-12 col-md-3"><strong>By Type:</strong><ul class="mb-0">`;
+    if (Object.keys(summary.by_type).length) {
+        for (const [type, count] of Object.entries(summary.by_type)) {
+            html += `<li>${type.charAt(0).toUpperCase() + type.slice(1)}: ${count}</li>`;
+        }
+    } else {
+        html += '<li>None</li>';
+    }
+    html += `</ul></div><div class="col-12 col-md-3"><strong>By Status:</strong><ul class="mb-0">`;
+    if (Object.keys(summary.by_status).length) {
+        for (const [status, count] of Object.entries(summary.by_status)) {
+            html += `<li>${status}: ${count}</li>`;
+        }
+    } else {
+        html += '<li>None</li>';
+    }
+    html += '</ul></div></div></div></div>';
+    summaryDiv.innerHTML = html;
+}
+
+function renderTable(notifications) {
+    if (!notifications.length) {
+        tableDiv.innerHTML = '<div class="alert alert-info">No notifications found for the selected filters.</div>';
+        return;
+    }
+    let html = `<div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0"><thead class="table-light"><tr>
+        <th>Date</th><th>Type</th><th>Title</th><th>Message</th><th>User</th><th>Branch</th><th>Status</th><th>Action URL</th><th>Action</th></tr></thead><tbody>`;
+    for (const n of notifications) {
+        html += `<tr>
+            <td>${escapeHtml(n.created_at)}</td>
+            <td>${escapeHtml(capitalize(n.notification_type))}</td>
+            <td>${escapeHtml(n.title)}</td>
+            <td>${escapeHtml(n.message)}</td>
+            <td>${escapeHtml((n.first_name || '') + ' ' + (n.last_name || ''))}</td>
+            <td>${escapeHtml(n.branch_name)}</td>
+            <td>${n.is_read ? '<span class="badge bg-success">Read</span>' : '<span class="badge bg-warning text-dark">Unread</span>'}</td>
+            <td>${n.action_url ? `<a href="${escapeHtml(n.action_url)}" target="_blank">Link</a>` : ''}</td>
+            <td>${!n.is_read ? `<button class="btn btn-sm btn-success mark-read-btn" data-id="${n.id}">Mark as Read</button>` : ''}</td>
+        </tr>`;
+    }
+    html += '</tbody></table></div>';
+    tableDiv.innerHTML = html;
+    document.querySelectorAll('.mark-read-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            markAsRead(this.dataset.id);
+        });
+    });
+}
+
+function renderPagination(pagination) {
+    let html = '';
+    for (let i = 1; i <= pagination.total_pages; i++) {
+        html += `<li class="page-item${i === pagination.page ? ' active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+    }
+    paginationUl.innerHTML = html;
+    document.querySelectorAll('#pagination .page-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentPage = parseInt(this.dataset.page);
+            fetchNotifications();
+        });
+    });
+}
+
+function markAsRead(id) {
+    fetch('mark_notification_read.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'notification_id=' + encodeURIComponent(id)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) fetchNotifications();
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/[&<>"']/g, function(m) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]);
+    });
+}
+function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+filterForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    currentPage = 1;
+    fetchNotifications();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetchNotifications();
+});
+</script>
 </body>
 </html> 
