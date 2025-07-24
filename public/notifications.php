@@ -302,6 +302,10 @@ addNotificationForm.addEventListener('submit', function(e) {
         if (data.success) {
             const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addNotificationModal'));
             modal.hide();
+            setTimeout(() => {
+              document.body.classList.remove('modal-open');
+              document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            }, 300); // Wait for modal animation
             addNotificationForm.reset();
             fetchNotifications();
         } else {
