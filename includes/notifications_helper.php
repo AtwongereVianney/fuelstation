@@ -82,4 +82,15 @@ function mark_notification_as_read($conn, $notification_id, $user_id = null) {
     $user_sql = $user_id ? " AND user_id = " . intval($user_id) : '';
     $sql = "UPDATE notifications SET is_read = 1 WHERE id = $id $user_sql LIMIT 1";
     return mysqli_query($conn, $sql);
+}
+
+function add_notification($conn, $data) {
+    $user_id = intval($data['user_id']);
+    $branch_id = intval($data['branch_id']);
+    $type = mysqli_real_escape_string($conn, $data['notification_type']);
+    $title = mysqli_real_escape_string($conn, $data['title']);
+    $message = mysqli_real_escape_string($conn, $data['message']);
+    $action_url = isset($data['action_url']) ? mysqli_real_escape_string($conn, $data['action_url']) : '';
+    $sql = "INSERT INTO notifications (user_id, branch_id, notification_type, title, message, action_url, is_read, created_at) VALUES ($user_id, $branch_id, '$type', '$title', '$message', '$action_url', 0, NOW())";
+    return mysqli_query($conn, $sql);
 } 

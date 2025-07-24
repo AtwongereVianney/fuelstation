@@ -107,6 +107,60 @@ function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UT
             </form>
             <div class="mb-4" id="notifications-summary"></div>
             <h5 class="mb-3">Notifications</h5>
+            <div class="mb-3">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addNotificationModal">Add Notification</button>
+            </div>
+            <!-- Add Notification Modal -->
+            <div class="modal fade" id="addNotificationModal" tabindex="-1" aria-labelledby="addNotificationModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form id="addNotificationForm">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="addNotificationModalLabel">Add Notification</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="notif_title" class="form-label">Title</label>
+                                    <input type="text" class="form-control" id="notif_title" name="title" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="notif_message" class="form-label">Message</label>
+                                    <textarea class="form-control" id="notif_message" name="message" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="notif_type" class="form-label">Type</label>
+                                    <select class="form-select" id="notif_type" name="notification_type" required>
+                                        <option value="">Select type</option>
+                                        <option value="info">Info</option>
+                                        <option value="warning">Warning</option>
+                                        <option value="error">Error</option>
+                                        <option value="success">Success</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="notif_branch" class="form-label">Branch</label>
+                                    <select class="form-select" id="notif_branch" name="branch_id" required>
+                                        <option value="">Select branch</option>
+                                        <?php foreach ($branches as $b): ?>
+                                            <option value="<?php echo $b['id']; ?>"><?php echo h($b['branch_name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="notif_action_url" class="form-label">Action URL (optional)</label>
+                                    <input type="url" class="form-control" id="notif_action_url" name="action_url">
+                                </div>
+                                <div id="addNotifError" class="alert alert-danger d-none"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Add Notification</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
             <div id="notifications-table"></div>
             <nav>
                 <ul class="pagination" id="pagination"></ul>
@@ -232,6 +286,34 @@ function capitalize(str) {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+const addNotificationForm = document.getElementById('addNotificationForm');
+const addNotifError = document.getElementById('addNotifError');
+addNotificationForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    addNotifError.classList.add('d-none');
+    const formData = new FormData(addNotificationForm);
+    fetch('add_notification.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addNotificationModal'));
+            modal.hide();
+            addNotificationForm.reset();
+            fetchNotifications();
+        } else {
+            addNotifError.textContent = data.error || 'Failed to add notification.';
+            addNotifError.classList.remove('d-none');
+        }
+    })
+    .catch(() => {
+        addNotifError.textContent = 'Failed to add notification.';
+        addNotifError.classList.remove('d-none');
+    });
+});
 
 filterForm.addEventListener('submit', function(e) {
     e.preventDefault();
