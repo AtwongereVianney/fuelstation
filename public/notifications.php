@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/db_connect.php';
 require_once '../includes/auth_helpers.php';
+require_once '../includes/notification_helper.php';
 
 // Fetch all branches for dropdown
 $branches = [];
@@ -27,6 +28,60 @@ $selected_branch_id = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : '
 $selected_type = isset($_GET['notification_type']) ? $_GET['notification_type'] : '';
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
+
+// Handle notification send form
+$send_success = false;
+$send_error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_notification'])) {
+    if (!has_permission('notifications.send')) {
+        $send_error = 'You do not have permission to send notifications.';
+    } else {
+        $recipient_type = $_POST['recipient_type'] ?? '';
+        $selected_users = isset($_POST['user_ids']) ? (array)$_POST['user_ids'] : [];
+        $selected_branch = $_POST['branch_id'] ?? '';
+        $type = $_POST['notification_type'] ?? '';
+        $title = trim($_POST['title'] ?? '');
+        $message = trim($_POST['message'] ?? '');
+        $action_url = trim($_POST['action_url'] ?? '');
+        if (!$type || !$title || !$message) {
+            $send_error = 'Type, title, and message are required.';
+        } else {
+            $sent = false;
+            if ($recipient_type === 'all') {
+                $sent = send_notification_to_all($conn, $type, $title, $message, $action_url);
+            } elseif ($recipient_type === 'branch' && $selected_branch) {
+                $sent = send_notification_to_branch($conn, $selected_branch, $type, $title, $message, $action_url);
+            } elseif ($recipient_type === 'user' && $selected_users) {
+                $sent = send_notification($conn, $selected_users, $type, $title, $message, $action_url);
+            } elseif ($recipient_type === 'combination') {
+                $sent = false;
+                // Send to selected users
+                if ($selected_users) {
+                    $sent = send_notification($conn, $selected_users, $type, $title, $message, $action_url) || $sent;
+                }
+                // Send to branch
+                if ($selected_branch) {
+                    $sent = send_notification_to_branch($conn, $selected_branch, $type, $title, $message, $action_url) || $sent;
+                }
+            }
+            if ($sent) {
+                $send_success = true;
+            } else {
+                $send_error = 'Failed to send notification.';
+            }
+        }
+    }
+}
+
+// Fetch all users for recipient dropdown
+$users = [];
+$user_sql = "SELECT u.id, u.first_name, u.last_name, u.email, r.display_name as role FROM users u LEFT JOIN user_roles ur ON u.id = ur.user_id LEFT JOIN roles r ON ur.role_id = r.id WHERE u.deleted_at IS NULL ORDER BY u.first_name, u.last_name";
+$user_result = mysqli_query($conn, $user_sql);
+if ($user_result) {
+    while ($row = mysqli_fetch_assoc($user_result)) {
+        $users[] = $row;
+    }
+}
 
 // Helper for safe output
 function h($str) { return htmlspecialchars((string)($str ?? ''), ENT_QUOTES, 'UTF-8'); }
@@ -198,6 +253,94 @@ if ($res) {
             <?php else: ?>
                 <div class="alert alert-info">No notifications found for the selected filters.</div>
             <?php endif; ?>
+            <?php if (has_permission('notifications.send')): ?>
+<!-- Send Notification Button -->
+<button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#sendNotificationModal">
+    <i class="bi bi-bell-plus"></i> Send Notification
+</button>
+<?php endif; ?>
+<?php if ($send_success): ?>
+    <div class="alert alert-success">Notification sent successfully.</div>
+<?php elseif ($send_error): ?>
+    <div class="alert alert-danger"><?php echo h($send_error); ?></div>
+<?php endif; ?>
+<!-- Send Notification Modal -->
+<div class="modal fade" id="sendNotificationModal" tabindex="-1" aria-labelledby="sendNotificationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="post">
+        <div class="modal-header">
+          <h5 class="modal-title" id="sendNotificationModalLabel">Send Notification</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="recipient_type" class="form-label">Recipient Type</label>
+            <select name="recipient_type" id="recipient_type" class="form-select" required onchange="toggleRecipientFields()">
+              <option value="">Select...</option>
+              <option value="all">All Users</option>
+              <option value="user">Specific User(s)</option>
+              <option value="branch">Branch</option>
+              <option value="combination">Combination</option>
+            </select>
+          </div>
+          <div class="mb-3 d-none" id="userSelectDiv">
+            <label for="user_ids" class="form-label">Select User(s)</label>
+            <select name="user_ids[]" id="user_ids" class="form-select" multiple>
+              <?php foreach ($users as $u): ?>
+                <option value="<?php echo $u['id']; ?>"><?php echo h($u['first_name'] . ' ' . $u['last_name'] . ' (' . $u['email'] . ')'); ?></option>
+              <?php endforeach; ?>
+            </select>
+            <div class="form-text">Hold Ctrl (Windows) or Cmd (Mac) to select multiple users.</div>
+          </div>
+          <div class="mb-3 d-none" id="branchSelectDiv">
+            <label for="branch_id" class="form-label">Select Branch</label>
+            <select name="branch_id" id="branch_id_modal" class="form-select">
+              <option value="">Select branch...</option>
+              <?php foreach ($branches as $b): ?>
+                <option value="<?php echo $b['id']; ?>"><?php echo h($b['branch_name']); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="notification_type" class="form-label">Type</label>
+            <select name="notification_type" id="notification_type_modal" class="form-select" required>
+              <?php foreach ($notification_types as $val => $label): if ($val === '') continue; ?>
+                <option value="<?php echo h($val); ?>"><?php echo h($label); ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" name="title" id="title" class="form-control" required maxlength="100">
+          </div>
+          <div class="mb-3">
+            <label for="message" class="form-label">Message</label>
+            <textarea name="message" id="message" class="form-control" rows="3" required maxlength="500"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="action_url" class="form-label">Action URL (optional)</label>
+            <input type="url" name="action_url" id="action_url" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" name="send_notification" class="btn btn-primary">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+function toggleRecipientFields() {
+  var type = document.getElementById('recipient_type').value;
+  document.getElementById('userSelectDiv').classList.toggle('d-none', !(type === 'user' || type === 'combination'));
+  document.getElementById('branchSelectDiv').classList.toggle('d-none', !(type === 'branch' || type === 'combination'));
+}
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('recipient_type').addEventListener('change', toggleRecipientFields);
+});
+</script>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
