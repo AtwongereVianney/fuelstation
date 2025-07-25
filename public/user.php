@@ -12,11 +12,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_user'])) {
     $status = $_POST['status'] === 'active' ? 'active' : 'inactive';
     $role_id = intval($_POST['role_id'] ?? 0);
     $business_id = intval($_POST['business_id'] ?? 0);
-    $branch_id = intval($_POST['branch_id'] ?? 0);
-    if ($user_id && $username && $email && $role_id && $business_id && $branch_id) {
-        $update_sql = "UPDATE users SET username=?, email=?, status=?, business_id=?, branch_id=?, updated_at=NOW() WHERE id=?";
-        $update_stmt = mysqli_prepare($conn, $update_sql);
-        mysqli_stmt_bind_param($update_stmt, 'ssssii', $username, $email, $status, $business_id, $branch_id, $user_id);
+    $branch_id = isset($_POST['branch_id']) && $_POST['branch_id'] !== '' ? intval($_POST['branch_id']) : null;
+    if ($user_id && $username && $email && $role_id && $business_id) { // branch_id is now optional
+        if ($branch_id !== null) {
+            $update_sql = "UPDATE users SET username=?, email=?, status=?, business_id=?, branch_id=?, updated_at=NOW() WHERE id=?";
+            $update_stmt = mysqli_prepare($conn, $update_sql);
+            mysqli_stmt_bind_param($update_stmt, 'ssssii', $username, $email, $status, $business_id, $branch_id, $user_id);
+        } else {
+            $update_sql = "UPDATE users SET username=?, email=?, status=?, business_id=?, branch_id=NULL, updated_at=NOW() WHERE id=?";
+            $update_stmt = mysqli_prepare($conn, $update_sql);
+            mysqli_stmt_bind_param($update_stmt, 'ssssi', $username, $email, $status, $business_id, $user_id);
+        }
         mysqli_stmt_execute($update_stmt);
         mysqli_stmt_close($update_stmt);
         $role_update_sql = "UPDATE user_roles SET role_id=? WHERE user_id=?";
@@ -26,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_user'])) {
         mysqli_stmt_close($role_update_stmt);
         $edit_success = true;
     } else {
-        $edit_errors[] = 'All fields are required.';
+        $edit_errors[] = 'All fields are required except branch.';
     }
 }
 
@@ -52,8 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
     $status = $_POST['status'] === 'active' ? 'active' : 'inactive';
     $role_id = intval($_POST['role_id'] ?? 0);
     $business_id = intval($_POST['business_id'] ?? 0);
-    $branch_id = intval($_POST['branch_id'] ?? 0);
-    if ($username && $email && $password && $role_id && $business_id && $branch_id) {
+    $branch_id = isset($_POST['branch_id']) && $_POST['branch_id'] !== '' ? intval($_POST['branch_id']) : null;
+    if ($username && $email && $password && $role_id && $business_id) { // branch_id is now optional
         // Check for duplicate username/email
         $check_sql = "SELECT id FROM users WHERE (username=? OR email=?) AND deleted_at IS NULL LIMIT 1";
         $check_stmt = mysqli_prepare($conn, $check_sql);
@@ -66,7 +72,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $insert_sql = "INSERT INTO users (username, email, password, status, business_id, branch_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
             $insert_stmt = mysqli_prepare($conn, $insert_sql);
-            mysqli_stmt_bind_param($insert_stmt, 'ssssii', $username, $email, $hashed_password, $status, $business_id, $branch_id);
+            // Use i or null for branch_id
+            if ($branch_id !== null) {
+                mysqli_stmt_bind_param($insert_stmt, 'ssssii', $username, $email, $hashed_password, $status, $business_id, $branch_id);
+            } else {
+                // Use NULL for branch_id
+                mysqli_stmt_bind_param($insert_stmt, 'ssssi', $username, $email, $hashed_password, $status, $business_id);
+                $insert_sql = "INSERT INTO users (username, email, password, status, business_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())";
+                $insert_stmt = mysqli_prepare($conn, $insert_sql);
+            }
             if (mysqli_stmt_execute($insert_stmt)) {
                 $new_user_id = mysqli_insert_id($conn);
                 $role_insert_sql = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
@@ -92,8 +106,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
                 if ($role_name === 'business_owner') {
                     header("Location: manage_businesses.php?user_id=$new_user_id");
                     exit;
-                } else {
+                } else if ($branch_id !== null) {
                     header("Location: branch_dashboard.php?branch_id=$branch_id");
+                    exit;
+                } else {
+                    header("Location: dashboard.php");
                     exit;
                 }
             } else {
@@ -103,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
         }
         mysqli_stmt_close($check_stmt);
     } else {
-        $add_errors[] = 'All fields are required.';
+        $add_errors[] = 'All fields are required except branch.';
     }
 }
 
@@ -328,8 +345,8 @@ if ($branches_result) {
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="branch_id<?php echo $user['id']; ?>" class="form-label">Branch</label>
-                        <select class="form-select branch-select-edit" id="branch_id<?php echo $user['id']; ?>" name="branch_id" required data-user-id="<?php echo $user['id']; ?>">
+                        <label for="branch_id<?php echo $user['id']; ?>" class="form-label">Branch <span class="text-muted">(optional)</span></label>
+                        <select class="form-select branch-select-edit" id="branch_id<?php echo $user['id']; ?>" name="branch_id" data-user-id="<?php echo $user['id']; ?>">
                             <option value="">Select Branch</option>
                             <?php foreach ($branches as $branch): ?>
                                 <option value="<?php echo $branch['id']; ?>" data-business="<?php echo $branch['business_id']; ?>" <?php if ($user['branch_name'] == $branch['branch_name']) echo 'selected'; ?>><?php echo htmlspecialchars($branch['branch_name']); ?></option>
@@ -411,8 +428,8 @@ if ($branches_result) {
                       </select>
                     </div>
                     <div class="mb-3">
-                      <label for="add_branch_id" class="form-label">Branch</label>
-                      <select class="form-select" id="add_branch_id" name="branch_id" required>
+                      <label for="add_branch_id" class="form-label">Branch <span class="text-muted">(optional)</span></label>
+                      <select class="form-select" id="add_branch_id" name="branch_id">
                         <option value="">Select Branch</option>
                         <?php foreach ($branches as $branch): ?>
                           <option value="<?php echo $branch['id']; ?>" data-business="<?php echo $branch['business_id']; ?>"><?php echo htmlspecialchars($branch['branch_name']); ?></option>

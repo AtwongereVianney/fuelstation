@@ -205,14 +205,51 @@ $sidebarModules = get_accessible_sidebar_modules();
                     echo '</ul>';
                     echo '</li>';
                 }
-            } else if (isset($_SESSION['business_id'], $_SESSION['branch_id'])) {
-                $user_business_id = $_SESSION['business_id'];
-                $user_branch_id = $_SESSION['branch_id'];
-                // Query the branch with both business_id and branch_id
-                $branch_sql = "SELECT id, branch_name FROM branches WHERE id = $user_branch_id AND business_id = $user_business_id AND deleted_at IS NULL LIMIT 1";
-                $branch_result = mysqli_query($conn, $branch_sql);
-                if ($branch_result && $branch = mysqli_fetch_assoc($branch_result)) {
-                    echo '<li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=' . $branch['id'] . '"><i class="bi bi-building"></i><span>' . htmlspecialchars($branch['branch_name']) . '</span></a></li>';
+            } else if (isset($_SESSION['user_id'])) {
+                // Check if user is a business owner
+                $user_id = $_SESSION['user_id'];
+                $owner_sql = "SELECT r.name FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = $user_id AND r.name = 'business_owner' AND r.deleted_at IS NULL LIMIT 1";
+                $owner_result = mysqli_query($conn, $owner_sql);
+                $is_business_owner = ($owner_result && mysqli_num_rows($owner_result) > 0);
+                if ($is_business_owner) {
+                    // Fetch all businesses owned by this user (assuming users.business_id = businesses.id or a mapping table if needed)
+                    $sidebar_businesses = [];
+                    $biz_res = mysqli_query($conn, "SELECT b.id, b.business_name FROM businesses b JOIN users u ON u.business_id = b.id WHERE u.id = $user_id AND b.deleted_at IS NULL");
+                    while ($biz_row = mysqli_fetch_assoc($biz_res)) {
+                        $sidebar_businesses[] = $biz_row;
+                    }
+                    $branches_by_business = [];
+                    foreach ($sidebar_businesses as $biz) {
+                        $branch_res = mysqli_query($conn, "SELECT id, branch_name, business_id FROM branches WHERE business_id = " . $biz['id'] . " AND deleted_at IS NULL ORDER BY branch_name");
+                        while ($branch_row = mysqli_fetch_assoc($branch_res)) {
+                            $branches_by_business[$biz['id']][] = $branch_row;
+                        }
+                    }
+                    echo '<li><a class="nav-link" href="../public/manage_businesses.php"><i class="bi bi-diagram-3"></i><span>Manage Businesses</span></a></li>';
+                    foreach ($sidebar_businesses as $biz) {
+                        $collapseId = 'bizBranches' . $biz['id'];
+                        echo '<li>';
+                        echo '<a class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#' . $collapseId . '" role="button" aria-expanded="false" aria-controls="' . $collapseId . '"><span><i class="bi bi-building"></i> ' . htmlspecialchars($biz['business_name']) . '</span><i class="bi bi-caret-down-fill small"></i></a>';
+                        echo '<ul class="collapse list-unstyled ps-3" id="' . $collapseId . '">';
+                        if (!empty($branches_by_business[$biz['id']])) {
+                            foreach ($branches_by_business[$biz['id']] as $branch) {
+                                echo '<li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=' . $branch['id'] . '"><i class="bi bi-chevron-right"></i><span>' . htmlspecialchars($branch['branch_name']) . '</span></a></li>';
+                            }
+                        } else {
+                            echo '<li><span class="nav-link text-muted">No branches</span></li>';
+                        }
+                        echo '</ul>';
+                        echo '</li>';
+                    }
+                } else if (isset($_SESSION['business_id'], $_SESSION['branch_id'])) {
+                    $user_business_id = $_SESSION['business_id'];
+                    $user_branch_id = $_SESSION['branch_id'];
+                    // Query the branch with both business_id and branch_id
+                    $branch_sql = "SELECT id, branch_name FROM branches WHERE id = $user_branch_id AND business_id = $user_business_id AND deleted_at IS NULL LIMIT 1";
+                    $branch_result = mysqli_query($conn, $branch_sql);
+                    if ($branch_result && $branch = mysqli_fetch_assoc($branch_result)) {
+                        echo '<li><a class="nav-link" href="../public/branch_dashboard.php?branch_id=' . $branch['id'] . '"><i class="bi bi-building"></i><span>' . htmlspecialchars($branch['branch_name']) . '</span></a></li>';
+                    }
                 }
             }
           ?>
