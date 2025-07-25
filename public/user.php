@@ -49,7 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
     $password = $_POST['password'] ?? '';
     $status = $_POST['status'] === 'active' ? 'active' : 'inactive';
     $role_id = intval($_POST['role_id'] ?? 0);
-    if ($username && $email && $password && $role_id) {
+    $business_id = intval($_POST['business_id'] ?? 0);
+    $branch_id = intval($_POST['branch_id'] ?? 0);
+    if ($username && $email && $password && $role_id && $business_id && $branch_id) {
         // Check for duplicate username/email
         $check_sql = "SELECT id FROM users WHERE (username=? OR email=?) AND deleted_at IS NULL LIMIT 1";
         $check_stmt = mysqli_prepare($conn, $check_sql);
@@ -60,9 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
             $add_errors[] = 'Username or email already exists.';
         } else {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $insert_sql = "INSERT INTO users (username, email, password, status, created_at) VALUES (?, ?, ?, ?, NOW())";
+            $insert_sql = "INSERT INTO users (username, email, password, status, business_id, branch_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
             $insert_stmt = mysqli_prepare($conn, $insert_sql);
-            mysqli_stmt_bind_param($insert_stmt, 'ssss', $username, $email, $hashed_password, $status);
+            mysqli_stmt_bind_param($insert_stmt, 'ssssii', $username, $email, $hashed_password, $status, $business_id, $branch_id);
             if (mysqli_stmt_execute($insert_stmt)) {
                 $new_user_id = mysqli_insert_id($conn);
                 $role_insert_sql = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
@@ -71,12 +73,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
                 mysqli_stmt_execute($role_insert_stmt);
                 mysqli_stmt_close($role_insert_stmt);
                 $add_success = true;
-
-                // Send welcome email with credentials
                 require_once '../includes/email_helper.php';
                 $welcome_subject = 'Welcome to Fuel Station Management System';
                 $welcome_body = "Dear $username,\n\nYour account has been created.\n\nLogin Email: $email\nPassword: $password\n\nFor your security, please log in and change your password as soon as possible.\n\nRegards,\nFuel Station Management Team";
                 send_email($email, $welcome_subject, $welcome_body);
+                // Get role name for redirect
+                $role_name = '';
+                $role_name_sql = "SELECT name FROM roles WHERE id=? LIMIT 1";
+                $role_name_stmt = mysqli_prepare($conn, $role_name_sql);
+                mysqli_stmt_bind_param($role_name_stmt, 'i', $role_id);
+                mysqli_stmt_execute($role_name_stmt);
+                mysqli_stmt_bind_result($role_name_stmt, $role_name);
+                mysqli_stmt_fetch($role_name_stmt);
+                mysqli_stmt_close($role_name_stmt);
+                // Redirect based on role
+                if ($role_name === 'business_owner') {
+                    header("Location: manage_businesses.php?user_id=$new_user_id");
+                    exit;
+                } else {
+                    header("Location: branch_dashboard.php?branch_id=$branch_id");
+                    exit;
+                }
             } else {
                 $add_errors[] = 'Failed to add user.';
             }
@@ -102,6 +119,24 @@ $role_sql = "SELECT id, display_name FROM roles";
 $role_result = mysqli_query($conn, $role_sql);
 while ($row = mysqli_fetch_assoc($role_result)) {
     $roles[] = $row;
+}
+
+// Fetch businesses and branches for dropdowns
+$businesses = [];
+$businesses_sql = "SELECT id, business_name FROM businesses WHERE deleted_at IS NULL ORDER BY business_name";
+$businesses_result = mysqli_query($conn, $businesses_sql);
+if ($businesses_result) {
+    while ($row = mysqli_fetch_assoc($businesses_result)) {
+        $businesses[] = $row;
+    }
+}
+$branches = [];
+$branches_sql = "SELECT id, branch_name, business_id FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
+$branches_result = mysqli_query($conn, $branches_sql);
+if ($branches_result) {
+    while ($row = mysqli_fetch_assoc($branches_result)) {
+        $branches[] = $row;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -312,32 +347,50 @@ while ($row = mysqli_fetch_assoc($role_result)) {
                   </div>
                   <div class="modal-body">
                     <div class="mb-3">
-                        <label for="add_username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="add_username" name="username" required>
+                      <label for="add_username" class="form-label">Username</label>
+                      <input type="text" class="form-control" id="add_username" name="username" required>
                     </div>
                     <div class="mb-3">
-                        <label for="add_email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="add_email" name="email" required>
+                      <label for="add_email" class="form-label">Email</label>
+                      <input type="email" class="form-control" id="add_email" name="email" required>
                     </div>
                     <div class="mb-3">
-                        <label for="add_password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="add_password" name="password" required>
+                      <label for="add_password" class="form-label">Password</label>
+                      <input type="password" class="form-control" id="add_password" name="password" required>
                     </div>
                     <div class="mb-3">
-                        <label for="add_status" class="form-label">Status</label>
-                        <select class="form-select" id="add_status" name="status">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
+                      <label for="add_status" class="form-label">Status</label>
+                      <select class="form-select" id="add_status" name="status">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
                     </div>
                     <div class="mb-3">
-                        <label for="add_role_id" class="form-label">Role</label>
-                        <select class="form-select" id="add_role_id" name="role_id" required>
-                            <option value="">Select Role</option>
-                            <?php foreach ($roles as $role): ?>
-                                <option value="<?php echo $role['id']; ?>"><?php echo htmlspecialchars($role['display_name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                      <label for="add_role_id" class="form-label">Role</label>
+                      <select class="form-select" id="add_role_id" name="role_id" required>
+                        <option value="">Select Role</option>
+                        <?php foreach ($roles as $role): ?>
+                          <option value="<?php echo $role['id']; ?>"><?php echo htmlspecialchars($role['display_name']); ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label for="add_business_id" class="form-label">Business</label>
+                      <select class="form-select" id="add_business_id" name="business_id" required>
+                        <option value="">Select Business</option>
+                        <?php foreach ($businesses as $business): ?>
+                          <option value="<?php echo $business['id']; ?>"><?php echo htmlspecialchars($business['business_name']); ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label for="add_branch_id" class="form-label">Branch</label>
+                      <select class="form-select" id="add_branch_id" name="branch_id" required>
+                        <option value="">Select Branch</option>
+                        <?php foreach ($branches as $branch): ?>
+                          <option value="<?php echo $branch['id']; ?>" data-business="<?php echo $branch['business_id']; ?>"><?php echo htmlspecialchars($branch['branch_name']); ?></option>
+                        <?php endforeach; ?>
+                      </select>
                     </div>
                   </div>
                   <div class="modal-footer">
@@ -345,7 +398,26 @@ while ($row = mysqli_fetch_assoc($role_result)) {
                     <button type="submit" name="add_user" class="btn btn-primary">Add User</button>
                   </div>
                 </form>
+              </div>
             </div>
+            <script>
+            // Filter branches by selected business in Add User modal
+            const businessSelect = document.getElementById('add_business_id');
+            const branchSelect = document.getElementById('add_branch_id');
+            if (businessSelect && branchSelect) {
+              businessSelect.addEventListener('change', function() {
+                const businessId = this.value;
+                for (let i = 0; i < branchSelect.options.length; i++) {
+                  const option = branchSelect.options[i];
+                  if (!option.value) continue;
+                  option.style.display = option.getAttribute('data-business') === businessId ? '' : 'none';
+                }
+                branchSelect.value = '';
+              });
+              // Trigger on page load to hide all branches until business is selected
+              businessSelect.dispatchEvent(new Event('change'));
+            }
+            </script>
         </div>
     </div>
 </div>
