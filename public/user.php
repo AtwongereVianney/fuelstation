@@ -11,10 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_user'])) {
     $email = trim($_POST['email'] ?? '');
     $status = $_POST['status'] === 'active' ? 'active' : 'inactive';
     $role_id = intval($_POST['role_id'] ?? 0);
-    if ($user_id && $username && $email && $role_id) {
-        $update_sql = "UPDATE users SET username=?, email=?, status=?, updated_at=NOW() WHERE id=?";
+    $business_id = intval($_POST['business_id'] ?? 0);
+    $branch_id = intval($_POST['branch_id'] ?? 0);
+    if ($user_id && $username && $email && $role_id && $business_id && $branch_id) {
+        $update_sql = "UPDATE users SET username=?, email=?, status=?, business_id=?, branch_id=?, updated_at=NOW() WHERE id=?";
         $update_stmt = mysqli_prepare($conn, $update_sql);
-        mysqli_stmt_bind_param($update_stmt, 'sssi', $username, $email, $status, $user_id);
+        mysqli_stmt_bind_param($update_stmt, 'ssssii', $username, $email, $status, $business_id, $branch_id, $user_id);
         mysqli_stmt_execute($update_stmt);
         mysqli_stmt_close($update_stmt);
         $role_update_sql = "UPDATE user_roles SET role_id=? WHERE user_id=?";
@@ -105,8 +107,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_user'])) {
     }
 }
 
-// Fetch all users with their roles
-$sql = "SELECT u.id, u.username, u.email, u.status, u.created_at, u.updated_at, r.id as role_id, r.name as role_name, r.display_name as role_display_name FROM users u LEFT JOIN user_roles ur ON u.id = ur.user_id LEFT JOIN roles r ON ur.role_id = r.id WHERE u.deleted_at IS NULL ORDER BY u.id ASC";
+// Fetch all users with their roles, business, and branch names
+$sql = "SELECT u.id, u.username, u.email, u.status, u.created_at, u.updated_at, r.id as role_id, r.name as role_name, r.display_name as role_display_name, b.business_name, br.branch_name FROM users u LEFT JOIN user_roles ur ON u.id = ur.user_id LEFT JOIN roles r ON ur.role_id = r.id LEFT JOIN businesses b ON u.business_id = b.id LEFT JOIN branches br ON u.branch_id = br.id WHERE u.deleted_at IS NULL ORDER BY u.id ASC";
 $result = mysqli_query($conn, $sql);
 $users = [];
 while ($row = mysqli_fetch_assoc($result)) {
@@ -211,6 +213,8 @@ if ($branches_result) {
                                     <th>Username</th>
                                     <th>Email</th>
                                     <th>Role</th>
+                                    <th>Business</th>
+                                    <th>Branch</th>
                                     <th>Status</th>
                                     <th>Created At</th>
                                     <th>Actions</th>
@@ -218,12 +222,15 @@ if ($branches_result) {
                             </thead>
                             <tbody>
                                 <?php $serial = 1; ?>
-                                <?php foreach ($users as $user): ?>
+                                <?php foreach (
+                                    $users as $user): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($serial++); ?></td>
                                         <td><?php echo htmlspecialchars($user['username']); ?></td>
                                         <td><?php echo htmlspecialchars($user['email']); ?></td>
                                         <td><?php echo htmlspecialchars($user['role_display_name'] ?? $user['role_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($user['business_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($user['branch_name'] ?? 'N/A'); ?></td>
                                         <td>
                                             <?php if ($user['status'] === 'active'): ?>
                                                 <span class="badge bg-success">Active</span>
@@ -267,6 +274,8 @@ if ($branches_result) {
                           <tr><th>Status</th><td><?php echo htmlspecialchars($user['status']); ?></td></tr>
                           <tr><th>Created At</th><td><?php echo htmlspecialchars($user['created_at']); ?></td></tr>
                           <tr><th>Updated At</th><td><?php echo htmlspecialchars($user['updated_at']); ?></td></tr>
+                          <tr><th>Business</th><td><?php echo htmlspecialchars($user['business_name'] ?? 'N/A'); ?></td></tr>
+                          <tr><th>Branch</th><td><?php echo htmlspecialchars($user['branch_name'] ?? 'N/A'); ?></td></tr>
                       </table>
                     </div>
                   </div>
@@ -306,6 +315,24 @@ if ($branches_result) {
                         <select class="form-select" id="role_id<?php echo $user['id']; ?>" name="role_id">
                             <?php foreach ($roles as $role): ?>
                                 <option value="<?php echo $role['id']; ?>" <?php if ($user['role_id'] == $role['id']) echo 'selected'; ?>><?php echo htmlspecialchars($role['display_name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="business_id<?php echo $user['id']; ?>" class="form-label">Business</label>
+                        <select class="form-select business-select-edit" id="business_id<?php echo $user['id']; ?>" name="business_id" required data-user-id="<?php echo $user['id']; ?>">
+                            <option value="">Select Business</option>
+                            <?php foreach ($businesses as $business): ?>
+                                <option value="<?php echo $business['id']; ?>" <?php if ($user['business_name'] == $business['business_name']) echo 'selected'; ?>><?php echo htmlspecialchars($business['business_name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="branch_id<?php echo $user['id']; ?>" class="form-label">Branch</label>
+                        <select class="form-select branch-select-edit" id="branch_id<?php echo $user['id']; ?>" name="branch_id" required data-user-id="<?php echo $user['id']; ?>">
+                            <option value="">Select Branch</option>
+                            <?php foreach ($branches as $branch): ?>
+                                <option value="<?php echo $branch['id']; ?>" data-business="<?php echo $branch['business_id']; ?>" <?php if ($user['branch_name'] == $branch['branch_name']) echo 'selected'; ?>><?php echo htmlspecialchars($branch['branch_name']); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
