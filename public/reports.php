@@ -18,7 +18,7 @@ if (isset($_SESSION['user_id'])) {
     $is_business_owner = ($owner_result && mysqli_num_rows($owner_result) > 0);
 }
 if ($is_super_admin) {
-    $branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
+$branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
 } else if ($is_business_owner) {
     // Get business_id for this owner
     $business_id = null;

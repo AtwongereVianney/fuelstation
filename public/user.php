@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_user'])) {
             mysqli_stmt_bind_param($update_stmt, 'ssssii', $username, $email, $status, $business_id, $branch_id, $user_id);
         } else {
             $update_sql = "UPDATE users SET username=?, email=?, status=?, business_id=?, branch_id=NULL, updated_at=NOW() WHERE id=?";
-            $update_stmt = mysqli_prepare($conn, $update_sql);
+        $update_stmt = mysqli_prepare($conn, $update_sql);
             mysqli_stmt_bind_param($update_stmt, 'ssssi', $username, $email, $status, $business_id, $user_id);
         }
         mysqli_stmt_execute($update_stmt);
@@ -391,32 +391,32 @@ if ($branches_result) {
                   </div>
                   <div class="modal-body">
                     <div class="mb-3">
-                      <label for="add_username" class="form-label">Username</label>
-                      <input type="text" class="form-control" id="add_username" name="username" required>
+                        <label for="add_username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="add_username" name="username" required>
                     </div>
                     <div class="mb-3">
-                      <label for="add_email" class="form-label">Email</label>
-                      <input type="email" class="form-control" id="add_email" name="email" required>
+                        <label for="add_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="add_email" name="email" required>
                     </div>
                     <div class="mb-3">
-                      <label for="add_password" class="form-label">Password</label>
-                      <input type="password" class="form-control" id="add_password" name="password" required>
+                        <label for="add_password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="add_password" name="password" required>
                     </div>
                     <div class="mb-3">
-                      <label for="add_status" class="form-label">Status</label>
-                      <select class="form-select" id="add_status" name="status">
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                      </select>
+                        <label for="add_status" class="form-label">Status</label>
+                        <select class="form-select" id="add_status" name="status">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
                     </div>
                     <div class="mb-3">
-                      <label for="add_role_id" class="form-label">Role</label>
-                      <select class="form-select" id="add_role_id" name="role_id" required>
-                        <option value="">Select Role</option>
-                        <?php foreach ($roles as $role): ?>
-                          <option value="<?php echo $role['id']; ?>"><?php echo htmlspecialchars($role['display_name']); ?></option>
-                        <?php endforeach; ?>
-                      </select>
+                        <label for="add_role_id" class="form-label">Role</label>
+                        <select class="form-select" id="add_role_id" name="role_id" required>
+                            <option value="">Select Role</option>
+                            <?php foreach ($roles as $role): ?>
+                                <option value="<?php echo $role['id']; ?>"><?php echo htmlspecialchars($role['display_name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                       <label for="add_business_id" class="form-label">Business</label>
@@ -442,7 +442,7 @@ if ($branches_result) {
                     <button type="submit" name="add_user" class="btn btn-primary">Add User</button>
                   </div>
                 </form>
-              </div>
+            </div>
             </div>
             <script>
             // Filter branches by selected business in Add User modal
