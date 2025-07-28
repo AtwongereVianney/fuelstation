@@ -163,7 +163,7 @@ $business_id = $_SESSION['business_id'] ?? null;
                 </div>
                 <div class="gap-2 d-flex align-items-center flex-wrap">
                     <div class="dropdown">
-                        <a href="javascript:void(0);" class="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown"><i class="bi bi-download me-2"></i>Export</a>
+                        <a href="javascript:void(0);" class="dropdown-toggle btn btn-outline-secondary px-2 shadow" data-bs-toggle="dropdown"><i class="bi bi-download me-2"></i>Export</a>
                         <div class="dropdown-menu dropdown-menu-end">
                             <ul>
                                 <li>
@@ -175,8 +175,8 @@ $business_id = $_SESSION['business_id'] ?? null;
                             </ul>
                         </div>
                     </div>
-                    <a href="javascript:void(0);" class="btn btn-icon btn-outline-light shadow" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh" data-bs-original-title="Refresh"><i class="bi bi-arrow-clockwise"></i></a>
-                    <a href="javascript:void(0);" class="btn btn-icon btn-outline-light shadow" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Collapse" data-bs-original-title="Collapse" id="collapse-header"><i class="bi bi-chevron-up"></i></a>
+                    <a href="javascript:void(0);" class="btn btn-icon btn-outline-secondary shadow" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh" data-bs-original-title="Refresh"><i class="bi bi-arrow-clockwise"></i></a>
+                    <a href="javascript:void(0);" class="btn btn-icon btn-outline-secondary shadow" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Collapse" data-bs-original-title="Collapse" id="collapse-header"><i class="bi bi-chevron-up"></i></a>
                 </div>
             </div>
 
@@ -196,7 +196,7 @@ $business_id = $_SESSION['business_id'] ?? null;
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <div class="dropdown">
-                                <a href="javascript:void(0);" class="btn btn-outline-light shadow px-2" data-bs-toggle="dropdown" data-bs-auto-close="outside"><i class="bi bi-funnel me-2"></i>Filter<i class="bi bi-chevron-down ms-2"></i></a>
+                                <a href="javascript:void(0);" class="btn btn-outline-secondary shadow px-2" data-bs-toggle="dropdown" data-bs-auto-close="outside"><i class="bi bi-funnel me-2"></i>Filter<i class="bi bi-chevron-down ms-2"></i></a>
                                 <div class="filter-dropdown-menu dropdown-menu dropdown-menu-lg p-0">
                                     <div class="filter-header d-flex align-items-center justify-content-between border-bottom">
                                         <h6 class="mb-0"><i class="bi bi-funnel me-1"></i>Filter</h6>
@@ -269,7 +269,7 @@ $business_id = $_SESSION['business_id'] ?? null;
                                             </div>
                                         </div>
                                         <div class="d-flex align-items-center gap-2">
-                                            <a href="javascript:void(0);" class="btn btn-outline-light w-100">Reset</a>
+                                            <a href="javascript:void(0);" class="btn btn-outline-secondary w-100">Reset</a>
                                             <a href="manage_users.php" class="btn btn-primary w-100">Filter</a>
                                         </div>
                                     </div>
@@ -281,7 +281,7 @@ $business_id = $_SESSION['business_id'] ?? null;
                         </div>
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <div class="dropdown">
-                                <a href="javascript:void(0);" class="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown"><i class="bi bi-sort-down me-2"></i>Sort By</a>
+                                <a href="javascript:void(0);" class="dropdown-toggle btn btn-outline-secondary px-2 shadow" data-bs-toggle="dropdown"><i class="bi bi-sort-down me-2"></i>Sort By</a>
                                 <div class="dropdown-menu">
                                     <ul>
                                         <li>
