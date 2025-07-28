@@ -183,9 +183,11 @@ $business_id = $_SESSION['business_id'] ?? null;
             <!-- Main Content Card -->
             <div class="card border-0 rounded-0">
                 <div class="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
-                    <div class="input-icon input-icon-start position-relative">
-                        <span class="input-icon-addon text-dark"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" placeholder="Search">
+                    <div class="position-relative">
+                        <input type="text" class="form-control ps-4" placeholder="Search">
+                        <span class="position-absolute top-50 start-0 translate-middle-y ms-2 text-muted">
+                            <i class="bi bi-search"></i>
+                        </span>
                     </div>
                     <a href="javascript:void(0);" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvas_add"><i class="bi bi-plus-circle me-1"></i>Add User</a>
                 </div>
@@ -209,11 +211,11 @@ $business_id = $_SESSION['business_id'] ?? null;
                                                 <div class="filter-set-contents accordion-collapse collapse show" id="collapseTwo" data-bs-parent="#accordionExample">
                                                     <div class="filter-content-list bg-light rounded border p-2 shadow mt-2">
                                                         <div class="mb-2">
-                                                            <div class="input-icon-start input-icon position-relative">
-                                                                <span class="input-icon-addon fs-12">
+                                                            <div class="position-relative">
+                                                                <input type="text" class="form-control form-control-md ps-4" placeholder="Search">
+                                                                <span class="position-absolute top-50 start-0 translate-middle-y ms-2 text-muted">
                                                                     <i class="bi bi-search"></i>
                                                                 </span>
-                                                                <input type="text" class="form-control form-control-md" placeholder="Search">
                                                             </div>
                                                         </div>
                                                         <ul class="mb-0">
