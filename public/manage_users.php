@@ -160,12 +160,6 @@ $business_id = $_SESSION['business_id'] ?? null;
             <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
                 <div>
                     <h4 class="mb-1">Manage Users<span class="badge badge-soft-primary ms-2">152</span></h4>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0 p-0">
-                            <li class="breadcrumb-item"><a href="dashboard.php">Home</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Manage Users</li>
-                        </ol>
-                    </nav>
                 </div>
                 <div class="gap-2 d-flex align-items-center flex-wrap">
                     <div class="dropdown">
