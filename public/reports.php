@@ -6,14 +6,31 @@ require_once '../includes/auth_helpers.php';
 // Fetch all branches for dropdown
 $branches = [];
 $is_super_admin = false;
+$is_business_owner = false;
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
     $super_sql = "SELECT 1 FROM user_roles WHERE user_id = $user_id AND role_id = 1 AND deleted_at IS NULL LIMIT 1";
     $super_result = mysqli_query($conn, $super_sql);
     $is_super_admin = mysqli_num_rows($super_result) > 0;
+    // Check if business owner
+    $owner_sql = "SELECT r.name FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = $user_id AND r.name = 'business_owner' AND r.deleted_at IS NULL LIMIT 1";
+    $owner_result = mysqli_query($conn, $owner_sql);
+    $is_business_owner = ($owner_result && mysqli_num_rows($owner_result) > 0);
 }
 if ($is_super_admin) {
-$branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
+    $branch_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
+} else if ($is_business_owner) {
+    // Get business_id for this owner
+    $business_id = null;
+    $biz_res = mysqli_query($conn, "SELECT business_id FROM users WHERE id = $user_id");
+    if ($biz_res && $biz_row = mysqli_fetch_assoc($biz_res)) {
+        $business_id = $biz_row['business_id'];
+    }
+    if ($business_id) {
+        $branch_sql = "SELECT id, branch_name FROM branches WHERE business_id = $business_id AND deleted_at IS NULL ORDER BY branch_name";
+    } else {
+        $branch_sql = "SELECT id, branch_name FROM branches WHERE 0";
+    }
 } else if (isset($_SESSION['business_id'], $_SESSION['branch_id'])) {
     $user_business_id = $_SESSION['business_id'];
     $user_branch_id = $_SESSION['branch_id'];

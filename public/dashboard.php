@@ -32,7 +32,23 @@ mysqli_stmt_close($stmt);
 $business_id = $_SESSION['business_id'] ?? null;
 $current_year = date('Y');
 $income_data = $expense_data = $service_demand_data = $months = [];
-if ($role === 'super_admin' && $business_id) {
+// Determine if user is business owner
+$is_business_owner = false;
+if (isset($_SESSION['user_id'])) {
+    $owner_sql = "SELECT r.name FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = $user_id AND r.name = 'business_owner' AND r.deleted_at IS NULL LIMIT 1";
+    $owner_result = mysqli_query($conn, $owner_sql);
+    $is_business_owner = ($owner_result && mysqli_num_rows($owner_result) > 0);
+}
+
+// For business owners, get their business_id (from users table)
+if ($is_business_owner && !$business_id) {
+    $biz_res = mysqli_query($conn, "SELECT business_id FROM users WHERE id = $user_id");
+    if ($biz_res && $biz_row = mysqli_fetch_assoc($biz_res)) {
+        $business_id = $biz_row['business_id'];
+    }
+}
+
+if (($role === 'super_admin' || $is_business_owner) && $business_id) {
     // Prepare months
     for ($m = 1; $m <= 12; $m++) {
         $months[] = date('M', mktime(0,0,0,$m,1));
@@ -67,6 +83,8 @@ $unread_count = 0;
 foreach ($latest_notifications as $n) {
     if (!$n['is_read']) $unread_count++;
 }
+
+$show_all_quickstarts = ($role === 'super_admin' || $is_business_owner);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -379,7 +397,7 @@ foreach ($latest_notifications as $n) {
                                 <span class="responsive-text">Quick Start</span>
                             </h5>
                             <div class="row g-3">
-                                <?php if ($role === 'super_admin' || in_array('financial.view_sales', $user_permissions)): ?>
+                                <?php if ($show_all_quickstarts || in_array('financial.view_sales', $user_permissions)): ?>
                                 <div class="col-6 col-md-3">
                                     <a href="daily_sales_summary.php" class="btn btn-outline-primary w-100 py-3">
                                         <i class="bi bi-cash-coin"></i>
@@ -387,7 +405,7 @@ foreach ($latest_notifications as $n) {
                                     </a>
                                 </div>
                                 <?php endif; ?>
-                                <?php if ($role === 'super_admin' || in_array('financial.view_purchases', $user_permissions)): ?>
+                                <?php if ($show_all_quickstarts || in_array('financial.view_purchases', $user_permissions)): ?>
                                 <div class="col-6 col-md-3">
                                     <a href="purchases.php" class="btn btn-outline-success w-100 py-3">
                                         <i class="bi bi-bag-plus"></i>
@@ -395,7 +413,7 @@ foreach ($latest_notifications as $n) {
                                     </a>
                                 </div>
                                 <?php endif; ?>
-                                <?php if ($role === 'super_admin' || in_array('employee.manage', $user_permissions)): ?>
+                                <?php if ($show_all_quickstarts || in_array('employee.manage', $user_permissions)): ?>
                                 <div class="col-6 col-md-3">
                                     <a href="employee_management.php" class="btn btn-outline-info w-100 py-3">
                                         <i class="bi bi-person-plus"></i>
@@ -403,7 +421,7 @@ foreach ($latest_notifications as $n) {
                                     </a>
                                 </div>
                                 <?php endif; ?>
-                                <?php if ($role === 'super_admin' || in_array('reports.view', $user_permissions)): ?>
+                                <?php if ($show_all_quickstarts || in_array('reports.view', $user_permissions)): ?>
                                 <div class="col-6 col-md-3">
                                     <a href="reports.php" class="btn btn-outline-dark w-100 py-3">
                                         <i class="bi bi-bar-chart-line"></i>
@@ -411,7 +429,7 @@ foreach ($latest_notifications as $n) {
                                     </a>
                                 </div>
                                 <?php endif; ?>
-                                <?php if ($role === 'super_admin' || in_array('financial.view_expenses', $user_permissions)): ?>
+                                <?php if ($show_all_quickstarts || in_array('financial.view_expenses', $user_permissions)): ?>
                                 <div class="col-6 col-md-3">
                                     <a href="expenses.php" class="btn btn-outline-warning w-100 py-3">
                                         <i class="bi bi-currency-exchange"></i>
@@ -419,7 +437,7 @@ foreach ($latest_notifications as $n) {
                                     </a>
                                 </div>
                                 <?php endif; ?>
-                                <?php if ($role === 'super_admin' || in_array('shift.assign', $user_permissions)): ?>
+                                <?php if ($show_all_quickstarts || in_array('shift.assign', $user_permissions)): ?>
                                 <div class="col-6 col-md-3">
                                     <a href="shift_assignments.php" class="btn btn-outline-secondary w-100 py-3">
                                         <i class="bi bi-clock-history"></i>
@@ -427,7 +445,7 @@ foreach ($latest_notifications as $n) {
                                     </a>
                                 </div>
                                 <?php endif; ?>
-                                <?php if ($role === 'super_admin' || in_array('inventory.view', $user_permissions)): ?>
+                                <?php if ($show_all_quickstarts || in_array('inventory.view', $user_permissions)): ?>
                                 <div class="col-6 col-md-3">
                                     <a href="fuel_type_info.php" class="btn btn-outline-danger w-100 py-3">
                                         <i class="bi bi-droplet-half"></i>
@@ -435,7 +453,7 @@ foreach ($latest_notifications as $n) {
                                     </a>
                                 </div>
                                 <?php endif; ?>
-                                <?php if ($role === 'super_admin' || in_array('notifications.view', $user_permissions)): ?>
+                                <?php if ($show_all_quickstarts || in_array('notifications.view', $user_permissions)): ?>
                                 <div class="col-6 col-md-3">
                                     <a href="notifications.php" class="btn btn-outline-primary w-100 py-3 position-relative">
                                         <i class="bi bi-bell<?php echo $unread_count ? ' bell-shake' : ''; ?>" id="notifBell"></i>
@@ -454,13 +472,21 @@ foreach ($latest_notifications as $n) {
                 </div>
 
                 <!-- Stats Cards -->
-                <?php if ($role === 'super_admin'): ?>
+                <?php if ($role === 'super_admin' || $is_business_owner): ?>
                 <div class="row g-4 mb-4">
                     <?php
-                    $users_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM users WHERE deleted_at IS NULL"))[0];
-                    $roles_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM roles WHERE deleted_at IS NULL"))[0];
-                    $perms_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM permissions WHERE deleted_at IS NULL"))[0];
-                    $branches_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM branches WHERE deleted_at IS NULL"))[0];
+                    if ($is_business_owner) {
+                        // Only count users, branches for this business
+                        $users_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM users WHERE deleted_at IS NULL AND business_id = $business_id"))[0];
+                        $roles_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM roles WHERE deleted_at IS NULL"))[0];
+                        $perms_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM permissions WHERE deleted_at IS NULL"))[0];
+                        $branches_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM branches WHERE deleted_at IS NULL AND business_id = $business_id"))[0];
+                    } else {
+                        $users_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM users WHERE deleted_at IS NULL"))[0];
+                        $roles_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM roles WHERE deleted_at IS NULL"))[0];
+                        $perms_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM permissions WHERE deleted_at IS NULL"))[0];
+                        $branches_count = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM branches WHERE deleted_at IS NULL"))[0];
+                    }
                     ?>
                     <div class="col-6 col-md-3">
                         <div class="card text-bg-primary h-100">
@@ -510,7 +536,7 @@ foreach ($latest_notifications as $n) {
                 <?php endif; ?>
 
                 <!-- Charts -->
-                <?php if ($role === 'super_admin' && $business_id): ?>
+                <?php if (($role === 'super_admin' || $is_business_owner) && $business_id): ?>
                 <div class="row mb-4">
                     <div class="col-lg-6 mb-4">
                         <div class="card h-100">
@@ -540,7 +566,7 @@ foreach ($latest_notifications as $n) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <?php if ($role === 'super_admin' && $business_id): ?>
+    <?php if (($role === 'super_admin' || $is_business_owner) && $business_id): ?>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
     const months = <?php echo json_encode($months); ?>;

@@ -37,7 +37,7 @@ function get_sidebar_modules() {
             'links' => [
                 [
                     'label' => 'Users',
-                    'url' => '../public/user.php',
+                    'url' => '../public/manage_users.php',
                     'icon' => 'bi-person',
                     'permission' => 'users.read_all'
                 ],
@@ -225,6 +225,27 @@ function get_sidebar_modules() {
 function get_accessible_sidebar_modules() {
     $modules = get_sidebar_modules();
     $accessible = [];
+    // If business owner, show all modules (like super admin)
+    $is_business_owner = false;
+    if (isset($_SESSION['user_id'])) {
+        global $conn;
+        $user_id = $_SESSION['user_id'];
+        $owner_sql = "SELECT r.name FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = $user_id AND r.name = 'business_owner' AND r.deleted_at IS NULL LIMIT 1";
+        $owner_result = mysqli_query($conn, $owner_sql);
+        $is_business_owner = ($owner_result && mysqli_num_rows($owner_result) > 0);
+    }
+    if ($is_business_owner) {
+        // Show all modules/links
+        foreach ($modules as $module) {
+            $accessible[] = [
+                'section' => $module['section'],
+                'icon' => $module['icon'],
+                'links' => $module['links']
+            ];
+        }
+        return $accessible;
+    }
+    // Default: filter by permissions
     foreach ($modules as $module) {
         $links = [];
         foreach ($module['links'] as $link) {
