@@ -30,6 +30,28 @@ while ($row = mysqli_fetch_assoc($result)) {
 mysqli_stmt_close($stmt);
 
 $business_id = $_SESSION['business_id'] ?? null;
+
+// Fetch all users with their roles, business, and branch names
+$users_sql = "SELECT u.id, u.username, u.email, u.status, u.created_at, u.updated_at, 
+              r.id as role_id, r.name as role_name, r.display_name as role_display_name, 
+              b.business_name, br.branch_name 
+              FROM users u 
+              LEFT JOIN user_roles ur ON u.id = ur.user_id 
+              LEFT JOIN roles r ON ur.role_id = r.id 
+              LEFT JOIN businesses b ON u.business_id = b.id 
+              LEFT JOIN branches br ON u.branch_id = br.id 
+              WHERE u.deleted_at IS NULL 
+              ORDER BY u.created_at DESC";
+$users_result = mysqli_query($conn, $users_sql);
+$users = [];
+if ($users_result) {
+    while ($row = mysqli_fetch_assoc($users_result)) {
+        $users[] = $row;
+    }
+}
+
+// Get total count for badge
+$total_users = count($users);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -159,7 +181,7 @@ $business_id = $_SESSION['business_id'] ?? null;
             <!-- Page Header -->
             <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
                 <div>
-                    <h4 class="mb-1">Manage Users<span class="badge badge-soft-primary ms-2">152</span></h4>
+                    <h4 class="mb-1">Manage Users<span class="badge badge-soft-primary ms-2"><?php echo $total_users; ?></span></h4>
                 </div>
                 <div class="gap-2 d-flex align-items-center flex-wrap">
                     <div class="dropdown">
@@ -387,63 +409,52 @@ $business_id = $_SESSION['business_id'] ?? null;
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Sample data - replace with actual PHP loop -->
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="user-avatar">EM</div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <h6 class="mb-0">Elizabeth Morgan</h6>
-                                            <small class="text-muted">Software Developer</small>
-                                        </div>
-                                    </td>
-                                    <td>+1 87545 54503</td>
-                                    <td>elizabeth@gmail.com</td>
-                                    <td>9 Jun 2025</td>
-                                    <td>2 hours ago</td>
-                                    <td><span class="badge bg-success status-badge">Active</span></td>
-                                    <td class="text-end">
-                                        <div class="action-buttons">
-                                            <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewUserModal"><i class="bi bi-eye"></i></button>
-                                            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editUserModal"><i class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal"><i class="bi bi-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="form-check form-check-md">
-                                            <input class="form-check-input" type="checkbox">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="user-avatar">KB</div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <h6 class="mb-0">Katherine Brooks</h6>
-                                            <small class="text-muted">Project Manager</small>
-                                        </div>
-                                    </td>
-                                    <td>+1 98975 17485</td>
-                                    <td>katherine@gmail.com</td>
-                                    <td>8 Jun 2025</td>
-                                    <td>1 day ago</td>
-                                    <td><span class="badge bg-success status-badge">Active</span></td>
-                                    <td class="text-end">
-                                        <div class="action-buttons">
-                                            <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewUserModal"><i class="bi bi-eye"></i></button>
-                                            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editUserModal"><i class="bi bi-pencil"></i></button>
-                                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal"><i class="bi bi-trash"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                <?php if (!empty($users)): ?>
+                                    <?php foreach ($users as $user): ?>
+                                        <tr>
+                                            <td>
+                                                <div class="form-check form-check-md">
+                                                    <input class="form-check-input" type="checkbox">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="user-avatar"><?php echo strtoupper(substr($user['username'], 0, 2)); ?></div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <h6 class="mb-0"><?php echo htmlspecialchars($user['username']); ?></h6>
+                                                    <small class="text-muted"><?php echo htmlspecialchars($user['role_display_name'] ?? $user['role_name'] ?? 'N/A'); ?></small>
+                                                </div>
+                                            </td>
+                                            <td><?php echo htmlspecialchars($user['email']); ?></td>
+                                            <td><?php echo htmlspecialchars($user['created_at']); ?></td>
+                                            <td><?php echo htmlspecialchars($user['updated_at'] ?? 'Never'); ?></td>
+                                            <td>
+                                                <?php if ($user['status'] === 'active'): ?>
+                                                    <span class="badge bg-success status-badge">Active</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-secondary status-badge">Inactive</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="action-buttons">
+                                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewUserModal<?php echo $user['id']; ?>" title="View"><i class="bi bi-eye"></i></button>
+                                                    <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editUserModal<?php echo $user['id']; ?>" title="Edit"><i class="bi bi-pencil"></i></button>
+                                                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal<?php echo $user['id']; ?>" title="Delete"><i class="bi bi-trash"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="9" class="text-center py-4">
+                                            <div class="text-muted">
+                                                <i class="bi bi-people fs-1 d-block mb-2"></i>
+                                                <p class="mb-0">No users found</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -457,307 +468,426 @@ $business_id = $_SESSION['business_id'] ?? null;
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Add User Offcanvas -->
-    <div class="offcanvas offcanvas-end offcanvas-large" tabindex="-1" id="offcanvas_add">
-        <div class="offcanvas-header border-bottom">
-            <h5 class="fw-semibold">Add New User</h5>
-            <button type="button" class="btn-close custom-btn-close border p-1 me-0 d-flex align-items-center justify-content-center rounded-circle" data-bs-dismiss="offcanvas" aria-label="Close">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-        <div class="offcanvas-body">
-            <form action="manage_users.php" method="POST">
-                <div>
-                    <!-- Basic Info -->
-                    <div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="avatar avatar-xxl border border-dashed me-3 flex-shrink-0">
-                                        <div class="position-relative d-flex align-items-center">
-                                            <i class="bi bi-person text-dark fs-16"></i>
+            <!-- Add User Offcanvas -->
+            <div class="offcanvas offcanvas-end offcanvas-large" tabindex="-1" id="offcanvas_add">
+                <div class="offcanvas-header border-bottom">
+                    <h5 class="fw-semibold">Add New User</h5>
+                    <button type="button" class="btn-close custom-btn-close border p-1 me-0 d-flex align-items-center justify-content-center rounded-circle" data-bs-dismiss="offcanvas" aria-label="Close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="offcanvas-body">
+                    <form action="manage_users.php" method="POST">
+                        <div>
+                            <!-- Basic Info -->
+                            <div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="avatar avatar-xxl border border-dashed me-3 flex-shrink-0">
+                                                <div class="position-relative d-flex align-items-center">
+                                                    <i class="bi bi-person text-dark fs-16"></i>
+                                                </div>
+                                            </div>
+                                            <div class="d-inline-flex flex-column align-items-start">
+                                                <div class="drag-upload-btn btn btn-sm btn-primary position-relative mb-2">
+                                                    <i class="bi bi-upload me-1"></i>Upload file
+                                                    <input type="file" class="form-control image-sign" multiple="">
+                                                </div>
+                                                <span>JPG, GIF or PNG. Max size of 800K</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="d-inline-flex flex-column align-items-start">
-                                        <div class="drag-upload-btn btn btn-sm btn-primary position-relative mb-2">
-                                            <i class="bi bi-upload me-1"></i>Upload file
-                                            <input type="file" class="form-control image-sign" multiple="">
-                                        </div>
-                                        <span>JPG, GIF or PNG. Max size of 800K</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label required-field">First Name</label>
-                                    <input type="text" class="form-control" name="first_name" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label required-field">User Name</label>
-                                    <input type="text" class="form-control" name="username" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <label class="form-label required-field">Email</label>
-                                        <div class="form-check form-switch form-check-reverse">
-                                            <input class="form-check-input" type="checkbox" id="switchCheckReverse">
-                                            <label class="form-check-label" for="switchCheckReverse">Email Opt Out</label>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">First Name</label>
+                                            <input type="text" class="form-control" name="first_name" required>
                                         </div>
                                     </div>
-                                    <input type="email" class="form-control" name="email" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label required-field">Role</label>
-                                    <select class="form-select" name="role" required>
-                                        <option value="">Choose Role</option>
-                                        <option value="admin">Administrator</option>
-                                        <option value="manager">Manager</option>
-                                        <option value="user">User</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label required-field">Phone 1</label>
-                                    <input type="tel" class="form-control phone" name="phone" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Phone 2</label>
-                                    <input type="tel" class="form-control phone" name="phone2">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Password</label>
-                                    <div class="input-group input-group-flat pass-group">
-                                        <input type="password" class="form-control pass-input" name="password">
-                                        <span class="input-group-text toggle-password">
-                                            <i class="bi bi-eye-off"></i>
-                                        </span>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">User Name</label>
+                                            <input type="text" class="form-control" name="username" required>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label required-field">Repeat Password</label>
-                                    <div class="input-group input-group-flat pass-group">
-                                        <input type="password" class="form-control pass-input" name="password_confirm" required>
-                                        <span class="input-group-text toggle-password">
-                                            <i class="bi bi-eye-off"></i>
-                                        </span>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <label class="form-label required-field">Email</label>
+                                                <div class="form-check form-switch form-check-reverse">
+                                                    <input class="form-check-input" type="checkbox" id="switchCheckReverse">
+                                                    <label class="form-check-label" for="switchCheckReverse">Email Opt Out</label>
+                                                </div>
+                                            </div>
+                                            <input type="email" class="form-control" name="email" required>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label required-field">Location</label>
-                                    <select class="form-select" name="location" required>
-                                        <option value="">Choose</option>
-                                        <option value="germany">Germany</option>
-                                        <option value="usa">USA</option>
-                                        <option value="canada">Canada</option>
-                                        <option value="india">India</option>
-                                        <option value="china">China</option>
-                                    </select>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">Role</label>
+                                            <select class="form-select" name="role" required>
+                                                <option value="">Choose Role</option>
+                                                <option value="admin">Administrator</option>
+                                                <option value="manager">Manager</option>
+                                                <option value="user">User</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">Phone 1</label>
+                                            <input type="tel" class="form-control phone" name="phone" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Phone 2</label>
+                                            <input type="tel" class="form-control phone" name="phone2">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Password</label>
+                                            <div class="input-group input-group-flat pass-group">
+                                                <input type="password" class="form-control pass-input" name="password">
+                                                <span class="input-group-text toggle-password">
+                                                    <i class="bi bi-eye-off"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">Repeat Password</label>
+                                            <div class="input-group input-group-flat pass-group">
+                                                <input type="password" class="form-control pass-input" name="password_confirm" required>
+                                                <span class="input-group-text toggle-password">
+                                                    <i class="bi bi-eye-off"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">Location</label>
+                                            <select class="form-select" name="location" required>
+                                                <option value="">Choose</option>
+                                                <option value="germany">Germany</option>
+                                                <option value="usa">USA</option>
+                                                <option value="canada">Canada</option>
+                                                <option value="india">India</option>
+                                                <option value="china">China</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="d-flex align-items-center justify-content-end">
+                            <a href="#" class="btn btn-light me-2" data-bs-dismiss="offcanvas">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="d-flex align-items-center justify-content-end">
-                    <a href="#" class="btn btn-light me-2" data-bs-dismiss="offcanvas">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Create</button>
-                </div>
-            </form>
-        </div>
-    </div>
+            </div>
 
-    <!-- Edit User Offcanvas -->
-    <div class="offcanvas offcanvas-end offcanvas-large" tabindex="-1" id="offcanvas_edit">
-        <div class="offcanvas-header border-bottom">
-            <h5 class="fw-semibold">Edit User</h5>
-            <button type="button" class="btn-close custom-btn-close border p-1 me-0 d-flex align-items-center justify-content-center rounded-circle" data-bs-dismiss="offcanvas" aria-label="Close">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-        <div class="offcanvas-body">
-            <form action="manage_users.php" method="POST">
-                <div>
-                    <!-- Basic Info -->
-                    <div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="avatar avatar-xxl border border-dashed me-3 flex-shrink-0">
-                                        <div class="position-relative d-flex align-items-center">
-                                            <i class="bi bi-person text-dark fs-16"></i>
+            <!-- Edit User Offcanvas -->
+            <div class="offcanvas offcanvas-end offcanvas-large" tabindex="-1" id="offcanvas_edit">
+                <div class="offcanvas-header border-bottom">
+                    <h5 class="fw-semibold">Edit User</h5>
+                    <button type="button" class="btn-close custom-btn-close border p-1 me-0 d-flex align-items-center justify-content-center rounded-circle" data-bs-dismiss="offcanvas" aria-label="Close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="offcanvas-body">
+                    <form action="manage_users.php" method="POST">
+                        <div>
+                            <!-- Basic Info -->
+                            <div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="avatar avatar-xxl border border-dashed me-3 flex-shrink-0">
+                                                <div class="position-relative d-flex align-items-center">
+                                                    <i class="bi bi-person text-dark fs-16"></i>
+                                                </div>
+                                            </div>
+                                            <div class="d-inline-flex flex-column align-items-start">
+                                                <div class="drag-upload-btn btn btn-sm btn-primary position-relative mb-2">
+                                                    <i class="bi bi-upload me-1"></i>Upload file
+                                                    <input type="file" class="form-control image-sign" multiple="">
+                                                </div>
+                                                <span>JPG, GIF or PNG. Max size of 800K</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="d-inline-flex flex-column align-items-start">
-                                        <div class="drag-upload-btn btn btn-sm btn-primary position-relative mb-2">
-                                            <i class="bi bi-upload me-1"></i>Upload file
-                                            <input type="file" class="form-control image-sign" multiple="">
-                                        </div>
-                                        <span>JPG, GIF or PNG. Max size of 800K</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label required-field">First Name</label>
-                                    <input type="text" class="form-control" name="first_name" value="Elizabeth Morgan" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label required-field">User Name</label>
-                                    <input type="text" class="form-control" name="username" value="Elizabeth@12" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <label class="form-label required-field">Email</label>
-                                        <div class="form-check form-switch form-check-reverse">
-                                            <input class="form-check-input" type="checkbox" id="switchCheckReverse2" checked>
-                                            <label class="form-check-label" for="switchCheckReverse2">Email Opt Out</label>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">First Name</label>
+                                            <input type="text" class="form-control" name="first_name" value="Elizabeth Morgan" required>
                                         </div>
                                     </div>
-                                    <input type="email" class="form-control" name="email" value="elizabeth@gmail.com" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label required-field">Role</label>
-                                    <input type="text" class="form-control" name="role" value="Software" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label required-field">Phone 1</label>
-                                    <input type="tel" class="form-control phone" name="phone" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Phone 2</label>
-                                    <input type="tel" class="form-control phone" name="phone2">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Password</label>
-                                    <div class="input-group input-group-flat pass-group">
-                                        <input type="password" class="form-control pass-input" name="password">
-                                        <span class="input-group-text toggle-password">
-                                            <i class="bi bi-eye-off"></i>
-                                        </span>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">User Name</label>
+                                            <input type="text" class="form-control" name="username" value="Elizabeth@12" required>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label required-field">Repeat Password</label>
-                                    <div class="input-group input-group-flat pass-group">
-                                        <input type="password" class="form-control pass-input" name="password_confirm" required>
-                                        <span class="input-group-text toggle-password">
-                                            <i class="bi bi-eye-off"></i>
-                                        </span>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <label class="form-label required-field">Email</label>
+                                                <div class="form-check form-switch form-check-reverse">
+                                                    <input class="form-check-input" type="checkbox" id="switchCheckReverse2" checked>
+                                                    <label class="form-check-label" for="switchCheckReverse2">Email Opt Out</label>
+                                                </div>
+                                            </div>
+                                            <input type="email" class="form-control" name="email" value="elizabeth@gmail.com" required>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label required-field">Location</label>
-                                    <select class="form-select" name="location" required>
-                                        <option value="">Choose</option>
-                                        <option value="germany">Germany</option>
-                                        <option value="usa" selected>USA</option>
-                                        <option value="canada">Canada</option>
-                                        <option value="india">India</option>
-                                        <option value="china">China</option>
-                                    </select>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">Role</label>
+                                            <input type="text" class="form-control" name="role" value="Software" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">Phone 1</label>
+                                            <input type="tel" class="form-control phone" name="phone" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Phone 2</label>
+                                            <input type="tel" class="form-control phone" name="phone2">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Password</label>
+                                            <div class="input-group input-group-flat pass-group">
+                                                <input type="password" class="form-control pass-input" name="password">
+                                                <span class="input-group-text toggle-password">
+                                                    <i class="bi bi-eye-off"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">Repeat Password</label>
+                                            <div class="input-group input-group-flat pass-group">
+                                                <input type="password" class="form-control pass-input" name="password_confirm" required>
+                                                <span class="input-group-text toggle-password">
+                                                    <i class="bi bi-eye-off"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label class="form-label required-field">Location</label>
+                                            <select class="form-select" name="location" required>
+                                                <option value="">Choose</option>
+                                                <option value="germany">Germany</option>
+                                                <option value="usa" selected>USA</option>
+                                                <option value="canada">Canada</option>
+                                                <option value="india">India</option>
+                                                <option value="china">China</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="d-flex align-items-center justify-content-end">
+                            <a href="#" class="btn btn-light me-2" data-bs-dismiss="offcanvas">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="d-flex align-items-center justify-content-end">
-                    <a href="#" class="btn btn-light me-2" data-bs-dismiss="offcanvas">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
+            </div>
 
-    <!-- Delete Modal -->
-    <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm rounded-0">
-            <div class="modal-content rounded-0">
-                <div class="modal-body p-4 text-center position-relative">
-                    <div class="mb-3 position-relative z-1">
-                        <span class="avatar avatar-xl badge-soft-danger border-0 text-danger rounded-circle"><i class="bi bi-trash fs-24"></i></span>
-                    </div>
-                    <h5 class="mb-1">Delete Confirmation</h5>
-                    <p class="mb-3">Are you sure you want to remove user you selected.</p>
-                    <div class="d-flex justify-content-center">
-                        <a href="#" class="btn btn-light position-relative z-1 me-2 w-100" data-bs-dismiss="modal">Cancel</a>
-                        <a href="#" class="btn btn-primary position-relative z-1 w-100" data-bs-dismiss="modal">Yes, Delete</a>
+            <!-- Delete Modal -->
+            <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-sm rounded-0">
+                    <div class="modal-content rounded-0">
+                        <div class="modal-body p-4 text-center position-relative">
+                            <div class="mb-3 position-relative z-1">
+                                <span class="avatar avatar-xl badge-soft-danger border-0 text-danger rounded-circle"><i class="bi bi-trash fs-24"></i></span>
+                            </div>
+                            <h5 class="mb-1">Delete Confirmation</h5>
+                            <p class="mb-3">Are you sure you want to remove user you selected.</p>
+                            <div class="d-flex justify-content-center">
+                                <a href="#" class="btn btn-light position-relative z-1 me-2 w-100" data-bs-dismiss="modal">Cancel</a>
+                                <a href="#" class="btn btn-primary position-relative z-1 w-100" data-bs-dismiss="modal">Yes, Delete</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- View User Modal -->
-    <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="viewUserModalLabel">User Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-3 text-center">
-                            <div class="user-avatar mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">EM</div>
-                            <h6>Elizabeth Morgan</h6>
-                            <p class="text-muted">Software Developer</p>
+            <!-- View User Modal -->
+            <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="viewUserModalLabel">User Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="col-md-9">
+                        <div class="modal-body">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Email:</strong> elizabeth@gmail.com</p>
-                                    <p><strong>Phone:</strong> +1 87545 54503</p>
-                                    <p><strong>Location:</strong> USA</p>
+                                <div class="col-md-3 text-center">
+                                    <div class="user-avatar mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">EM</div>
+                                    <h6>Elizabeth Morgan</h6>
+                                    <p class="text-muted">Software Developer</p>
                                 </div>
-                                <div class="col-md-6">
-                                    <p><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
-                                    <p><strong>Created:</strong> 9 Jun 2025</p>
-                                    <p><strong>Last Activity:</strong> 2 hours ago</p>
+                                <div class="col-md-9">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Email:</strong> elizabeth@gmail.com</p>
+                                            <p><strong>Phone:</strong> +1 87545 54503</p>
+                                            <p><strong>Location:</strong> USA</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
+                                            <p><strong>Created:</strong> 9 Jun 2025</p>
+                                            <p><strong>Last Activity:</strong> 2 hours ago</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editUserModal" data-bs-dismiss="modal">Edit User</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Modals -->
+            <?php if (!empty($users)): ?>
+                <?php foreach ($users as $user): ?>
+                    <!-- View User Modal -->
+                    <div class="modal fade" id="viewUserModal<?php echo $user['id']; ?>" tabindex="-1" aria-labelledby="viewUserModalLabel<?php echo $user['id']; ?>" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="viewUserModalLabel<?php echo $user['id']; ?>">User Details</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-3 text-center">
+                                            <div class="user-avatar mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;"><?php echo strtoupper(substr($user['username'], 0, 2)); ?></div>
+                                            <h6><?php echo htmlspecialchars($user['username']); ?></h6>
+                                            <p class="text-muted"><?php echo htmlspecialchars($user['role_display_name'] ?? $user['role_name'] ?? 'N/A'); ?></p>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p><strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
+                                                    <p><strong>Business:</strong> <?php echo htmlspecialchars($user['business_name'] ?? 'N/A'); ?></p>
+                                                    <p><strong>Branch:</strong> <?php echo htmlspecialchars($user['branch_name'] ?? 'N/A'); ?></p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <p><strong>Status:</strong> 
+                                                        <?php if ($user['status'] === 'active'): ?>
+                                                            <span class="badge bg-success">Active</span>
+                                                        <?php else: ?>
+                                                            <span class="badge bg-secondary">Inactive</span>
+                                                        <?php endif; ?>
+                                                    </p>
+                                                    <p><strong>Created:</strong> <?php echo htmlspecialchars($user['created_at']); ?></p>
+                                                    <p><strong>Last Updated:</strong> <?php echo htmlspecialchars($user['updated_at'] ?? 'Never'); ?></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editUserModal<?php echo $user['id']; ?>" data-bs-dismiss="modal">Edit User</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editUserModal" data-bs-dismiss="modal">Edit User</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
+                    <!-- Edit User Modal -->
+                    <div class="modal fade" id="editUserModal<?php echo $user['id']; ?>" tabindex="-1" aria-labelledby="editUserModalLabel<?php echo $user['id']; ?>" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="editUserModalLabel<?php echo $user['id']; ?>">Edit User</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="manage_users.php" method="POST">
+                                        <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label required-field">Username</label>
+                                                    <input type="text" class="form-control" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label required-field">Email</label>
+                                                    <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Status</label>
+                                                    <select class="form-select" name="status">
+                                                        <option value="active" <?php echo ($user['status'] === 'active') ? 'selected' : ''; ?>>Active</option>
+                                                        <option value="inactive" <?php echo ($user['status'] === 'inactive') ? 'selected' : ''; ?>>Inactive</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Role</label>
+                                                    <input type="text" class="form-control" value="<?php echo htmlspecialchars($user['role_display_name'] ?? $user['role_name'] ?? 'N/A'); ?>" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete User Modal -->
+                    <div class="modal fade" id="deleteUserModal<?php echo $user['id']; ?>" tabindex="-1" aria-labelledby="deleteUserModalLabel<?php echo $user['id']; ?>" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-sm">
+                            <div class="modal-content">
+                                <div class="modal-body p-4 text-center">
+                                    <div class="mb-3">
+                                        <span class="avatar avatar-xl badge-soft-danger border-0 text-danger rounded-circle">
+                                            <i class="bi bi-trash fs-24"></i>
+                                        </span>
+                                    </div>
+                                    <h5 class="mb-1">Delete Confirmation</h5>
+                                    <p class="mb-3">Are you sure you want to delete user <strong><?php echo htmlspecialchars($user['username']); ?></strong>?</p>
+                                    <div class="d-flex justify-content-center">
+                                        <button type="button" class="btn btn-light me-2 w-100" data-bs-dismiss="modal">Cancel</button>
+                                        <a href="manage_users.php?delete_user=<?php echo $user['id']; ?>" class="btn btn-danger w-100">Yes, Delete</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
