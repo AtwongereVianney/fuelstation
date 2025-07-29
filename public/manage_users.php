@@ -52,6 +52,213 @@ if ($users_result) {
 
 // Get total count for badge
 $total_users = count($users);
+
+// Handle Add New User form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_user') {
+    $response = array();
+    
+    // Validate required fields
+    $required_fields = ['username', 'email', 'password', 'password_confirm', 'role'];
+    $errors = array();
+    
+    foreach ($required_fields as $field) {
+        if (empty($_POST[$field])) {
+            $errors[] = ucfirst(str_replace('_', ' ', $field)) . " is required.";
+        }
+    }
+    
+    // Check if passwords match
+    if ($_POST['password'] !== $_POST['password_confirm']) {
+        $errors[] = "Passwords do not match.";
+    }
+    
+    // Check password length
+    if (strlen($_POST['password']) < 6) {
+        $errors[] = "Password must be at least 6 characters long.";
+    }
+    
+    // Check if username already exists
+    $check_username = "SELECT id FROM users WHERE username = ? AND deleted_at IS NULL";
+    $stmt = mysqli_prepare($conn, $check_username);
+    mysqli_stmt_bind_param($stmt, 's', $_POST['username']);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    if (mysqli_num_rows($result) > 0) {
+        $errors[] = "Username already exists.";
+    }
+    mysqli_stmt_close($stmt);
+    
+    // Check if email already exists
+    $check_email = "SELECT id FROM users WHERE email = ? AND deleted_at IS NULL";
+    $stmt = mysqli_prepare($conn, $check_email);
+    mysqli_stmt_bind_param($stmt, 's', $_POST['email']);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    if (mysqli_num_rows($result) > 0) {
+        $errors[] = "Email already exists.";
+    }
+    mysqli_stmt_close($stmt);
+    
+    if (empty($errors)) {
+        // Hash the password
+        $hashed_password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+        
+        // Get role ID
+        $role_sql = "SELECT id FROM roles WHERE name = ? AND deleted_at IS NULL";
+        $stmt = mysqli_prepare($conn, $role_sql);
+        mysqli_stmt_bind_param($stmt, 's', $_POST['role']);
+        mysqli_stmt_execute($stmt);
+        $role_result = mysqli_stmt_get_result($stmt);
+        $role_data = mysqli_fetch_assoc($role_result);
+        mysqli_stmt_close($stmt);
+        
+        if ($role_data) {
+            $role_id = $role_data['id'];
+            
+            // Insert new user
+            $insert_user = "INSERT INTO users (username, email, password, status, business_id, branch_id, created_at) 
+                           VALUES (?, ?, ?, 'active', ?, ?, NOW())";
+            $stmt = mysqli_prepare($conn, $insert_user);
+            mysqli_stmt_bind_param($stmt, 'sssii', 
+                $_POST['username'], 
+                $_POST['email'], 
+                $hashed_password,
+                $business_id,
+                $_POST['branch_id'] ?? null
+            );
+            
+            if (mysqli_stmt_execute($stmt)) {
+                $new_user_id = mysqli_insert_id($conn);
+                
+                // Assign role to user
+                $assign_role = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
+                $stmt2 = mysqli_prepare($conn, $assign_role);
+                mysqli_stmt_bind_param($stmt2, 'ii', $new_user_id, $role_id);
+                mysqli_stmt_execute($stmt2);
+                mysqli_stmt_close($stmt2);
+                
+                $response['success'] = true;
+                $response['message'] = "User added successfully!";
+                
+                // Redirect to refresh the page and show the new user
+                header('Location: manage_users.php?success=user_added');
+                exit;
+            } else {
+                $response['success'] = false;
+                $response['message'] = "Error adding user: " . mysqli_error($conn);
+            }
+            mysqli_stmt_close($stmt);
+        } else {
+            $response['success'] = false;
+            $response['message'] = "Invalid role selected.";
+        }
+    } else {
+        $response['success'] = false;
+        $response['message'] = implode(" ", $errors);
+    }
+}
+
+// Handle Edit User form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'edit_user') {
+    $response = array();
+    
+    if (empty($_POST['user_id'])) {
+        $response['success'] = false;
+        $response['message'] = "User ID is required.";
+    } else {
+        $user_id = $_POST['user_id'];
+        
+        // Validate required fields
+        if (empty($_POST['username']) || empty($_POST['email'])) {
+            $response['success'] = false;
+            $response['message'] = "Username and email are required.";
+        } else {
+            // Check if username already exists (excluding current user)
+            $check_username = "SELECT id FROM users WHERE username = ? AND id != ? AND deleted_at IS NULL";
+            $stmt = mysqli_prepare($conn, $check_username);
+            mysqli_stmt_bind_param($stmt, 'si', $_POST['username'], $user_id);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            if (mysqli_num_rows($result) > 0) {
+                $response['success'] = false;
+                $response['message'] = "Username already exists.";
+            } else {
+                // Check if email already exists (excluding current user)
+                $check_email = "SELECT id FROM users WHERE email = ? AND id != ? AND deleted_at IS NULL";
+                $stmt = mysqli_prepare($conn, $check_email);
+                mysqli_stmt_bind_param($stmt, 'si', $_POST['email'], $user_id);
+                mysqli_stmt_execute($stmt);
+                $result = mysqli_stmt_get_result($stmt);
+                if (mysqli_num_rows($result) > 0) {
+                    $response['success'] = false;
+                    $response['message'] = "Email already exists.";
+                } else {
+                    // Update user
+                    $update_user = "UPDATE users SET username = ?, email = ?, status = ?, updated_at = NOW() WHERE id = ?";
+                    $stmt = mysqli_prepare($conn, $update_user);
+                    mysqli_stmt_bind_param($stmt, 'sssi', 
+                        $_POST['username'], 
+                        $_POST['email'], 
+                        $_POST['status'],
+                        $user_id
+                    );
+                    
+                    if (mysqli_stmt_execute($stmt)) {
+                        $response['success'] = true;
+                        $response['message'] = "User updated successfully!";
+                        header('Location: manage_users.php?success=user_updated');
+                        exit;
+                    } else {
+                        $response['success'] = false;
+                        $response['message'] = "Error updating user: " . mysqli_error($conn);
+                    }
+                    mysqli_stmt_close($stmt);
+                }
+                mysqli_stmt_close($stmt);
+            }
+            mysqli_stmt_close($stmt);
+        }
+    }
+}
+
+// Handle Delete User
+if (isset($_GET['delete_user'])) {
+    $user_id = $_GET['delete_user'];
+    
+    // Soft delete user
+    $delete_user = "UPDATE users SET deleted_at = NOW() WHERE id = ?";
+    $stmt = mysqli_prepare($conn, $delete_user);
+    mysqli_stmt_bind_param($stmt, 'i', $user_id);
+    
+    if (mysqli_stmt_execute($stmt)) {
+        header('Location: manage_users.php?success=user_deleted');
+        exit;
+    } else {
+        header('Location: manage_users.php?error=delete_failed');
+        exit;
+    }
+    mysqli_stmt_close($stmt);
+}
+
+// Fetch roles for dropdown
+$roles_sql = "SELECT id, name, display_name FROM roles WHERE deleted_at IS NULL ORDER BY display_name";
+$roles_result = mysqli_query($conn, $roles_sql);
+$roles = [];
+if ($roles_result) {
+    while ($row = mysqli_fetch_assoc($roles_result)) {
+        $roles[] = $row;
+    }
+}
+
+// Fetch branches for dropdown
+$branches_sql = "SELECT id, branch_name FROM branches WHERE deleted_at IS NULL ORDER BY branch_name";
+$branches_result = mysqli_query($conn, $branches_sql);
+$branches = [];
+if ($branches_result) {
+    while ($row = mysqli_fetch_assoc($branches_result)) {
+        $branches[] = $row;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -204,6 +411,43 @@ $total_users = count($users);
                     <i class="bi bi-list"></i> Menu
                 </button>
             </div>
+
+            <!-- Success/Error Messages -->
+            <?php if (isset($_GET['success'])): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <?php 
+                    switch ($_GET['success']) {
+                        case 'user_added':
+                            echo 'User added successfully!';
+                            break;
+                        case 'user_updated':
+                            echo 'User updated successfully!';
+                            break;
+                        case 'user_deleted':
+                            echo 'User deleted successfully!';
+                            break;
+                        default:
+                            echo 'Operation completed successfully!';
+                    }
+                    ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
+
+            <?php if (isset($_GET['error'])): ?>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <?php 
+                    switch ($_GET['error']) {
+                        case 'delete_failed':
+                            echo 'Failed to delete user. Please try again.';
+                            break;
+                        default:
+                            echo 'An error occurred. Please try again.';
+                    }
+                    ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            <?php endif; ?>
 
             <!-- Page Header -->
             <div class="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
@@ -548,6 +792,7 @@ $total_users = count($users);
                 </div>
                 <div class="offcanvas-body">
                     <form action="manage_users.php" method="POST">
+                        <input type="hidden" name="action" value="add_user">
                         <div>
                             <!-- Basic Info -->
                             <div>
@@ -570,13 +815,7 @@ $total_users = count($users);
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label required-field">First Name</label>
-                                            <input type="text" class="form-control" name="first_name" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label required-field">User Name</label>
+                                            <label class="form-label required-field">Username</label>
                                             <input type="text" class="form-control" name="username" required>
                                         </div>
                                     </div>
@@ -597,29 +836,32 @@ $total_users = count($users);
                                             <label class="form-label required-field">Role</label>
                                             <select class="form-select" name="role" required>
                                                 <option value="">Choose Role</option>
-                                                <option value="admin">Administrator</option>
-                                                <option value="manager">Manager</option>
-                                                <option value="user">User</option>
+                                                <?php foreach ($roles as $role): ?>
+                                                    <option value="<?php echo htmlspecialchars($role['name']); ?>">
+                                                        <?php echo htmlspecialchars($role['display_name'] ?? $role['name']); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label required-field">Phone 1</label>
-                                            <input type="tel" class="form-control phone" name="phone" required>
+                                            <label class="form-label">Branch</label>
+                                            <select class="form-select" name="branch_id">
+                                                <option value="">Choose Branch (Optional)</option>
+                                                <?php foreach ($branches as $branch): ?>
+                                                    <option value="<?php echo htmlspecialchars($branch['id']); ?>">
+                                                        <?php echo htmlspecialchars($branch['branch_name']); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label">Phone 2</label>
-                                            <input type="tel" class="form-control phone" name="phone2">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Password</label>
+                                            <label class="form-label required-field">Password</label>
                                             <div class="input-group input-group-flat pass-group">
-                                                <input type="password" class="form-control pass-input" name="password">
+                                                <input type="password" class="form-control pass-input" name="password" required>
                                                 <span class="input-group-text toggle-password">
                                                     <i class="bi bi-eye-off"></i>
                                                 </span>
@@ -628,7 +870,7 @@ $total_users = count($users);
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label required-field">Repeat Password</label>
+                                            <label class="form-label required-field">Confirm Password</label>
                                             <div class="input-group input-group-flat pass-group">
                                                 <input type="password" class="form-control pass-input" name="password_confirm" required>
                                                 <span class="input-group-text toggle-password">
@@ -637,25 +879,12 @@ $total_users = count($users);
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-12">
-                                        <div class="mb-3">
-                                            <label class="form-label required-field">Location</label>
-                                            <select class="form-select" name="location" required>
-                                                <option value="">Choose</option>
-                                                <option value="germany">Germany</option>
-                                                <option value="usa">USA</option>
-                                                <option value="canada">Canada</option>
-                                                <option value="india">India</option>
-                                                <option value="china">China</option>
-                                            </select>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-end">
                             <a href="#" class="btn btn-light me-2" data-bs-dismiss="offcanvas">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Create</button>
+                            <button type="submit" class="btn btn-primary">Create User</button>
                         </div>
                     </form>
                 </div>
@@ -895,6 +1124,7 @@ $total_users = count($users);
                                 </div>
                                 <div class="modal-body">
                                     <form action="manage_users.php" method="POST">
+                                        <input type="hidden" name="action" value="edit_user">
                                         <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
                                         <div class="row">
                                             <div class="col-md-6">
