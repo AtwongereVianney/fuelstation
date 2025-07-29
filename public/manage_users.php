@@ -32,7 +32,7 @@ mysqli_stmt_close($stmt);
 $business_id = $_SESSION['business_id'] ?? null;
 
 // Fetch all users with their roles, business, and branch names
-$users_sql = "SELECT u.id, u.username, u.email, u.status, u.created_at, u.updated_at, 
+$users_sql = "SELECT u.id, u.username, u.email, u.status, u.created_at, u.updated_at, u.branch_id,
               r.id as role_id, r.name as role_name, r.display_name as role_display_name, 
               b.business_name, br.branch_name 
               FROM users u 
@@ -193,26 +193,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $response['success'] = false;
                     $response['message'] = "Email already exists.";
                 } else {
-                    // Update user
-                    $update_user = "UPDATE users SET username = ?, email = ?, status = ?, updated_at = NOW() WHERE id = ?";
-                    $stmt = mysqli_prepare($conn, $update_user);
-                    mysqli_stmt_bind_param($stmt, 'sssi', 
-                        $_POST['username'], 
-                        $_POST['email'], 
-                        $_POST['status'],
-                        $user_id
-                    );
+                    // Start transaction
+                    mysqli_begin_transaction($conn);
                     
-                    if (mysqli_stmt_execute($stmt)) {
+                    try {
+                        // Update user basic info
+                        $update_user = "UPDATE users SET username = ?, email = ?, status = ?, branch_id = ?, updated_at = NOW() WHERE id = ?";
+                        $stmt = mysqli_prepare($conn, $update_user);
+                        mysqli_stmt_bind_param($stmt, 'sssii', 
+                            $_POST['username'], 
+                            $_POST['email'], 
+                            $_POST['status'],
+                            $_POST['branch_id'] ?: null,
+                            $user_id
+                        );
+                        
+                        if (!mysqli_stmt_execute($stmt)) {
+                            throw new Exception("Error updating user: " . mysqli_error($conn));
+                        }
+                        mysqli_stmt_close($stmt);
+                        
+                        // Update password if provided
+                        if (!empty($_POST['new_password'])) {
+                            if (strlen($_POST['new_password']) < 6) {
+                                throw new Exception("Password must be at least 6 characters long.");
+                            }
+                            
+                            $hashed_password = password_hash($_POST['new_password'], PASSWORD_DEFAULT);
+                            $update_password = "UPDATE users SET password = ? WHERE id = ?";
+                            $stmt = mysqli_prepare($conn, $update_password);
+                            mysqli_stmt_bind_param($stmt, 'si', $hashed_password, $user_id);
+                            
+                            if (!mysqli_stmt_execute($stmt)) {
+                                throw new Exception("Error updating password: " . mysqli_error($conn));
+                            }
+                            mysqli_stmt_close($stmt);
+                        }
+                        
+                        // Update role if changed
+                        if (!empty($_POST['role'])) {
+                            // Get role ID
+                            $role_sql = "SELECT id FROM roles WHERE name = ? AND deleted_at IS NULL";
+                            $stmt = mysqli_prepare($conn, $role_sql);
+                            mysqli_stmt_bind_param($stmt, 's', $_POST['role']);
+                            mysqli_stmt_execute($stmt);
+                            $role_result = mysqli_stmt_get_result($stmt);
+                            $role_data = mysqli_fetch_assoc($role_result);
+                            mysqli_stmt_close($stmt);
+                            
+                            if ($role_data) {
+                                $role_id = $role_data['id'];
+                                
+                                // Remove existing role assignments
+                                $delete_roles = "DELETE FROM user_roles WHERE user_id = ?";
+                                $stmt = mysqli_prepare($conn, $delete_roles);
+                                mysqli_stmt_bind_param($stmt, 'i', $user_id);
+                                mysqli_stmt_execute($stmt);
+                                mysqli_stmt_close($stmt);
+                                
+                                // Assign new role
+                                $assign_role = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
+                                $stmt = mysqli_prepare($conn, $assign_role);
+                                mysqli_stmt_bind_param($stmt, 'ii', $user_id, $role_id);
+                                
+                                if (!mysqli_stmt_execute($stmt)) {
+                                    throw new Exception("Error updating role: " . mysqli_error($conn));
+                                }
+                                mysqli_stmt_close($stmt);
+                            }
+                        }
+                        
+                        // Commit transaction
+                        mysqli_commit($conn);
+                        
                         $response['success'] = true;
                         $response['message'] = "User updated successfully!";
                         header('Location: manage_users.php?success=user_updated');
                         exit;
-                    } else {
+                        
+                    } catch (Exception $e) {
+                        // Rollback transaction on error
+                        mysqli_rollback($conn);
                         $response['success'] = false;
-                        $response['message'] = "Error updating user: " . mysqli_error($conn);
+                        $response['message'] = $e->getMessage();
                     }
-                    mysqli_stmt_close($stmt);
                 }
                 mysqli_stmt_close($stmt);
             }
@@ -1151,7 +1215,39 @@ if ($branches_result) {
                                             <div class="col-md-6">
                                                 <div class="mb-3">
                                                     <label class="form-label">Role</label>
-                                                    <input type="text" class="form-control" value="<?php echo htmlspecialchars($user['role_display_name'] ?? $user['role_name'] ?? 'N/A'); ?>" readonly>
+                                                    <select class="form-select" name="role">
+                                                        <?php foreach ($roles as $role): ?>
+                                                            <option value="<?php echo htmlspecialchars($role['name']); ?>" 
+                                                                    <?php echo ($user['role_name'] === $role['name']) ? 'selected' : ''; ?>>
+                                                                <?php echo htmlspecialchars($role['display_name'] ?? $role['name']); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Branch</label>
+                                                    <select class="form-select" name="branch_id">
+                                                        <option value="">No Branch</option>
+                                                        <?php foreach ($branches as $branch): ?>
+                                                            <option value="<?php echo htmlspecialchars($branch['id']); ?>" 
+                                                                    <?php echo ($user['branch_id'] == $branch['id']) ? 'selected' : ''; ?>>
+                                                                <?php echo htmlspecialchars($branch['branch_name']); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">New Password (Optional)</label>
+                                                    <div class="input-group input-group-flat pass-group">
+                                                        <input type="password" class="form-control pass-input" name="new_password" placeholder="Leave blank to keep current password">
+                                                        <span class="input-group-text toggle-password">
+                                                            <i class="bi bi-eye-off"></i>
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
