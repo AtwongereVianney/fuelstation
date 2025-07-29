@@ -146,6 +146,33 @@ $total_users = count($users);
             content: " *";
             color: #dc3545;
         }
+        
+        /* Modal and Offcanvas improvements */
+        .offcanvas-backdrop {
+            z-index: 1040;
+        }
+        
+        .offcanvas {
+            z-index: 1045;
+        }
+        
+        .modal-backdrop {
+            z-index: 1050;
+        }
+        
+        .modal {
+            z-index: 1055;
+        }
+        
+        /* Ensure body remains scrollable when modal is closed */
+        body:not(.modal-open) {
+            overflow: auto !important;
+        }
+        
+        /* Prevent backdrop from blocking interactions */
+        .offcanvas-backdrop.show {
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
@@ -479,10 +506,33 @@ $total_users = count($users);
                     </div>
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <div class="datatable-length"></div>
+                            <div class="d-flex align-items-center">
+                                <label class="me-2">Show</label>
+                                <select class="form-select form-select-sm" style="width: auto;" id="entries-per-page">
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <label class="ms-2">entries</label>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="datatable-paginate"></div>
+                            <div class="d-flex justify-content-end">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination pagination-sm mb-0">
+                                        <li class="page-item disabled">
+                                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                                        </li>
+                                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="#">Next</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -956,6 +1006,118 @@ $total_users = count($users);
                     }
                 });
             }
+
+            // Entries per page functionality
+            const entriesSelect = document.getElementById('entries-per-page');
+            const tableBody = document.querySelector('#manage-users-list tbody');
+            const allRows = Array.from(tableBody.querySelectorAll('tr'));
+            
+            if (entriesSelect) {
+                entriesSelect.addEventListener('change', function() {
+                    const selectedValue = parseInt(this.value);
+                    showEntries(selectedValue);
+                });
+            }
+
+            function showEntries(entriesPerPage) {
+                // Hide all rows first
+                allRows.forEach(row => {
+                    row.style.display = 'none';
+                });
+
+                // Show only the specified number of entries
+                const rowsToShow = allRows.slice(0, entriesPerPage);
+                rowsToShow.forEach(row => {
+                    row.style.display = '';
+                });
+
+                // Update pagination if needed
+                updatePagination(entriesPerPage);
+            }
+
+            function updatePagination(entriesPerPage) {
+                const totalPages = Math.ceil(allRows.length / entriesPerPage);
+                const paginationContainer = document.querySelector('.pagination');
+                
+                if (paginationContainer) {
+                    // Clear existing pagination
+                    paginationContainer.innerHTML = '';
+                    
+                    // Add Previous button
+                    const prevLi = document.createElement('li');
+                    prevLi.className = 'page-item disabled';
+                    prevLi.innerHTML = '<a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>';
+                    paginationContainer.appendChild(prevLi);
+
+                    // Add page numbers
+                    for (let i = 1; i <= totalPages; i++) {
+                        const li = document.createElement('li');
+                        li.className = i === 1 ? 'page-item active' : 'page-item';
+                        li.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                        paginationContainer.appendChild(li);
+                    }
+
+                    // Add Next button
+                    const nextLi = document.createElement('li');
+                    nextLi.className = 'page-item';
+                    nextLi.innerHTML = '<a class="page-link" href="#">Next</a>';
+                    paginationContainer.appendChild(nextLi);
+                }
+            }
+
+            // Initialize with default value (10 entries)
+            if (entriesSelect) {
+                showEntries(10);
+            }
+
+            // Modal backdrop and close handling
+            const addUserModal = document.getElementById('offcanvas_add');
+            if (addUserModal) {
+                addUserModal.addEventListener('hidden.bs.offcanvas', function () {
+                    // Reset form when modal is closed
+                    const form = addUserModal.querySelector('form');
+                    if (form) {
+                        form.reset();
+                    }
+                    // Remove any backdrop issues
+                    document.body.classList.remove('modal-open');
+                    const backdrop = document.querySelector('.offcanvas-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                });
+
+                addUserModal.addEventListener('show.bs.offcanvas', function () {
+                    // Ensure proper backdrop handling
+                    document.body.classList.add('modal-open');
+                });
+            }
+
+            // Handle all offcanvas modals
+            const allOffcanvas = document.querySelectorAll('.offcanvas');
+            allOffcanvas.forEach(offcanvas => {
+                offcanvas.addEventListener('hidden.bs.offcanvas', function () {
+                    // Clean up backdrop and body classes
+                    document.body.classList.remove('modal-open');
+                    const backdrop = document.querySelector('.offcanvas-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                });
+            });
+
+            // Handle regular modals as well
+            const allModals = document.querySelectorAll('.modal');
+            allModals.forEach(modal => {
+                modal.addEventListener('hidden.bs.modal', function () {
+                    // Clean up backdrop and body classes
+                    document.body.classList.remove('modal-open');
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                });
+            });
         });
     </script>
 </body>
