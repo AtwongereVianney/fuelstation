@@ -400,8 +400,8 @@ $total_users = count($users);
                                     </th>
                                     <th class="no-sort"></th>
                                     <th>Name</th>
-                                    <th>Phone</th>
                                     <th>Email</th>
+                                    <th>Role</th>
                                     <th>Created</th>
                                     <th>Last Activity</th>
                                     <th>Status</th>
@@ -423,10 +423,11 @@ $total_users = count($users);
                                             <td>
                                                 <div>
                                                     <h6 class="mb-0"><?php echo htmlspecialchars($user['username']); ?></h6>
-                                                    <small class="text-muted"><?php echo htmlspecialchars($user['role_display_name'] ?? $user['role_name'] ?? 'N/A'); ?></small>
+                                                    <small class="text-muted"><?php echo htmlspecialchars($user['business_name'] ?? 'N/A'); ?></small>
                                                 </div>
                                             </td>
                                             <td><?php echo htmlspecialchars($user['email']); ?></td>
+                                            <td><?php echo htmlspecialchars($user['role_display_name'] ?? $user['role_name'] ?? 'N/A'); ?></td>
                                             <td><?php echo htmlspecialchars($user['created_at']); ?></td>
                                             <td><?php echo htmlspecialchars($user['updated_at'] ?? 'Never'); ?></td>
                                             <td>
