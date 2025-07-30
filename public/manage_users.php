@@ -2,6 +2,18 @@
 session_start();
 require_once '../config/db_connect.php';
 require_once '../includes/auth_helpers.php';
+require_once '../includes/email_helper.php';
+
+// Test email configuration (uncomment to test)
+// if (isset($_GET['test_email'])) {
+//     $test_result = test_email_config();
+//     if ($test_result) {
+//         echo "Email test successful! Check your inbox.";
+//     } else {
+//         echo "Email test failed. Check error logs.";
+//     }
+//     exit;
+// }
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
@@ -58,23 +70,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $response = array();
     
     // Validate required fields
-    $required_fields = ['username', 'email', 'password', 'password_confirm', 'role'];
+    $required_fields = ['username', 'email', 'role'];
     $errors = array();
     
     foreach ($required_fields as $field) {
         if (empty($_POST[$field])) {
             $errors[] = ucfirst(str_replace('_', ' ', $field)) . " is required.";
         }
-    }
-    
-    // Check if passwords match
-    if ($_POST['password'] !== $_POST['password_confirm']) {
-        $errors[] = "Passwords do not match.";
-    }
-    
-    // Check password length
-    if (strlen($_POST['password']) < 6) {
-        $errors[] = "Password must be at least 6 characters long.";
     }
     
     // Check if username already exists
@@ -100,8 +102,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     mysqli_stmt_close($stmt);
     
     if (empty($errors)) {
+        // Generate a random password
+        $generated_password = generateRandomPassword();
+        
         // Hash the password
-        $hashed_password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+        $hashed_password = password_hash($generated_password, PASSWORD_DEFAULT);
         
         // Get role ID
         $role_sql = "SELECT id FROM roles WHERE name = ? AND deleted_at IS NULL";
@@ -137,8 +142,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 mysqli_stmt_execute($stmt2);
                 mysqli_stmt_close($stmt2);
                 
+                // Send email with credentials
+                $email_sent = sendUserCredentials($_POST['email'], $_POST['username'], $generated_password);
+                
                 $response['success'] = true;
-                $response['message'] = "User added successfully!";
+                $response['message'] = "User added successfully! " . ($email_sent ? "Login credentials have been sent to the user's email." : "Note: Email notification failed.");
                 
                 // Redirect to refresh the page and show the new user
                 header('Location: manage_users.php?success=user_added');
@@ -156,6 +164,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $response['success'] = false;
         $response['message'] = implode(" ", $errors);
     }
+}
+
+// Function to generate random password
+function generateRandomPassword($length = 12) {
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+    $password = '';
+    for ($i = 0; $i < $length; $i++) {
+        $password .= $chars[rand(0, strlen($chars) - 1)];
+    }
+    return $password;
+}
+
+// Function to send user credentials via email
+function sendUserCredentials($email, $username, $password) {
+    $subject = "Your Account Credentials - Fuel Station Management System";
+    $body = "Dear $username,\n\n";
+    $body .= "Your account has been created successfully in the Fuel Station Management System.\n\n";
+    $body .= "Here are your login credentials:\n";
+    $body .= "Username: $username\n";
+    $body .= "Password: $password\n\n";
+    $body .= "Please login at: " . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . dirname($_SERVER['PHP_SELF']) . "/login.php\n\n";
+    $body .= "For security reasons, we recommend changing your password after your first login.\n\n";
+    $body .= "Best regards,\nFuel Station Management Team";
+    
+    return send_email($email, $subject, $body);
 }
 
 // Handle Edit User form submission
@@ -482,7 +515,7 @@ if ($branches_result) {
                     <?php 
                     switch ($_GET['success']) {
                         case 'user_added':
-                            echo 'User added successfully!';
+                            echo 'User added successfully! Login credentials have been sent to the user\'s email address.';
                             break;
                         case 'user_updated':
                             echo 'User updated successfully!';
@@ -532,6 +565,7 @@ if ($branches_result) {
                             </ul>
                         </div>
                     </div>
+                    <a href="test_email.php" class="btn btn-outline-info btn-sm" title="Test Email Configuration"><i class="bi bi-envelope me-1"></i>Test Email</a>
                     <a href="javascript:void(0);" class="btn btn-icon btn-outline-secondary shadow" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Refresh" data-bs-original-title="Refresh"><i class="bi bi-arrow-clockwise"></i></a>
                     <a href="javascript:void(0);" class="btn btn-icon btn-outline-secondary shadow" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Collapse" data-bs-original-title="Collapse" id="collapse-header"><i class="bi bi-chevron-up"></i></a>
                 </div>
@@ -921,26 +955,10 @@ if ($branches_result) {
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label required-field">Password</label>
-                                            <div class="input-group input-group-flat pass-group">
-                                                <input type="password" class="form-control pass-input" name="password" required>
-                                                <span class="input-group-text toggle-password">
-                                                    <i class="bi bi-eye-off"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label required-field">Confirm Password</label>
-                                            <div class="input-group input-group-flat pass-group">
-                                                <input type="password" class="form-control pass-input" name="password_confirm" required>
-                                                <span class="input-group-text toggle-password">
-                                                    <i class="bi bi-eye-off"></i>
-                                                </span>
-                                            </div>
+                                    <div class="col-md-12">
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            <strong>Note:</strong> A secure password will be automatically generated and sent to the user's email address.
                                         </div>
                                     </div>
                                 </div>
@@ -1396,28 +1414,100 @@ if ($branches_result) {
                 showEntries(10);
             }
 
-            // Modal backdrop and close handling
-            const addUserModal = document.getElementById('offcanvas_add');
-            if (addUserModal) {
-                addUserModal.addEventListener('hidden.bs.offcanvas', function () {
-                    // Reset form when modal is closed
-                    const form = addUserModal.querySelector('form');
-                    if (form) {
-                        form.reset();
-                    }
-                    // Remove any backdrop issues
-                    document.body.classList.remove('modal-open');
-                    const backdrop = document.querySelector('.offcanvas-backdrop');
-                    if (backdrop) {
-                        backdrop.remove();
-                    }
-                });
+                    // Modal backdrop and close handling
+        const addUserModal = document.getElementById('offcanvas_add');
+        if (addUserModal) {
+            addUserModal.addEventListener('hidden.bs.offcanvas', function () {
+                // Reset form when modal is closed
+                const form = addUserModal.querySelector('form');
+                if (form) {
+                    form.reset();
+                    // Clear any validation messages
+                    const alerts = form.querySelectorAll('.alert-danger');
+                    alerts.forEach(alert => alert.remove());
+                }
+                // Remove any backdrop issues
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.offcanvas-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+            });
 
-                addUserModal.addEventListener('show.bs.offcanvas', function () {
-                    // Ensure proper backdrop handling
-                    document.body.classList.add('modal-open');
+            addUserModal.addEventListener('show.bs.offcanvas', function () {
+                // Ensure proper backdrop handling
+                document.body.classList.add('modal-open');
+            });
+
+            // Form validation
+            const addUserForm = addUserModal.querySelector('form');
+            if (addUserForm) {
+                addUserForm.addEventListener('submit', function(e) {
+                    const username = this.querySelector('input[name="username"]').value.trim();
+                    const email = this.querySelector('input[name="email"]').value.trim();
+                    const role = this.querySelector('select[name="role"]').value;
+                    
+                    let hasErrors = false;
+                    
+                    // Clear previous error messages
+                    const existingAlerts = this.querySelectorAll('.alert-danger');
+                    existingAlerts.forEach(alert => alert.remove());
+                    
+                    if (!username) {
+                        showFormError(this, 'Username is required.');
+                        hasErrors = true;
+                    }
+                    
+                    if (!email) {
+                        showFormError(this, 'Email is required.');
+                        hasErrors = true;
+                    } else if (!isValidEmail(email)) {
+                        showFormError(this, 'Please enter a valid email address.');
+                        hasErrors = true;
+                    }
+                    
+                    if (!role) {
+                        showFormError(this, 'Please select a role.');
+                        hasErrors = true;
+                    }
+                    
+                    if (hasErrors) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // Show loading state
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Creating User...';
+                    submitBtn.disabled = true;
+                    
+                    // Re-enable after a delay in case of errors
+                    setTimeout(() => {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }, 5000);
                 });
             }
+        }
+
+        // Function to show form errors
+        function showFormError(form, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            form.insertBefore(alertDiv, form.firstChild);
+        }
+
+        // Function to validate email
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
 
             // Handle all offcanvas modals
             const allOffcanvas = document.querySelectorAll('.offcanvas');
