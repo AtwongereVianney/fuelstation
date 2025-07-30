@@ -120,17 +120,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         if ($role_data) {
             $role_id = $role_data['id'];
             
-            // Insert new user
-            $insert_user = "INSERT INTO users (username, email, password, status, business_id, branch_id, created_at) 
-                           VALUES (?, ?, ?, 'active', ?, ?, NOW())";
-            $stmt = mysqli_prepare($conn, $insert_user);
-            mysqli_stmt_bind_param($stmt, 'sssii', 
-                $_POST['username'], 
-                $_POST['email'], 
-                $hashed_password,
-                $business_id,
-                $_POST['branch_id'] ?? null
-            );
+            // Insert new user - handle null values properly
+            if ($business_id && !empty($_POST['branch_id'])) {
+                // Both business_id and branch_id are provided
+                $insert_user = "INSERT INTO users (username, email, password, status, business_id, branch_id, created_at) 
+                               VALUES (?, ?, ?, 'active', ?, ?, NOW())";
+                $stmt = mysqli_prepare($conn, $insert_user);
+                mysqli_stmt_bind_param($stmt, 'sssii', 
+                    $_POST['username'], 
+                    $_POST['email'], 
+                    $hashed_password,
+                    $business_id,
+                    $_POST['branch_id']
+                );
+            } elseif ($business_id) {
+                // Only business_id is provided
+                $insert_user = "INSERT INTO users (username, email, password, status, business_id, created_at) 
+                               VALUES (?, ?, ?, 'active', ?, NOW())";
+                $stmt = mysqli_prepare($conn, $insert_user);
+                mysqli_stmt_bind_param($stmt, 'sssi', 
+                    $_POST['username'], 
+                    $_POST['email'], 
+                    $hashed_password,
+                    $business_id
+                );
+            } elseif (!empty($_POST['branch_id'])) {
+                // Only branch_id is provided
+                $insert_user = "INSERT INTO users (username, email, password, status, branch_id, created_at) 
+                               VALUES (?, ?, ?, 'active', ?, NOW())";
+                $stmt = mysqli_prepare($conn, $insert_user);
+                mysqli_stmt_bind_param($stmt, 'sssi', 
+                    $_POST['username'], 
+                    $_POST['email'], 
+                    $hashed_password,
+                    $_POST['branch_id']
+                );
+            } else {
+                // Neither business_id nor branch_id is provided
+                $insert_user = "INSERT INTO users (username, email, password, status, created_at) 
+                               VALUES (?, ?, ?, 'active', NOW())";
+                $stmt = mysqli_prepare($conn, $insert_user);
+                mysqli_stmt_bind_param($stmt, 'sss', 
+                    $_POST['username'], 
+                    $_POST['email'], 
+                    $hashed_password
+                );
+            }
             
             if (mysqli_stmt_execute($stmt)) {
                 $new_user_id = mysqli_insert_id($conn);
@@ -230,16 +265,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     mysqli_begin_transaction($conn);
                     
                     try {
-                        // Update user basic info
-                        $update_user = "UPDATE users SET username = ?, email = ?, status = ?, branch_id = ?, updated_at = NOW() WHERE id = ?";
-                        $stmt = mysqli_prepare($conn, $update_user);
-                        mysqli_stmt_bind_param($stmt, 'sssii', 
-                            $_POST['username'], 
-                            $_POST['email'], 
-                            $_POST['status'],
-                            $_POST['branch_id'] ?: null,
-                            $user_id
-                        );
+                        // Update user basic info - handle null values properly
+                        if (!empty($_POST['branch_id'])) {
+                            $update_user = "UPDATE users SET username = ?, email = ?, status = ?, branch_id = ?, updated_at = NOW() WHERE id = ?";
+                            $stmt = mysqli_prepare($conn, $update_user);
+                            mysqli_stmt_bind_param($stmt, 'sssii', 
+                                $_POST['username'], 
+                                $_POST['email'], 
+                                $_POST['status'],
+                                $_POST['branch_id'],
+                                $user_id
+                            );
+                        } else {
+                            $update_user = "UPDATE users SET username = ?, email = ?, status = ?, branch_id = NULL, updated_at = NOW() WHERE id = ?";
+                            $stmt = mysqli_prepare($conn, $update_user);
+                            mysqli_stmt_bind_param($stmt, 'sssi', 
+                                $_POST['username'], 
+                                $_POST['email'], 
+                                $_POST['status'],
+                                $user_id
+                            );
+                        }
                         
                         if (!mysqli_stmt_execute($stmt)) {
                             throw new Exception("Error updating user: " . mysqli_error($conn));
