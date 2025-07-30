@@ -102,13 +102,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     mysqli_stmt_close($stmt);
     
     if (empty($errors)) {
-        // Generate a random password
-        $generated_password = generateRandomPassword();
+        // Handle file upload
+        $profile_photo_path = null;
+        if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = '../uploads/profile_photos/';
+            
+            // Create directory if it doesn't exist
+            if (!file_exists($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
+            }
+            
+            $file_info = pathinfo($_FILES['profile_photo']['name']);
+            $file_extension = strtolower($file_info['extension']);
+            
+            // Validate file type
+            $allowed_types = ['jpg', 'jpeg', 'png', 'gif'];
+            if (!in_array($file_extension, $allowed_types)) {
+                $errors[] = "Only JPG, JPEG, PNG, and GIF files are allowed.";
+            }
+            
+            // Validate file size (800KB max)
+            if ($_FILES['profile_photo']['size'] > 800 * 1024) {
+                $errors[] = "File size must be less than 800KB.";
+            }
+            
+            if (empty($errors)) {
+                // Generate unique filename
+                $filename = uniqid() . '_' . time() . '.' . $file_extension;
+                $file_path = $upload_dir . $filename;
+                
+                if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $file_path)) {
+                    $profile_photo_path = 'uploads/profile_photos/' . $filename;
+                } else {
+                    $errors[] = "Failed to upload file.";
+                }
+            }
+        }
         
-        // Hash the password
-        $hashed_password = password_hash($generated_password, PASSWORD_DEFAULT);
-        
-        // Get role ID
+        if (empty($errors)) {
+            // Generate a random password
+            $generated_password = generateRandomPassword();
+            
+            // Hash the password
+            $hashed_password = password_hash($generated_password, PASSWORD_DEFAULT);
+            
+            // Get role ID
         $role_sql = "SELECT id FROM roles WHERE name = ? AND deleted_at IS NULL";
         $stmt = mysqli_prepare($conn, $role_sql);
         mysqli_stmt_bind_param($stmt, 's', $_POST['role']);
@@ -123,47 +161,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // Insert new user - handle null values properly
             if ($business_id && !empty($_POST['branch_id'])) {
                 // Both business_id and branch_id are provided
-                $insert_user = "INSERT INTO users (username, email, password, status, business_id, branch_id, created_at) 
-                               VALUES (?, ?, ?, 'active', ?, ?, NOW())";
+                $insert_user = "INSERT INTO users (username, email, password, status, business_id, branch_id, profile_photo, created_at) 
+                               VALUES (?, ?, ?, 'active', ?, ?, ?, NOW())";
                 $stmt = mysqli_prepare($conn, $insert_user);
-                mysqli_stmt_bind_param($stmt, 'sssii', 
+                mysqli_stmt_bind_param($stmt, 'sssiss', 
                     $_POST['username'], 
                     $_POST['email'], 
                     $hashed_password,
                     $business_id,
-                    $_POST['branch_id']
+                    $_POST['branch_id'],
+                    $profile_photo_path
                 );
             } elseif ($business_id) {
                 // Only business_id is provided
-                $insert_user = "INSERT INTO users (username, email, password, status, business_id, created_at) 
-                               VALUES (?, ?, ?, 'active', ?, NOW())";
+                $insert_user = "INSERT INTO users (username, email, password, status, business_id, profile_photo, created_at) 
+                               VALUES (?, ?, ?, 'active', ?, ?, NOW())";
                 $stmt = mysqli_prepare($conn, $insert_user);
-                mysqli_stmt_bind_param($stmt, 'sssi', 
+                mysqli_stmt_bind_param($stmt, 'sssis', 
                     $_POST['username'], 
                     $_POST['email'], 
                     $hashed_password,
-                    $business_id
+                    $business_id,
+                    $profile_photo_path
                 );
             } elseif (!empty($_POST['branch_id'])) {
                 // Only branch_id is provided
-                $insert_user = "INSERT INTO users (username, email, password, status, branch_id, created_at) 
-                               VALUES (?, ?, ?, 'active', ?, NOW())";
+                $insert_user = "INSERT INTO users (username, email, password, status, branch_id, profile_photo, created_at) 
+                               VALUES (?, ?, ?, 'active', ?, ?, NOW())";
                 $stmt = mysqli_prepare($conn, $insert_user);
-                mysqli_stmt_bind_param($stmt, 'sssi', 
+                mysqli_stmt_bind_param($stmt, 'sssis', 
                     $_POST['username'], 
                     $_POST['email'], 
                     $hashed_password,
-                    $_POST['branch_id']
+                    $_POST['branch_id'],
+                    $profile_photo_path
                 );
             } else {
                 // Neither business_id nor branch_id is provided
-                $insert_user = "INSERT INTO users (username, email, password, status, created_at) 
-                               VALUES (?, ?, ?, 'active', NOW())";
+                $insert_user = "INSERT INTO users (username, email, password, status, profile_photo, created_at) 
+                               VALUES (?, ?, ?, 'active', ?, NOW())";
                 $stmt = mysqli_prepare($conn, $insert_user);
-                mysqli_stmt_bind_param($stmt, 'sss', 
+                mysqli_stmt_bind_param($stmt, 'ssss', 
                     $_POST['username'], 
                     $_POST['email'], 
-                    $hashed_password
+                    $hashed_password,
+                    $profile_photo_path
                 );
             }
             
@@ -195,6 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $response['success'] = false;
             $response['message'] = "Invalid role selected.";
         }
+    }
     } else {
         $response['success'] = false;
         $response['message'] = implode(" ", $errors);
@@ -261,53 +304,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $response['success'] = false;
                     $response['message'] = "Email already exists.";
                 } else {
-                    // Start transaction
-                    mysqli_begin_transaction($conn);
-                    
-                    try {
-                        // Update user basic info - handle null values properly
-                        if (!empty($_POST['branch_id'])) {
-                            $update_user = "UPDATE users SET username = ?, email = ?, status = ?, branch_id = ?, updated_at = NOW() WHERE id = ?";
-                            $stmt = mysqli_prepare($conn, $update_user);
-                            mysqli_stmt_bind_param($stmt, 'sssii', 
-                                $_POST['username'], 
-                                $_POST['email'], 
-                                $_POST['status'],
-                                $_POST['branch_id'],
-                                $user_id
-                            );
-                        } else {
-                            $update_user = "UPDATE users SET username = ?, email = ?, status = ?, branch_id = NULL, updated_at = NOW() WHERE id = ?";
-                            $stmt = mysqli_prepare($conn, $update_user);
-                            mysqli_stmt_bind_param($stmt, 'sssi', 
-                                $_POST['username'], 
-                                $_POST['email'], 
-                                $_POST['status'],
-                                $user_id
-                            );
+                    // Handle file upload for edit
+                    $profile_photo_path = null;
+                    if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
+                        $upload_dir = '../uploads/profile_photos/';
+                        
+                        // Create directory if it doesn't exist
+                        if (!file_exists($upload_dir)) {
+                            mkdir($upload_dir, 0755, true);
                         }
+                        
+                        $file_info = pathinfo($_FILES['profile_photo']['name']);
+                        $file_extension = strtolower($file_info['extension']);
+                        
+                        // Validate file type
+                        $allowed_types = ['jpg', 'jpeg', 'png', 'gif'];
+                        if (!in_array($file_extension, $allowed_types)) {
+                            $response['success'] = false;
+                            $response['message'] = "Only JPG, JPEG, PNG, and GIF files are allowed.";
+                        }
+                        
+                        // Validate file size (800KB max)
+                        if ($_FILES['profile_photo']['size'] > 800 * 1024) {
+                            $response['success'] = false;
+                            $response['message'] = "File size must be less than 800KB.";
+                        }
+                        
+                        if ($response['success'] !== false) {
+                            // Generate unique filename
+                            $filename = uniqid() . '_' . time() . '.' . $file_extension;
+                            $file_path = $upload_dir . $filename;
+                            
+                            if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $file_path)) {
+                                $profile_photo_path = 'uploads/profile_photos/' . $filename;
+                            } else {
+                                $response['success'] = false;
+                                $response['message'] = "Failed to upload file.";
+                            }
+                        }
+                    }
+                    
+                    if ($response['success'] !== false) {
+                        // Start transaction
+                        mysqli_begin_transaction($conn);
+                        
+                        try {
+                            // Update user basic info - handle null values and profile photo
+                            if (!empty($_POST['branch_id']) && $profile_photo_path) {
+                                $update_user = "UPDATE users SET username = ?, email = ?, status = ?, branch_id = ?, profile_photo = ?, updated_at = NOW() WHERE id = ?";
+                                $stmt = mysqli_prepare($conn, $update_user);
+                                mysqli_stmt_bind_param($stmt, 'sssisi', 
+                                    $_POST['username'], 
+                                    $_POST['email'], 
+                                    $_POST['status'],
+                                    $_POST['branch_id'],
+                                    $profile_photo_path,
+                                    $user_id
+                                );
+                            } elseif (!empty($_POST['branch_id'])) {
+                                $update_user = "UPDATE users SET username = ?, email = ?, status = ?, branch_id = ?, updated_at = NOW() WHERE id = ?";
+                                $stmt = mysqli_prepare($conn, $update_user);
+                                mysqli_stmt_bind_param($stmt, 'sssii', 
+                                    $_POST['username'], 
+                                    $_POST['email'], 
+                                    $_POST['status'],
+                                    $_POST['branch_id'],
+                                    $user_id
+                                );
+                            } elseif ($profile_photo_path) {
+                                $update_user = "UPDATE users SET username = ?, email = ?, status = ?, profile_photo = ?, updated_at = NOW() WHERE id = ?";
+                                $stmt = mysqli_prepare($conn, $update_user);
+                                mysqli_stmt_bind_param($stmt, 'ssssi', 
+                                    $_POST['username'], 
+                                    $_POST['email'], 
+                                    $_POST['status'],
+                                    $profile_photo_path,
+                                    $user_id
+                                );
+                            } else {
+                                $update_user = "UPDATE users SET username = ?, email = ?, status = ?, branch_id = NULL, updated_at = NOW() WHERE id = ?";
+                                $stmt = mysqli_prepare($conn, $update_user);
+                                mysqli_stmt_bind_param($stmt, 'sssi', 
+                                    $_POST['username'], 
+                                    $_POST['email'], 
+                                    $_POST['status'],
+                                    $user_id
+                                );
+                            }
                         
                         if (!mysqli_stmt_execute($stmt)) {
                             throw new Exception("Error updating user: " . mysqli_error($conn));
                         }
                         mysqli_stmt_close($stmt);
-                        
-                        // Update password if provided
-                        if (!empty($_POST['new_password'])) {
-                            if (strlen($_POST['new_password']) < 6) {
-                                throw new Exception("Password must be at least 6 characters long.");
-                            }
-                            
-                            $hashed_password = password_hash($_POST['new_password'], PASSWORD_DEFAULT);
-                            $update_password = "UPDATE users SET password = ? WHERE id = ?";
-                            $stmt = mysqli_prepare($conn, $update_password);
-                            mysqli_stmt_bind_param($stmt, 'si', $hashed_password, $user_id);
-                            
-                            if (!mysqli_stmt_execute($stmt)) {
-                                throw new Exception("Error updating password: " . mysqli_error($conn));
-                            }
-                            mysqli_stmt_close($stmt);
-                        }
                         
                         // Update role if changed
                         if (!empty($_POST['role'])) {
@@ -357,11 +445,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         $response['message'] = $e->getMessage();
                     }
                 }
-                mysqli_stmt_close($stmt);
             }
-            mysqli_stmt_close($stmt);
         }
     }
+}
 }
 
 // Handle Delete User
@@ -864,7 +951,14 @@ if ($branches_result) {
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editUserModal<?php echo $user['id']; ?>">
+                                                            <a class="dropdown-item" href="#" data-bs-toggle="offcanvas" data-bs-target="#offcanvas_edit" 
+                                                               data-user-id="<?php echo $user['id']; ?>"
+                                                               data-username="<?php echo htmlspecialchars($user['username']); ?>"
+                                                               data-email="<?php echo htmlspecialchars($user['email']); ?>"
+                                                               data-role="<?php echo htmlspecialchars($user['role_name'] ?? ''); ?>"
+                                                               data-branch-id="<?php echo htmlspecialchars($user['branch_id'] ?? ''); ?>"
+                                                               data-status="<?php echo htmlspecialchars($user['status']); ?>"
+                                                               data-profile-photo="<?php echo htmlspecialchars($user['profile_photo'] ?? ''); ?>">
                                                                 <i class="bi bi-pencil me-2"></i>Edit
                                                             </a>
                                                         </li>
@@ -935,7 +1029,7 @@ if ($branches_result) {
                     </button>
                 </div>
                 <div class="offcanvas-body">
-                    <form action="manage_users.php" method="POST">
+                    <form action="manage_users.php" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="action" value="add_user">
                         <div>
                             <!-- Basic Info -->
@@ -951,7 +1045,7 @@ if ($branches_result) {
                                             <div class="d-inline-flex flex-column align-items-start">
                                                 <div class="drag-upload-btn btn btn-sm btn-primary position-relative mb-2">
                                                     <i class="bi bi-upload me-1"></i>Upload file
-                                                    <input type="file" class="form-control image-sign" multiple="">
+                                                    <input type="file" class="form-control image-sign" name="profile_photo" accept="image/*">
                                                 </div>
                                                 <span>JPG, GIF or PNG. Max size of 800K</span>
                                             </div>
@@ -1027,7 +1121,9 @@ if ($branches_result) {
                     </button>
                 </div>
                 <div class="offcanvas-body">
-                    <form action="manage_users.php" method="POST">
+                    <form action="manage_users.php" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="action" value="edit_user">
+                        <input type="hidden" name="user_id" id="edit_user_id">
                         <div>
                             <!-- Basic Info -->
                             <div>
@@ -1042,7 +1138,7 @@ if ($branches_result) {
                                             <div class="d-inline-flex flex-column align-items-start">
                                                 <div class="drag-upload-btn btn btn-sm btn-primary position-relative mb-2">
                                                     <i class="bi bi-upload me-1"></i>Upload file
-                                                    <input type="file" class="form-control image-sign" multiple="">
+                                                    <input type="file" class="form-control image-sign" name="profile_photo" accept="image/*">
                                                 </div>
                                                 <span>JPG, GIF or PNG. Max size of 800K</span>
                                             </div>
@@ -1050,14 +1146,8 @@ if ($branches_result) {
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label required-field">First Name</label>
-                                            <input type="text" class="form-control" name="first_name" value="Elizabeth Morgan" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label required-field">User Name</label>
-                                            <input type="text" class="form-control" name="username" value="Elizabeth@12" required>
+                                            <label class="form-label required-field">Username</label>
+                                            <input type="text" class="form-control" name="username" id="edit_username" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -1065,64 +1155,52 @@ if ($branches_result) {
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <label class="form-label required-field">Email</label>
                                                 <div class="form-check form-switch form-check-reverse">
-                                                    <input class="form-check-input" type="checkbox" id="switchCheckReverse2" checked>
+                                                    <input class="form-check-input" type="checkbox" id="switchCheckReverse2">
                                                     <label class="form-check-label" for="switchCheckReverse2">Email Opt Out</label>
                                                 </div>
                                             </div>
-                                            <input type="email" class="form-control" name="email" value="elizabeth@gmail.com" required>
+                                            <input type="email" class="form-control" name="email" id="edit_email" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label required-field">Role</label>
-                                            <input type="text" class="form-control" name="role" value="Software" required>
+                                            <select class="form-select" name="role" id="edit_role" required>
+                                                <option value="">Choose Role</option>
+                                                <?php foreach ($roles as $role): ?>
+                                                    <option value="<?php echo htmlspecialchars($role['name']); ?>">
+                                                        <?php echo htmlspecialchars($role['display_name'] ?? $role['name']); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label required-field">Phone 1</label>
-                                            <input type="tel" class="form-control phone" name="phone" required>
+                                            <label class="form-label">Branch</label>
+                                            <select class="form-select" name="branch_id" id="edit_branch_id">
+                                                <option value="">Choose Branch (Optional)</option>
+                                                <?php foreach ($branches as $branch): ?>
+                                                    <option value="<?php echo htmlspecialchars($branch['id']); ?>">
+                                                        <?php echo htmlspecialchars($branch['branch_name']); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label">Phone 2</label>
-                                            <input type="tel" class="form-control phone" name="phone2">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label">Password</label>
-                                            <div class="input-group input-group-flat pass-group">
-                                                <input type="password" class="form-control pass-input" name="password">
-                                                <span class="input-group-text toggle-password">
-                                                    <i class="bi bi-eye-off"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label class="form-label required-field">Repeat Password</label>
-                                            <div class="input-group input-group-flat pass-group">
-                                                <input type="password" class="form-control pass-input" name="password_confirm" required>
-                                                <span class="input-group-text toggle-password">
-                                                    <i class="bi bi-eye-off"></i>
-                                                </span>
-                                            </div>
+                                            <label class="form-label">Status</label>
+                                            <select class="form-select" name="status" id="edit_status">
+                                                <option value="active">Active</option>
+                                                <option value="inactive">Inactive</option>
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="col-md-12">
-                                        <div class="mb-3">
-                                            <label class="form-label required-field">Location</label>
-                                            <select class="form-select" name="location" required>
-                                                <option value="">Choose</option>
-                                                <option value="germany">Germany</option>
-                                                <option value="usa" selected>USA</option>
-                                                <option value="canada">Canada</option>
-                                                <option value="india">India</option>
-                                                <option value="china">China</option>
-                                            </select>
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            <strong>Note:</strong> You cannot change the password from this form.
                                         </div>
                                     </div>
                                 </div>
@@ -1555,32 +1633,80 @@ if ($branches_result) {
             return emailRegex.test(email);
         }
 
-            // Handle all offcanvas modals
-            const allOffcanvas = document.querySelectorAll('.offcanvas');
-            allOffcanvas.forEach(offcanvas => {
-                offcanvas.addEventListener('hidden.bs.offcanvas', function () {
-                    // Clean up backdrop and body classes
-                    document.body.classList.remove('modal-open');
-                    const backdrop = document.querySelector('.offcanvas-backdrop');
-                    if (backdrop) {
-                        backdrop.remove();
-                    }
-                });
-            });
-
-            // Handle regular modals as well
-            const allModals = document.querySelectorAll('.modal');
-            allModals.forEach(modal => {
-                modal.addEventListener('hidden.bs.modal', function () {
-                    // Clean up backdrop and body classes
-                    document.body.classList.remove('modal-open');
-                    const backdrop = document.querySelector('.modal-backdrop');
-                    if (backdrop) {
-                        backdrop.remove();
-                    }
-                });
+        // Handle image preview
+        const imageInputs = document.querySelectorAll('input[type="file"][accept="image/*"]');
+        imageInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const avatar = input.closest('.d-flex').querySelector('.avatar');
+                        if (avatar) {
+                            avatar.innerHTML = `<img src="${e.target.result}" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
             });
         });
+
+        // Handle Edit User form population
+        const editButtons = document.querySelectorAll('[data-bs-target^="#editUserModal"]');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                const username = this.getAttribute('data-username');
+                const email = this.getAttribute('data-email');
+                const role = this.getAttribute('data-role');
+                const branchId = this.getAttribute('data-branch-id');
+                const status = this.getAttribute('data-status');
+                const profilePhoto = this.getAttribute('data-profile-photo');
+                
+                // Populate the edit form
+                document.getElementById('edit_user_id').value = userId;
+                document.getElementById('edit_username').value = username;
+                document.getElementById('edit_email').value = email;
+                document.getElementById('edit_role').value = role;
+                document.getElementById('edit_branch_id').value = branchId;
+                document.getElementById('edit_status').value = status;
+                
+                // Update avatar if profile photo exists
+                if (profilePhoto) {
+                    const avatar = document.querySelector('#offcanvas_edit .avatar');
+                    if (avatar) {
+                        avatar.innerHTML = `<img src="../${profilePhoto}" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                    }
+                }
+            });
+        });
+
+        // Handle all offcanvas modals
+        const allOffcanvas = document.querySelectorAll('.offcanvas');
+        allOffcanvas.forEach(offcanvas => {
+            offcanvas.addEventListener('hidden.bs.offcanvas', function () {
+                // Clean up backdrop and body classes
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.offcanvas-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+            });
+        });
+
+        // Handle regular modals as well
+        const allModals = document.querySelectorAll('.modal');
+        allModals.forEach(modal => {
+            modal.addEventListener('hidden.bs.modal', function () {
+                // Clean up backdrop and body classes
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+            });
+        });
+    });
     </script>
 </body>
 </html>
