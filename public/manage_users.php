@@ -237,11 +237,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $response['success'] = false;
             $response['message'] = "Invalid role selected.";
         }
-    }
     } else {
         $response['success'] = false;
         $response['message'] = implode(" ", $errors);
     }
+}
 }
 
 // Function to generate random password
@@ -271,7 +271,7 @@ function sendUserCredentials($email, $username, $password) {
 
 // Handle Edit User form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'edit_user') {
-    $response = array();
+    $response = array('success' => true, 'message' => '');
     
     if (empty($_POST['user_id'])) {
         $response['success'] = false;
@@ -330,7 +330,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                             $response['message'] = "File size must be less than 800KB.";
                         }
                         
-                        if ($response['success'] !== false) {
+                        if ($response['success']) {
                             // Generate unique filename
                             $filename = uniqid() . '_' . time() . '.' . $file_extension;
                             $file_path = $upload_dir . $filename;
@@ -344,7 +344,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         }
                     }
                     
-                    if ($response['success'] !== false) {
+                    if ($response['success']) {
                         // Start transaction
                         mysqli_begin_transaction($conn);
                         
@@ -450,7 +450,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 }
-
 // Handle Delete User
 if (isset($_GET['delete_user'])) {
     $user_id = $_GET['delete_user'];
@@ -1538,175 +1537,175 @@ if ($branches_result) {
                 showEntries(10);
             }
 
-                    // Modal backdrop and close handling
-        const addUserModal = document.getElementById('offcanvas_add');
-        if (addUserModal) {
-            addUserModal.addEventListener('hidden.bs.offcanvas', function () {
-                // Reset form when modal is closed
-                const form = addUserModal.querySelector('form');
-                if (form) {
-                    form.reset();
-                    // Clear any validation messages
-                    const alerts = form.querySelectorAll('.alert-danger');
-                    alerts.forEach(alert => alert.remove());
-                }
-                // Remove any backdrop issues
-                document.body.classList.remove('modal-open');
-                const backdrop = document.querySelector('.offcanvas-backdrop');
-                if (backdrop) {
-                    backdrop.remove();
-                }
-            });
-
-            addUserModal.addEventListener('show.bs.offcanvas', function () {
-                // Ensure proper backdrop handling
-                document.body.classList.add('modal-open');
-            });
-
-            // Form validation
-            const addUserForm = addUserModal.querySelector('form');
-            if (addUserForm) {
-                addUserForm.addEventListener('submit', function(e) {
-                    const username = this.querySelector('input[name="username"]').value.trim();
-                    const email = this.querySelector('input[name="email"]').value.trim();
-                    const role = this.querySelector('select[name="role"]').value;
-                    
-                    let hasErrors = false;
-                    
-                    // Clear previous error messages
-                    const existingAlerts = this.querySelectorAll('.alert-danger');
-                    existingAlerts.forEach(alert => alert.remove());
-                    
-                    if (!username) {
-                        showFormError(this, 'Username is required.');
-                        hasErrors = true;
+            // Modal backdrop and close handling
+            const addUserModal = document.getElementById('offcanvas_add');
+            if (addUserModal) {
+                addUserModal.addEventListener('hidden.bs.offcanvas', function () {
+                    // Reset form when modal is closed
+                    const form = addUserModal.querySelector('form');
+                    if (form) {
+                        form.reset();
+                        // Clear any validation messages
+                        const alerts = form.querySelectorAll('.alert-danger');
+                        alerts.forEach(alert => alert.remove());
                     }
-                    
-                    if (!email) {
-                        showFormError(this, 'Email is required.');
-                        hasErrors = true;
-                    } else if (!isValidEmail(email)) {
-                        showFormError(this, 'Please enter a valid email address.');
-                        hasErrors = true;
+                    // Remove any backdrop issues
+                    document.body.classList.remove('modal-open');
+                    const backdrop = document.querySelector('.offcanvas-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
                     }
-                    
-                    if (!role) {
-                        showFormError(this, 'Please select a role.');
-                        hasErrors = true;
-                    }
-                    
-                    if (hasErrors) {
-                        e.preventDefault();
-                        return false;
-                    }
-                    
-                    // Show loading state
-                    const submitBtn = this.querySelector('button[type="submit"]');
-                    const originalText = submitBtn.innerHTML;
-                    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Creating User...';
-                    submitBtn.disabled = true;
-                    
-                    // Re-enable after a delay in case of errors
-                    setTimeout(() => {
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                    }, 5000);
                 });
-            }
-        }
 
-        // Function to show form errors
-        function showFormError(form, message) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
-            alertDiv.innerHTML = `
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            `;
-            form.insertBefore(alertDiv, form.firstChild);
-        }
+                addUserModal.addEventListener('show.bs.offcanvas', function () {
+                    // Ensure proper backdrop handling
+                    document.body.classList.add('modal-open');
+                });
 
-        // Function to validate email
-        function isValidEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email);
-        }
-
-        // Handle image preview
-        const imageInputs = document.querySelectorAll('input[type="file"][accept="image/*"]');
-        imageInputs.forEach(input => {
-            input.addEventListener('change', function() {
-                const file = this.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const avatar = input.closest('.d-flex').querySelector('.avatar');
-                        if (avatar) {
-                            avatar.innerHTML = `<img src="${e.target.result}" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                // Form validation
+                const addUserForm = addUserModal.querySelector('form');
+                if (addUserForm) {
+                    addUserForm.addEventListener('submit', function(e) {
+                        const username = this.querySelector('input[name="username"]').value.trim();
+                        const email = this.querySelector('input[name="email"]').value.trim();
+                        const role = this.querySelector('select[name="role"]').value;
+                        
+                        let hasErrors = false;
+                        
+                        // Clear previous error messages
+                        const existingAlerts = this.querySelectorAll('.alert-danger');
+                        existingAlerts.forEach(alert => alert.remove());
+                        
+                        if (!username) {
+                            showFormError(this, 'Username is required.');
+                            hasErrors = true;
                         }
-                    };
-                    reader.readAsDataURL(file);
+                        
+                        if (!email) {
+                            showFormError(this, 'Email is required.');
+                            hasErrors = true;
+                        } else if (!isValidEmail(email)) {
+                            showFormError(this, 'Please enter a valid email address.');
+                            hasErrors = true;
+                        }
+                        
+                        if (!role) {
+                            showFormError(this, 'Please select a role.');
+                            hasErrors = true;
+                        }
+                        
+                        if (hasErrors) {
+                            e.preventDefault();
+                            return false;
+                        }
+                        
+                        // Show loading state
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        const originalText = submitBtn.innerHTML;
+                        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Creating User...';
+                        submitBtn.disabled = true;
+                        
+                        // Re-enable after a delay in case of errors
+                        setTimeout(() => {
+                            submitBtn.innerHTML = originalText;
+                            submitBtn.disabled = false;
+                        }, 5000);
+                    });
                 }
-            });
-        });
+            }
 
-        // Handle Edit User form population
-        const editButtons = document.querySelectorAll('[data-bs-target^="#editUserModal"]');
-        editButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const userId = this.getAttribute('data-user-id');
-                const username = this.getAttribute('data-username');
-                const email = this.getAttribute('data-email');
-                const role = this.getAttribute('data-role');
-                const branchId = this.getAttribute('data-branch-id');
-                const status = this.getAttribute('data-status');
-                const profilePhoto = this.getAttribute('data-profile-photo');
-                
-                // Populate the edit form
-                document.getElementById('edit_user_id').value = userId;
-                document.getElementById('edit_username').value = username;
-                document.getElementById('edit_email').value = email;
-                document.getElementById('edit_role').value = role;
-                document.getElementById('edit_branch_id').value = branchId;
-                document.getElementById('edit_status').value = status;
-                
-                // Update avatar if profile photo exists
-                if (profilePhoto) {
-                    const avatar = document.querySelector('#offcanvas_edit .avatar');
-                    if (avatar) {
-                        avatar.innerHTML = `<img src="../${profilePhoto}" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+            // Function to show form errors
+            function showFormError(form, message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                form.insertBefore(alertDiv, form.firstChild);
+            }
+
+            // Function to validate email
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+
+            // Handle image preview
+            const imageInputs = document.querySelectorAll('input[type="file"][accept="image/*"]');
+            imageInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const avatar = input.closest('.d-flex').querySelector('.avatar');
+                            if (avatar) {
+                                avatar.innerHTML = `<img src="${e.target.result}" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                            }
+                        };
+                        reader.readAsDataURL(file);
                     }
-                }
+                });
             });
-        });
 
-        // Handle all offcanvas modals
-        const allOffcanvas = document.querySelectorAll('.offcanvas');
-        allOffcanvas.forEach(offcanvas => {
-            offcanvas.addEventListener('hidden.bs.offcanvas', function () {
-                // Clean up backdrop and body classes
-                document.body.classList.remove('modal-open');
-                const backdrop = document.querySelector('.offcanvas-backdrop');
-                if (backdrop) {
-                    backdrop.remove();
-                }
+            // Handle Edit User form population
+            const editButtons = document.querySelectorAll('[data-bs-target="#offcanvas_edit"]');
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-user-id');
+                    const username = this.getAttribute('data-username');
+                    const email = this.getAttribute('data-email');
+                    const role = this.getAttribute('data-role');
+                    const branchId = this.getAttribute('data-branch-id');
+                    const status = this.getAttribute('data-status');
+                    const profilePhoto = this.getAttribute('data-profile-photo');
+                    
+                    // Populate the edit form
+                    document.getElementById('edit_user_id').value = userId;
+                    document.getElementById('edit_username').value = username;
+                    document.getElementById('edit_email').value = email;
+                    document.getElementById('edit_role').value = role;
+                    document.getElementById('edit_branch_id').value = branchId;
+                    document.getElementById('edit_status').value = status;
+                    
+                    // Update avatar if profile photo exists
+                    if (profilePhoto) {
+                        const avatar = document.querySelector('#offcanvas_edit .avatar');
+                        if (avatar) {
+                            avatar.innerHTML = `<img src="../${profilePhoto}" alt="Profile Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                        }
+                    }
+                });
             });
-        });
 
-        // Handle regular modals as well
-        const allModals = document.querySelectorAll('.modal');
-        allModals.forEach(modal => {
-            modal.addEventListener('hidden.bs.modal', function () {
-                // Clean up backdrop and body classes
-                document.body.classList.remove('modal-open');
-                const backdrop = document.querySelector('.modal-backdrop');
-                if (backdrop) {
-                    backdrop.remove();
-                }
+            // Handle all offcanvas modals
+            const allOffcanvas = document.querySelectorAll('.offcanvas');
+            allOffcanvas.forEach(offcanvas => {
+                offcanvas.addEventListener('hidden.bs.offcanvas', function () {
+                    // Clean up backdrop and body classes
+                    document.body.classList.remove('modal-open');
+                    const backdrop = document.querySelector('.offcanvas-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                });
+            });
+
+            // Handle regular modals as well
+            const allModals = document.querySelectorAll('.modal');
+            allModals.forEach(modal => {
+                modal.addEventListener('hidden.bs.modal', function () {
+                    // Clean up backdrop and body classes
+                    document.body.classList.remove('modal-open');
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                });
             });
         });
-    });
     </script>
 </body>
 </html>
