@@ -12,18 +12,25 @@ if (!has_permission('quality_tests.view')) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_test'])) {
         $branch_id = intval($_POST['branch_id']);
+        $fuel_type_id = intval($_POST['fuel_type_id']);
+        $tank_id = isset($_POST['tank_id']) ? intval($_POST['tank_id']) : null;
         $test_date = mysqli_real_escape_string($conn, $_POST['test_date']);
-        $fuel_type = mysqli_real_escape_string($conn, $_POST['fuel_type']);
         $test_type = mysqli_real_escape_string($conn, $_POST['test_type']);
-        $result = mysqli_real_escape_string($conn, $_POST['result']);
-        $tested_by = isset($_POST['tested_by']) ? intval($_POST['tested_by']) : null;
-        $remarks = mysqli_real_escape_string($conn, $_POST['remarks']);
-        $status = 'pending';
+        $density = isset($_POST['density']) ? floatval($_POST['density']) : null;
+        $octane_rating = isset($_POST['octane_rating']) ? intval($_POST['octane_rating']) : null;
+        $water_content = isset($_POST['water_content']) ? floatval($_POST['water_content']) : null;
+        $contamination_level = isset($_POST['contamination_level']) ? mysqli_real_escape_string($conn, $_POST['contamination_level']) : null;
+        $color_grade = isset($_POST['color_grade']) ? mysqli_real_escape_string($conn, $_POST['color_grade']) : null;
+        $test_result = mysqli_real_escape_string($conn, $_POST['test_result']);
+        $tested_by = isset($_POST['tested_by']) ? mysqli_real_escape_string($conn, $_POST['tested_by']) : null;
+        $lab_reference = isset($_POST['lab_reference']) ? mysqli_real_escape_string($conn, $_POST['lab_reference']) : null;
+        $notes = isset($_POST['notes']) ? mysqli_real_escape_string($conn, $_POST['notes']) : null;
 
-        $sql = "INSERT INTO fuel_quality_tests (branch_id, test_date, fuel_type, test_type, result, tested_by, remarks, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO fuel_quality_tests (branch_id, fuel_type_id, tank_id, test_date, test_type, density, octane_rating, water_content, contamination_level, color_grade, test_result, tested_by, lab_reference, notes) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = mysqli_prepare($conn, $sql);
         if ($stmt) {
-            mysqli_stmt_bind_param($stmt, 'issssiss', $branch_id, $test_date, $fuel_type, $test_type, $result, $tested_by, $remarks, $status);
+            mysqli_stmt_bind_param($stmt, 'iiisssdssssss', $branch_id, $fuel_type_id, $tank_id, $test_date, $test_type, $density, $octane_rating, $water_content, $contamination_level, $color_grade, $test_result, $tested_by, $lab_reference, $notes);
             if (mysqli_stmt_execute($stmt)) {
                 $_SESSION['feedback'] = ['type' => 'success', 'message' => 'Fuel quality test added successfully.'];
             } else {
@@ -37,15 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (isset($_POST['update_test'])) {
         $test_id = intval($_POST['test_id']);
-        $status = mysqli_real_escape_string($conn, $_POST['status']);
-        $remarks = mysqli_real_escape_string($conn, $_POST['remarks']);
+        $test_result = mysqli_real_escape_string($conn, $_POST['test_result']);
+        $notes = mysqli_real_escape_string($conn, $_POST['notes']);
 
-        $sql = "UPDATE fuel_quality_tests SET status = ?, remarks = ? WHERE id = ?";
+        $sql = "UPDATE fuel_quality_tests SET test_result = ?, notes = ? WHERE id = ?";
         $stmt = mysqli_prepare($conn, $sql);
         if ($stmt) {
-            mysqli_stmt_bind_param($stmt, 'ssi', $status, $remarks, $test_id);
+            mysqli_stmt_bind_param($stmt, 'ssi', $test_result, $notes, $test_id);
             if (mysqli_stmt_execute($stmt)) {
-                $_SESSION['feedback'] = ['type' => 'success', 'message' => 'Test status updated successfully.'];
+                $_SESSION['feedback'] = ['type' => 'success', 'message' => 'Test result updated successfully.'];
             } else {
                 $_SESSION['feedback'] = ['type' => 'danger', 'message' => 'Error updating test: ' . mysqli_error($conn)];
             }
@@ -79,18 +86,26 @@ if ($user_branch_id) {
     }
 }
 
-// Fetch users for assignment dropdown
-$users = [];
-$user_sql = "SELECT id, first_name, last_name, employee_id FROM users WHERE deleted_at IS NULL ORDER BY first_name, last_name";
-$user_result = mysqli_query($conn, $user_sql);
-while ($row = mysqli_fetch_assoc($user_result)) {
-    $users[] = $row;
+// Fetch fuel types for dropdown
+$fuel_types = [];
+$fuel_type_sql = "SELECT id, name, code FROM fuel_types WHERE deleted_at IS NULL ORDER BY name";
+$fuel_type_result = mysqli_query($conn, $fuel_type_sql);
+while ($row = mysqli_fetch_assoc($fuel_type_result)) {
+    $fuel_types[] = $row;
+}
+
+// Fetch tanks for dropdown
+$tanks = [];
+$tank_sql = "SELECT id, tank_number, fuel_type_id FROM storage_tanks WHERE deleted_at IS NULL ORDER BY tank_number";
+$tank_result = mysqli_query($conn, $tank_sql);
+while ($row = mysqli_fetch_assoc($tank_result)) {
+    $tanks[] = $row;
 }
 
 // Get selected branch and filters
 $selected_branch_id = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : ($user_branch_id ?? ($branches[0]['id'] ?? null));
-$status_filter = $_GET['status'] ?? '';
-$fuel_type_filter = $_GET['fuel_type'] ?? '';
+$test_result_filter = $_GET['test_result'] ?? '';
+$fuel_type_filter = $_GET['fuel_type_id'] ?? '';
 $test_type_filter = $_GET['test_type'] ?? '';
 
 // Build query for test records
@@ -103,15 +118,15 @@ if ($selected_branch_id) {
     $params[] = $selected_branch_id;
     $param_types .= 'i';
 }
-if ($status_filter) {
-    $where_conditions[] = "qt.status = ?";
-    $params[] = $status_filter;
+if ($test_result_filter) {
+    $where_conditions[] = "qt.test_result = ?";
+    $params[] = $test_result_filter;
     $param_types .= 's';
 }
 if ($fuel_type_filter) {
-    $where_conditions[] = "qt.fuel_type = ?";
+    $where_conditions[] = "qt.fuel_type_id = ?";
     $params[] = $fuel_type_filter;
-    $param_types .= 's';
+    $param_types .= 'i';
 }
 if ($test_type_filter) {
     $where_conditions[] = "qt.test_type = ?";
@@ -120,7 +135,13 @@ if ($test_type_filter) {
 }
 $where_clause = implode(' AND ', $where_conditions);
 
-$sql = "SELECT qt.*, b.branch_name, u.first_name, u.last_name, u.employee_id FROM fuel_quality_tests qt LEFT JOIN branches b ON qt.branch_id = b.id LEFT JOIN users u ON qt.tested_by = u.id WHERE $where_clause ORDER BY qt.test_date DESC, qt.id DESC";
+$sql = "SELECT qt.*, b.branch_name, ft.name as fuel_type_name, st.tank_number 
+        FROM fuel_quality_tests qt 
+        LEFT JOIN branches b ON qt.branch_id = b.id 
+        LEFT JOIN fuel_types ft ON qt.fuel_type_id = ft.id 
+        LEFT JOIN storage_tanks st ON qt.tank_id = st.id 
+        WHERE $where_clause 
+        ORDER BY qt.test_date DESC, qt.id DESC";
 $stmt = mysqli_prepare($conn, $sql);
 if ($stmt && !empty($params)) {
     mysqli_stmt_bind_param($stmt, $param_types, ...$params);
@@ -142,10 +163,9 @@ while ($row = mysqli_fetch_assoc($result)) {
     <link href="assets/css/bootstrap-icons.css" rel="stylesheet">
     <link href="assets/css/datatables.min.css" rel="stylesheet">
     <style>
-        .status-pending { background-color: #fff3cd; }
-        .status-in_progress { background-color: #cce7ff; }
-        .status-passed { background-color: #d1e7dd; }
-        .status-failed { background-color: #f8d7da; }
+        .result-pass { background-color: #d1e7dd; }
+        .result-fail { background-color: #f8d7da; }
+        .result-marginal { background-color: #fff3cd; }
     </style>
 </head>
 <body>
@@ -193,33 +213,33 @@ while ($row = mysqli_fetch_assoc($result)) {
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="status" class="form-label">Status</label>
-                                <select class="form-select" id="status" name="status">
-                                    <option value="">All Status</option>
-                                    <option value="pending" <?php echo ($status_filter == 'pending') ? 'selected' : ''; ?>>Pending</option>
-                                    <option value="in_progress" <?php echo ($status_filter == 'in_progress') ? 'selected' : ''; ?>>In Progress</option>
-                                    <option value="passed" <?php echo ($status_filter == 'passed') ? 'selected' : ''; ?>>Passed</option>
-                                    <option value="failed" <?php echo ($status_filter == 'failed') ? 'selected' : ''; ?>>Failed</option>
+                                <label for="test_result" class="form-label">Test Result</label>
+                                <select class="form-select" id="test_result" name="test_result">
+                                    <option value="">All Results</option>
+                                    <option value="pass" <?php echo ($test_result_filter == 'pass') ? 'selected' : ''; ?>>Pass</option>
+                                    <option value="fail" <?php echo ($test_result_filter == 'fail') ? 'selected' : ''; ?>>Fail</option>
+                                    <option value="marginal" <?php echo ($test_result_filter == 'marginal') ? 'selected' : ''; ?>>Marginal</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label for="fuel_type" class="form-label">Fuel Type</label>
-                                <select class="form-select" id="fuel_type" name="fuel_type">
+                                <label for="fuel_type_id" class="form-label">Fuel Type</label>
+                                <select class="form-select" id="fuel_type_id" name="fuel_type_id">
                                     <option value="">All Types</option>
-                                    <option value="petrol" <?php echo ($fuel_type_filter == 'petrol') ? 'selected' : ''; ?>>Petrol</option>
-                                    <option value="diesel" <?php echo ($fuel_type_filter == 'diesel') ? 'selected' : ''; ?>>Diesel</option>
-                                    <option value="kerosene" <?php echo ($fuel_type_filter == 'kerosene') ? 'selected' : ''; ?>>Kerosene</option>
+                                    <?php foreach ($fuel_types as $fuel_type): ?>
+                                        <option value="<?php echo $fuel_type['id']; ?>" <?php echo ($fuel_type_filter == $fuel_type['id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($fuel_type['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="col-md-3">
                                 <label for="test_type" class="form-label">Test Type</label>
                                 <select class="form-select" id="test_type" name="test_type">
                                     <option value="">All Types</option>
-                                    <option value="density" <?php echo ($test_type_filter == 'density') ? 'selected' : ''; ?>>Density</option>
-                                    <option value="water" <?php echo ($test_type_filter == 'water') ? 'selected' : ''; ?>>Water</option>
-                                    <option value="color" <?php echo ($test_type_filter == 'color') ? 'selected' : ''; ?>>Color</option>
-                                    <option value="sulphur" <?php echo ($test_type_filter == 'sulphur') ? 'selected' : ''; ?>>Sulphur</option>
-                                    <option value="other" <?php echo ($test_type_filter == 'other') ? 'selected' : ''; ?>>Other</option>
+                                    <option value="routine" <?php echo ($test_type_filter == 'routine') ? 'selected' : ''; ?>>Routine</option>
+                                    <option value="delivery" <?php echo ($test_type_filter == 'delivery') ? 'selected' : ''; ?>>Delivery</option>
+                                    <option value="complaint" <?php echo ($test_type_filter == 'complaint') ? 'selected' : ''; ?>>Complaint</option>
+                                    <option value="regulatory" <?php echo ($test_type_filter == 'regulatory') ? 'selected' : ''; ?>>Regulatory</option>
                                 </select>
                             </div>
                             <div class="col-12">
@@ -245,48 +265,42 @@ while ($row = mysqli_fetch_assoc($result)) {
                                     <tr>
                                         <th>Date</th>
                                         <th>Fuel Type</th>
+                                        <th>Tank</th>
                                         <th>Test Type</th>
                                         <th>Result</th>
-                                        <th>Status</th>
+                                        <th>Density</th>
+                                        <th>Octane</th>
                                         <th>Branch</th>
                                         <th>Tested By</th>
-                                        <th>Remarks</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($test_records as $record): ?>
-                                        <tr class="status-<?php echo $record['status']; ?>">
+                                        <tr class="result-<?php echo $record['test_result']; ?>">
                                             <td><?php echo date('M d, Y', strtotime($record['test_date'])); ?></td>
-                                            <td><?php echo ucfirst($record['fuel_type']); ?></td>
+                                            <td><?php echo htmlspecialchars($record['fuel_type_name']); ?></td>
+                                            <td><?php echo $record['tank_number'] ? 'Tank ' . $record['tank_number'] : 'N/A'; ?></td>
                                             <td><?php echo ucfirst($record['test_type']); ?></td>
-                                            <td><?php echo htmlspecialchars($record['result']); ?></td>
                                             <td>
                                                 <span class="badge bg-<?php 
-                                                    echo $record['status'] === 'passed' ? 'success' : 
-                                                        ($record['status'] === 'failed' ? 'danger' : 
-                                                        ($record['status'] === 'in_progress' ? 'primary' : 'warning')); 
+                                                    echo $record['test_result'] === 'pass' ? 'success' : 
+                                                        ($record['test_result'] === 'fail' ? 'danger' : 'warning'); 
                                                 ?>">
-                                                    <?php echo ucfirst(str_replace('_', ' ', $record['status'])); ?>
+                                                    <?php echo ucfirst($record['test_result']); ?>
                                                 </span>
                                             </td>
+                                            <td><?php echo $record['density'] ? number_format($record['density'], 4) : 'N/A'; ?></td>
+                                            <td><?php echo $record['octane_rating'] ? $record['octane_rating'] : 'N/A'; ?></td>
                                             <td><?php echo htmlspecialchars($record['branch_name']); ?></td>
-                                            <td>
-                                                <?php if ($record['first_name']): ?>
-                                                    <?php echo htmlspecialchars($record['first_name'] . ' ' . $record['last_name']); ?>
-                                                    <br><small class="text-muted"><?php echo $record['employee_id']; ?></small>
-                                                <?php else: ?>
-                                                    <span class="text-muted">Not assigned</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td><?php echo htmlspecialchars($record['remarks']); ?></td>
+                                            <td><?php echo htmlspecialchars($record['tested_by']); ?></td>
                                             <td>
                                                 <div class="btn-group" role="group">
                                                     <button type="button" class="btn btn-sm btn-outline-primary" 
                                                             data-bs-toggle="modal" data-bs-target="#updateTestModal" 
                                                             data-id="<?php echo $record['id']; ?>"
-                                                            data-status="<?php echo $record['status']; ?>"
-                                                            data-remarks="<?php echo htmlspecialchars($record['remarks'], ENT_QUOTES); ?>">
+                                                            data-result="<?php echo $record['test_result']; ?>"
+                                                            data-notes="<?php echo htmlspecialchars($record['notes'], ENT_QUOTES); ?>">
                                                         Update
                                                     </button>
                                                     <button type="button" class="btn btn-sm btn-outline-info" 
@@ -328,51 +342,95 @@ while ($row = mysqli_fetch_assoc($result)) {
                             </select>
                         </div>
                         <div class="col-md-6">
+                            <label for="fuel_type_id" class="form-label">Fuel Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="fuel_type_id" name="fuel_type_id" required>
+                                <option value="">Select Fuel Type</option>
+                                <?php foreach ($fuel_types as $fuel_type): ?>
+                                    <option value="<?php echo $fuel_type['id']; ?>"><?php echo htmlspecialchars($fuel_type['name'] . ' (' . $fuel_type['code'] . ')'); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="tank_id" class="form-label">Tank</label>
+                            <select class="form-select" id="tank_id" name="tank_id">
+                                <option value="">Select Tank</option>
+                                <?php foreach ($tanks as $tank): ?>
+                                    <option value="<?php echo $tank['id']; ?>">Tank <?php echo $tank['tank_number']; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
                             <label for="test_date" class="form-label">Test Date <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" id="test_date" name="test_date" required>
                         </div>
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-6">
-                            <label for="fuel_type" class="form-label">Fuel Type <span class="text-danger">*</span></label>
-                            <select class="form-select" id="fuel_type" name="fuel_type" required>
-                                <option value="">Select Type</option>
-                                <option value="petrol">Petrol</option>
-                                <option value="diesel">Diesel</option>
-                                <option value="kerosene">Kerosene</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
                             <label for="test_type" class="form-label">Test Type <span class="text-danger">*</span></label>
                             <select class="form-select" id="test_type" name="test_type" required>
                                 <option value="">Select Type</option>
-                                <option value="density">Density</option>
-                                <option value="water">Water</option>
-                                <option value="color">Color</option>
-                                <option value="sulphur">Sulphur</option>
-                                <option value="other">Other</option>
+                                <option value="routine">Routine</option>
+                                <option value="delivery">Delivery</option>
+                                <option value="complaint">Complaint</option>
+                                <option value="regulatory">Regulatory</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="test_result" class="form-label">Test Result <span class="text-danger">*</span></label>
+                            <select class="form-select" id="test_result" name="test_result" required>
+                                <option value="">Select Result</option>
+                                <option value="pass">Pass</option>
+                                <option value="fail">Fail</option>
+                                <option value="marginal">Marginal</option>
                             </select>
                         </div>
                     </div>
                     <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label for="density" class="form-label">Density</label>
+                            <input type="number" class="form-control" id="density" name="density" step="0.0001" min="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="octane_rating" class="form-label">Octane Rating</label>
+                            <input type="number" class="form-control" id="octane_rating" name="octane_rating" min="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="water_content" class="form-label">Water Content</label>
+                            <input type="number" class="form-control" id="water_content" name="water_content" step="0.001" min="0">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
                         <div class="col-md-6">
-                            <label for="result" class="form-label">Result <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="result" name="result" required>
+                            <label for="contamination_level" class="form-label">Contamination Level</label>
+                            <select class="form-select" id="contamination_level" name="contamination_level">
+                                <option value="">Select Level</option>
+                                <option value="clean">Clean</option>
+                                <option value="slight">Slight</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="heavy">Heavy</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
+                            <label for="color_grade" class="form-label">Color Grade</label>
+                            <input type="text" class="form-control" id="color_grade" name="color_grade">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
                             <label for="tested_by" class="form-label">Tested By</label>
-                            <select class="form-select" id="tested_by" name="tested_by">
-                                <option value="">Select Employee</option>
-                                <?php foreach ($users as $user): ?>
-                                    <option value="<?php echo $user['id']; ?>"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name'] . ' (' . $user['employee_id'] . ')'); ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                            <input type="text" class="form-control" id="tested_by" name="tested_by">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lab_reference" class="form-label">Lab Reference</label>
+                            <input type="text" class="form-control" id="lab_reference" name="lab_reference">
                         </div>
                     </div>
                     <div class="row mt-3">
                         <div class="col-12">
-                            <label for="remarks" class="form-label">Remarks</label>
-                            <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
                         </div>
                     </div>
                 </div>
@@ -389,29 +447,28 @@ while ($row = mysqli_fetch_assoc($result)) {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Update Test Status</h5>
+                <h5 class="modal-title">Update Test Result</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
                 <div class="modal-body">
                     <input type="hidden" id="test_id" name="test_id">
                     <div class="mb-3">
-                        <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                        <select class="form-select" id="status" name="status" required>
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="passed">Passed</option>
-                            <option value="failed">Failed</option>
+                        <label for="test_result" class="form-label">Test Result <span class="text-danger">*</span></label>
+                        <select class="form-select" id="test_result" name="test_result" required>
+                            <option value="pass">Pass</option>
+                            <option value="fail">Fail</option>
+                            <option value="marginal">Marginal</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="remarks" class="form-label">Remarks</label>
-                        <textarea class="form-control" id="update_remarks" name="remarks" rows="2"></textarea>
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="update_notes" name="notes" rows="2"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" name="update_test" class="btn btn-primary">Update Status</button>
+                    <button type="submit" name="update_test" class="btn btn-primary">Update Result</button>
                 </div>
             </form>
         </div>
@@ -446,12 +503,12 @@ $(document).ready(function() {
     $('#updateTestModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);
         var id = button.data('id');
-        var status = button.data('status');
-        var remarks = button.data('remarks');
+        var result = button.data('result');
+        var notes = button.data('notes');
         var modal = $(this);
         modal.find('#test_id').val(id);
-        modal.find('#status').val(status);
-        modal.find('#update_remarks').val(remarks);
+        modal.find('#test_result').val(result);
+        modal.find('#update_notes').val(notes);
     });
     $('#viewDetailsModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);
@@ -463,21 +520,30 @@ $(document).ready(function() {
                 <div class="col-md-6">
                     <h6>Test Information</h6>
                     <p><strong>Date:</strong> ${new Date(record.test_date).toLocaleDateString()}</p>
-                    <p><strong>Fuel Type:</strong> ${record.fuel_type.charAt(0).toUpperCase() + record.fuel_type.slice(1)}</p>
+                    <p><strong>Fuel Type:</strong> ${record.fuel_type_name}</p>
+                    <p><strong>Tank:</strong> ${record.tank_number ? 'Tank ' + record.tank_number : 'N/A'}</p>
                     <p><strong>Test Type:</strong> ${record.test_type.charAt(0).toUpperCase() + record.test_type.slice(1)}</p>
-                    <p><strong>Result:</strong> ${record.result}</p>
+                    <p><strong>Result:</strong> <span class="badge bg-${record.test_result === 'pass' ? 'success' : record.test_result === 'fail' ? 'danger' : 'warning'}">${record.test_result.charAt(0).toUpperCase() + record.test_result.slice(1)}</span></p>
                 </div>
                 <div class="col-md-6">
-                    <h6>Status & Assignment</h6>
-                    <p><strong>Status:</strong> <span class="badge bg-${record.status === 'passed' ? 'success' : record.status === 'failed' ? 'danger' : record.status === 'in_progress' ? 'primary' : 'warning'}">${record.status.charAt(0).toUpperCase() + record.status.slice(1)}</span></p>
-                    <p><strong>Branch:</strong> ${record.branch_name}</p>
-                    <p><strong>Tested By:</strong> ${record.first_name ? record.first_name + ' ' + record.last_name + ' (' + record.employee_id + ')' : 'Not assigned'}</p>
+                    <h6>Test Parameters</h6>
+                    <p><strong>Density:</strong> ${record.density ? parseFloat(record.density).toFixed(4) : 'N/A'}</p>
+                    <p><strong>Octane Rating:</strong> ${record.octane_rating || 'N/A'}</p>
+                    <p><strong>Water Content:</strong> ${record.water_content ? parseFloat(record.water_content).toFixed(3) : 'N/A'}</p>
+                    <p><strong>Contamination Level:</strong> ${record.contamination_level ? record.contamination_level.charAt(0).toUpperCase() + record.contamination_level.slice(1) : 'N/A'}</p>
+                    <p><strong>Color Grade:</strong> ${record.color_grade || 'N/A'}</p>
                 </div>
             </div>
             <div class="row mt-3">
-                <div class="col-12">
-                    <h6>Remarks</h6>
-                    <p>${record.remarks || 'No remarks provided.'}</p>
+                <div class="col-md-6">
+                    <h6>Assignment & Reference</h6>
+                    <p><strong>Branch:</strong> ${record.branch_name}</p>
+                    <p><strong>Tested By:</strong> ${record.tested_by || 'N/A'}</p>
+                    <p><strong>Lab Reference:</strong> ${record.lab_reference || 'N/A'}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Notes</h6>
+                    <p>${record.notes || 'No notes provided.'}</p>
                 </div>
             </div>
         `);

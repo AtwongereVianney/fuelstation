@@ -12,22 +12,22 @@ if (!has_permission('maintenance.view')) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_maintenance'])) {
         $branch_id = intval($_POST['branch_id']);
-        $equipment_name = mysqli_real_escape_string($conn, $_POST['equipment_name']);
         $equipment_type = mysqli_real_escape_string($conn, $_POST['equipment_type']);
         $maintenance_type = mysqli_real_escape_string($conn, $_POST['maintenance_type']);
         $description = mysqli_real_escape_string($conn, $_POST['description']);
-        $scheduled_date = mysqli_real_escape_string($conn, $_POST['scheduled_date']);
-        $estimated_cost = floatval($_POST['estimated_cost']);
-        $assigned_to = isset($_POST['assigned_to']) ? intval($_POST['assigned_to']) : null;
-        $priority = mysqli_real_escape_string($conn, $_POST['priority']);
+        $maintenance_date = mysqli_real_escape_string($conn, $_POST['maintenance_date']);
+        $cost = floatval($_POST['estimated_cost']);
+        $performed_by = isset($_POST['assigned_to']) ? intval($_POST['assigned_to']) : null;
+        $service_provider = mysqli_real_escape_string($conn, $_POST['service_provider'] ?? '');
+        $technician_name = mysqli_real_escape_string($conn, $_POST['technician_name'] ?? '');
         $status = 'scheduled';
 
-        $sql = "INSERT INTO equipment_maintenance (branch_id, equipment_name, equipment_type, maintenance_type, description, scheduled_date, estimated_cost, assigned_to, priority, status) 
+        $sql = "INSERT INTO equipment_maintenance (branch_id, equipment_type, maintenance_type, description, maintenance_date, cost, performed_by, service_provider, technician_name, status) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = mysqli_prepare($conn, $sql);
         if ($stmt) {
-            mysqli_stmt_bind_param($stmt, 'isssssdis', $branch_id, $equipment_name, $equipment_type, $maintenance_type, $description, $scheduled_date, $estimated_cost, $assigned_to, $priority, $status);
+            mysqli_stmt_bind_param($stmt, 'issssdiss', $branch_id, $equipment_type, $maintenance_type, $description, $maintenance_date, $cost, $performed_by, $service_provider, $technician_name, $status);
             if (mysqli_stmt_execute($stmt)) {
                 $_SESSION['feedback'] = ['type' => 'success', 'message' => 'Maintenance record added successfully.'];
             } else {
@@ -42,18 +42,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_status'])) {
         $maintenance_id = intval($_POST['maintenance_id']);
         $status = mysqli_real_escape_string($conn, $_POST['status']);
-        $completion_date = null;
         $actual_cost = null;
         
         if ($status === 'completed') {
-            $completion_date = date('Y-m-d');
             $actual_cost = isset($_POST['actual_cost']) ? floatval($_POST['actual_cost']) : null;
         }
 
-        $sql = "UPDATE equipment_maintenance SET status = ?, completion_date = ?, actual_cost = ? WHERE id = ?";
+        $sql = "UPDATE equipment_maintenance SET status = ?, cost = ? WHERE id = ?";
         $stmt = mysqli_prepare($conn, $sql);
         if ($stmt) {
-            mysqli_stmt_bind_param($stmt, 'ssdi', $status, $completion_date, $actual_cost, $maintenance_id);
+            mysqli_stmt_bind_param($stmt, 'sdi', $status, $actual_cost, $maintenance_id);
             if (mysqli_stmt_execute($stmt)) {
                 $_SESSION['feedback'] = ['type' => 'success', 'message' => 'Maintenance status updated successfully.'];
             } else {
@@ -102,7 +100,6 @@ while ($row = mysqli_fetch_assoc($user_result)) {
 // Get selected branch and filters
 $selected_branch_id = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : ($user_branch_id ?? ($branches[0]['id'] ?? null));
 $status_filter = $_GET['status'] ?? '';
-$priority_filter = $_GET['priority'] ?? '';
 
 // Build query for maintenance records
 $where_conditions = ["em.deleted_at IS NULL"];
@@ -121,20 +118,14 @@ if ($status_filter) {
     $param_types .= 's';
 }
 
-if ($priority_filter) {
-    $where_conditions[] = "em.priority = ?";
-    $params[] = $priority_filter;
-    $param_types .= 's';
-}
-
 $where_clause = implode(' AND ', $where_conditions);
 
 $sql = "SELECT em.*, b.branch_name, u.first_name, u.last_name, u.employee_id
         FROM equipment_maintenance em
         LEFT JOIN branches b ON em.branch_id = b.id
-        LEFT JOIN users u ON em.assigned_to = u.id
+        LEFT JOIN users u ON em.performed_by = u.id
         WHERE $where_clause
-        ORDER BY em.scheduled_date DESC, em.priority DESC";
+        ORDER BY em.maintenance_date DESC, em.id DESC";
 
 $stmt = mysqli_prepare($conn, $sql);
 if ($stmt && !empty($params)) {
@@ -159,13 +150,10 @@ while ($row = mysqli_fetch_assoc($result)) {
     <link href="assets/css/bootstrap-icons.css" rel="stylesheet">
     <link href="assets/css/datatables.min.css" rel="stylesheet">
     <style>
-        .priority-high { color: #dc3545; font-weight: bold; }
-        .priority-medium { color: #fd7e14; font-weight: bold; }
-        .priority-low { color: #198754; }
         .status-scheduled { background-color: #fff3cd; }
-        .status-in-progress { background-color: #cce7ff; }
+        .status-in_progress { background-color: #cce7ff; }
         .status-completed { background-color: #d1e7dd; }
-        .status-overdue { background-color: #f8d7da; }
+        .status-cancelled { background-color: #f8d7da; }
     </style>
 </head>
 <body>
@@ -204,7 +192,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                     <div class="card">
                         <div class="card-body">
                             <form method="GET" class="row g-3">
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <label for="branch_id" class="form-label">Branch</label>
                                     <select class="form-select" id="branch_id" name="branch_id">
                                         <option value="">All Branches</option>
@@ -215,31 +203,19 @@ while ($row = mysqli_fetch_assoc($result)) {
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <label for="status" class="form-label">Status</label>
                                     <select class="form-select" id="status" name="status">
                                         <option value="">All Status</option>
                                         <option value="scheduled" <?php echo ($status_filter == 'scheduled') ? 'selected' : ''; ?>>Scheduled</option>
                                         <option value="in_progress" <?php echo ($status_filter == 'in_progress') ? 'selected' : ''; ?>>In Progress</option>
                                         <option value="completed" <?php echo ($status_filter == 'completed') ? 'selected' : ''; ?>>Completed</option>
-                                        <option value="overdue" <?php echo ($status_filter == 'overdue') ? 'selected' : ''; ?>>Overdue</option>
+                                        <option value="cancelled" <?php echo ($status_filter == 'cancelled') ? 'selected' : ''; ?>>Cancelled</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
-                                    <label for="priority" class="form-label">Priority</label>
-                                    <select class="form-select" id="priority" name="priority">
-                                        <option value="">All Priorities</option>
-                                        <option value="high" <?php echo ($priority_filter == 'high') ? 'selected' : ''; ?>>High</option>
-                                        <option value="medium" <?php echo ($priority_filter == 'medium') ? 'selected' : ''; ?>>Medium</option>
-                                        <option value="low" <?php echo ($priority_filter == 'low') ? 'selected' : ''; ?>>Low</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">&nbsp;</label>
-                                    <div>
-                                        <button type="submit" class="btn btn-primary">Filter</button>
-                                        <a href="equipment_maintenance.php" class="btn btn-secondary">Clear</a>
-                                    </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                    <a href="equipment_maintenance.php" class="btn btn-secondary">Clear</a>
                                 </div>
                             </form>
                         </div>
@@ -252,43 +228,35 @@ while ($row = mysqli_fetch_assoc($result)) {
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header">
-                            <h5 class="card-title">Maintenance Records</h5>
+                            <h5 class="card-title">Equipment Maintenance Records</h5>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-striped table-hover" id="maintenanceTable">
                                     <thead>
                                         <tr>
-                                            <th>Equipment</th>
-                                            <th>Type</th>
+                                            <th>Equipment Type</th>
                                             <th>Maintenance Type</th>
                                             <th>Branch</th>
-                                            <th>Scheduled Date</th>
-                                            <th>Priority</th>
+                                            <th>Maintenance Date</th>
                                             <th>Status</th>
-                                            <th>Assigned To</th>
-                                            <th>Estimated Cost</th>
+                                            <th>Performed By</th>
+                                            <th>Cost</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach ($maintenance_records as $record): ?>
                                             <tr class="status-<?php echo $record['status']; ?>">
-                                                <td><?php echo htmlspecialchars($record['equipment_name']); ?></td>
-                                                <td><?php echo htmlspecialchars($record['equipment_type']); ?></td>
-                                                <td><?php echo htmlspecialchars($record['maintenance_type']); ?></td>
+                                                <td><?php echo ucfirst(str_replace('_', ' ', $record['equipment_type'])); ?></td>
+                                                <td><?php echo ucfirst(str_replace('_', ' ', $record['maintenance_type'])); ?></td>
                                                 <td><?php echo htmlspecialchars($record['branch_name']); ?></td>
-                                                <td><?php echo date('M d, Y', strtotime($record['scheduled_date'])); ?></td>
-                                                <td>
-                                                    <span class="priority-<?php echo $record['priority']; ?>">
-                                                        <?php echo ucfirst($record['priority']); ?>
-                                                    </span>
-                                                </td>
+                                                <td><?php echo date('M d, Y', strtotime($record['maintenance_date'])); ?></td>
                                                 <td>
                                                     <span class="badge bg-<?php 
                                                         echo $record['status'] === 'completed' ? 'success' : 
                                                             ($record['status'] === 'in_progress' ? 'primary' : 
-                                                            ($record['status'] === 'overdue' ? 'danger' : 'warning')); 
+                                                            ($record['status'] === 'cancelled' ? 'danger' : 'warning')); 
                                                     ?>">
                                                         <?php echo ucfirst(str_replace('_', ' ', $record['status'])); ?>
                                                     </span>
@@ -301,14 +269,14 @@ while ($row = mysqli_fetch_assoc($result)) {
                                                         <span class="text-muted">Not assigned</span>
                                                     <?php endif; ?>
                                                 </td>
-                                                <td><?php echo number_format($record['estimated_cost'], 2); ?></td>
+                                                <td><?php echo $record['cost'] ? '$' . number_format($record['cost'], 2) : 'N/A'; ?></td>
                                                 <td>
                                                     <div class="btn-group" role="group">
                                                         <button type="button" class="btn btn-sm btn-outline-primary" 
                                                                 data-bs-toggle="modal" data-bs-target="#updateStatusModal" 
                                                                 data-id="<?php echo $record['id']; ?>"
                                                                 data-status="<?php echo $record['status']; ?>">
-                                                            Update Status
+                                                            Update
                                                         </button>
                                                         <button type="button" class="btn btn-sm btn-outline-info" 
                                                                 data-bs-toggle="modal" data-bs-target="#viewDetailsModal"
@@ -350,25 +318,18 @@ while ($row = mysqli_fetch_assoc($result)) {
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label for="equipment_name" class="form-label">Equipment Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="equipment_name" name="equipment_name" required>
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-md-6">
                                 <label for="equipment_type" class="form-label">Equipment Type <span class="text-danger">*</span></label>
                                 <select class="form-select" id="equipment_type" name="equipment_type" required>
                                     <option value="">Select Type</option>
-                                    <option value="dispenser">Fuel Dispenser</option>
-                                    <option value="tank">Storage Tank</option>
-                                    <option value="pump">Fuel Pump</option>
+                                    <option value="tank">Tank</option>
+                                    <option value="dispenser">Dispenser</option>
                                     <option value="generator">Generator</option>
-                                    <option value="compressor">Air Compressor</option>
-                                    <option value="lighting">Lighting System</option>
-                                    <option value="security">Security System</option>
+                                    <option value="safety_equipment">Safety Equipment</option>
                                     <option value="other">Other</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="row mt-3">
                             <div class="col-md-6">
                                 <label for="maintenance_type" class="form-label">Maintenance Type <span class="text-danger">*</span></label>
                                 <select class="form-select" id="maintenance_type" name="maintenance_type" required>
@@ -376,23 +337,12 @@ while ($row = mysqli_fetch_assoc($result)) {
                                     <option value="preventive">Preventive</option>
                                     <option value="corrective">Corrective</option>
                                     <option value="emergency">Emergency</option>
-                                    <option value="inspection">Inspection</option>
+                                    <option value="calibration">Calibration</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="row mt-3">
                             <div class="col-md-6">
-                                <label for="scheduled_date" class="form-label">Scheduled Date <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="scheduled_date" name="scheduled_date" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="priority" class="form-label">Priority <span class="text-danger">*</span></label>
-                                <select class="form-select" id="priority" name="priority" required>
-                                    <option value="">Select Priority</option>
-                                    <option value="high">High</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="low">Low</option>
-                                </select>
+                                <label for="maintenance_date" class="form-label">Maintenance Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="maintenance_date" name="maintenance_date" required>
                             </div>
                         </div>
                         <div class="row mt-3">
@@ -410,6 +360,16 @@ while ($row = mysqli_fetch_assoc($result)) {
                             <div class="col-md-6">
                                 <label for="estimated_cost" class="form-label">Estimated Cost</label>
                                 <input type="number" class="form-control" id="estimated_cost" name="estimated_cost" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label for="service_provider" class="form-label">Service Provider</label>
+                                <input type="text" class="form-control" id="service_provider" name="service_provider">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="technician_name" class="form-label">Technician Name</label>
+                                <input type="text" class="form-control" id="technician_name" name="technician_name">
                             </div>
                         </div>
                         <div class="row mt-3">
@@ -445,7 +405,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                                 <option value="scheduled">Scheduled</option>
                                 <option value="in_progress">In Progress</option>
                                 <option value="completed">Completed</option>
-                                <option value="overdue">Overdue</option>
+                                <option value="cancelled">Cancelled</option>
                             </select>
                         </div>
                         <div class="mb-3" id="completionFields" style="display: none;">
@@ -487,7 +447,7 @@ while ($row = mysqli_fetch_assoc($result)) {
         $(document).ready(function() {
             // Initialize DataTable
             $('#maintenanceTable').DataTable({
-                order: [[4, 'desc']], // Sort by scheduled date
+                order: [[3, 'desc']], // Sort by maintenance date
                 pageLength: 25
             });
 
@@ -516,22 +476,21 @@ while ($row = mysqli_fetch_assoc($result)) {
                 var record = button.data('record');
                 var modal = $(this);
                 var content = modal.find('#detailsContent');
-                
                 content.html(`
                     <div class="row">
                         <div class="col-md-6">
-                            <h6>Equipment Information</h6>
-                            <p><strong>Name:</strong> ${record.equipment_name}</p>
-                            <p><strong>Type:</strong> ${record.equipment_type}</p>
-                            <p><strong>Maintenance Type:</strong> ${record.maintenance_type}</p>
-                            <p><strong>Branch:</strong> ${record.branch_name}</p>
+                            <h6>Maintenance Information</h6>
+                            <p><strong>Equipment Type:</strong> ${record.equipment_type.charAt(0).toUpperCase() + record.equipment_type.slice(1).replace('_', ' ')}</p>
+                            <p><strong>Maintenance Type:</strong> ${record.maintenance_type.charAt(0).toUpperCase() + record.maintenance_type.slice(1).replace('_', ' ')}</p>
+                            <p><strong>Maintenance Date:</strong> ${new Date(record.maintenance_date).toLocaleDateString()}</p>
+                            <p><strong>Status:</strong> <span class="badge bg-${record.status === 'completed' ? 'success' : record.status === 'in_progress' ? 'primary' : record.status === 'cancelled' ? 'danger' : 'warning'}">${record.status.charAt(0).toUpperCase() + record.status.slice(1).replace('_', ' ')}</span></p>
                         </div>
                         <div class="col-md-6">
-                            <h6>Maintenance Details</h6>
-                            <p><strong>Scheduled Date:</strong> ${new Date(record.scheduled_date).toLocaleDateString()}</p>
-                            <p><strong>Priority:</strong> <span class="priority-${record.priority}">${record.priority.charAt(0).toUpperCase() + record.priority.slice(1)}</span></p>
-                            <p><strong>Status:</strong> <span class="badge bg-${record.status === 'completed' ? 'success' : record.status === 'in_progress' ? 'primary' : record.status === 'overdue' ? 'danger' : 'warning'}">${record.status.replace('_', ' ').charAt(0).toUpperCase() + record.status.replace('_', ' ').slice(1)}</span></p>
-                            <p><strong>Estimated Cost:</strong> ${parseFloat(record.estimated_cost).toLocaleString('en-US', {style: 'currency', currency: 'UGX'})}</p>
+                            <h6>Assignment & Cost</h6>
+                            <p><strong>Branch:</strong> ${record.branch_name}</p>
+                            <p><strong>Performed By:</strong> ${record.first_name ? record.first_name + ' ' + record.last_name + ' (' + record.employee_id + ')' : 'Not assigned'}</p>
+                            <p><strong>Cost:</strong> ${record.cost ? '$' + parseFloat(record.cost).toFixed(2) : 'N/A'}</p>
+                            <p><strong>Service Provider:</strong> ${record.service_provider || 'N/A'}</p>
                         </div>
                     </div>
                     <div class="row mt-3">
