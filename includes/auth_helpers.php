@@ -152,7 +152,7 @@ function get_sidebar_modules() {
             'links' => [
                 [
                     'label' => 'Equipment Maintenance',
-                    'url' => '#',
+                    'url' => '../public/equipment_maintenance.php',
                     'icon' => 'bi-gear',
                     'permission' => 'maintenance.view'
                 ],
