@@ -2,10 +2,6 @@
 session_start();
 require_once '../config/db_connect.php';
 
-// Add error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 // Handle form submission
 $errors = [];
 $success = '';
@@ -31,9 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_employee']))
     $emergency_contact_name = trim($_POST['emergency_contact_name'] ?? '');
     $emergency_contact_phone = trim($_POST['emergency_contact_phone'] ?? '');
     $hired_date = $_POST['hired_date'] ?? '';
-
-    // Debug: Check if form data is being received
-    echo "<!-- DEBUG: Form submitted with business_name: $business_name_input, branch_name: $branch_name_input -->";
 
     // Basic validation
     if (empty($username) || empty($email) || empty($password) || empty($confirm_password) || 
