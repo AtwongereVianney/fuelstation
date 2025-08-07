@@ -164,7 +164,7 @@ function get_sidebar_modules() {
                 ],
                 [
                     'label' => 'Fuel Quality Tests',
-                    'url' => '#',
+                    'url' => '../public/fuel_quality_tests.php',
                     'icon' => 'bi-droplet',
                     'permission' => 'quality_tests.view'
                 ],
