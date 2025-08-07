@@ -170,7 +170,7 @@ function get_sidebar_modules() {
                 ],
                 [
                     'label' => 'Safety Incidents',
-                    'url' => '#',
+                    'url' => '../public/safety_incidents.php',
                     'icon' => 'bi-exclamation-triangle',
                     'permission' => 'safety_incidents.view'
                 ],
