@@ -158,7 +158,7 @@ function get_sidebar_modules() {
                 ],
                 [
                     'label' => 'Regulatory Compliance',
-                    'url' => '#',
+                    'url' => '../public/regulatory_compliance.php',
                     'icon' => 'bi-clipboard-check',
                     'permission' => 'compliance.view'
                 ],
