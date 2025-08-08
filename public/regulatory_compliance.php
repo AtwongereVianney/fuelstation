@@ -133,7 +133,7 @@ $sql = "SELECT rc.*, b.branch_name, u.first_name, u.last_name, u.employee_id
         LEFT JOIN branches b ON rc.branch_id = b.id
         LEFT JOIN users u ON rc.responsible_person = u.id
         WHERE $where_clause
-        ORDER BY rc.due_date ASC, rc.priority DESC";
+        ORDER BY rc.due_date ASC";
 
 $stmt = mysqli_prepare($conn, $sql);
 if ($stmt && !empty($params)) {
