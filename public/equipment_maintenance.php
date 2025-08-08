@@ -150,6 +150,12 @@ while ($row = mysqli_fetch_assoc($result)) {
     <link href="assets/css/bootstrap-icons.css" rel="stylesheet">
     <link href="assets/css/datatables.min.css" rel="stylesheet">
     <style>
+        html, body { height: 100%; }
+        body { min-height: 100vh; margin: 0; padding: 0; }
+        .main-flex-container { display: flex; height: 100vh; overflow: hidden; }
+        .sidebar-fixed { width: 240px; min-width: 200px; max-width: 300px; height: 100vh; position: sticky; top: 0; left: 0; z-index: 1020; background: #f8f9fa; border-right: 1px solid #dee2e6; }
+        .main-content-scroll { flex: 1 1 0%; height: 100vh; overflow-y: auto; padding: 32px 24px 24px 24px; background: #fff; }
+        @media (max-width: 767.98px) { .main-flex-container { display: block; height: auto; } .sidebar-fixed { display: none; } .main-content-scroll { height: auto; padding: 16px 8px; } }
         .status-scheduled { background-color: #fff3cd; }
         .status-in_progress { background-color: #cce7ff; }
         .status-completed { background-color: #d1e7dd; }
@@ -157,138 +163,167 @@ while ($row = mysqli_fetch_assoc($result)) {
     </style>
 </head>
 <body>
-    <?php include '../includes/header.php'; ?>
-    
-    <div class="page-wrapper">
-        <div class="content container-fluid">
-            <div class="page-header">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h3 class="page-title">Equipment Maintenance</h3>
-                        <ul class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Equipment Maintenance</li>
-                        </ul>
-                    </div>
-                    <div class="col-auto">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMaintenanceModal">
-                            <i class="bi bi-plus"></i> Add Maintenance
-                        </button>
-                    </div>
-                </div>
+    <!-- Mobile Sidebar -->
+    <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="mobileSidebarLabel">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <?php include '../includes/sidebar.php'; ?>
+        </div>
+    </div>
+
+    <div class="main-flex-container">
+        <!-- Desktop Sidebar -->
+        <div class="sidebar-fixed d-none d-md-block p-0">
+            <?php include '../includes/sidebar.php'; ?>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content-scroll">
+            <!-- Include header -->
+            <?php include '../includes/header.php'; ?>
+            
+            <!-- Mobile menu button -->
+            <div class="d-md-none mb-3">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                    <i class="bi bi-list"></i> Menu
+                </button>
             </div>
 
-            <?php if (isset($_SESSION['feedback'])): ?>
-                <div class="alert alert-<?php echo $_SESSION['feedback']['type']; ?> alert-dismissible fade show">
-                    <?php echo $_SESSION['feedback']['message']; ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <?php unset($_SESSION['feedback']); ?>
-            <?php endif; ?>
-
-            <!-- Filters -->
-            <div class="row mb-3">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <form method="GET" class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="branch_id" class="form-label">Branch</label>
-                                    <select class="form-select" id="branch_id" name="branch_id">
-                                        <option value="">All Branches</option>
-                                        <?php foreach ($branches as $branch): ?>
-                                            <option value="<?php echo $branch['id']; ?>" <?php echo ($selected_branch_id == $branch['id']) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($branch['branch_name']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="status" class="form-label">Status</label>
-                                    <select class="form-select" id="status" name="status">
-                                        <option value="">All Status</option>
-                                        <option value="scheduled" <?php echo ($status_filter == 'scheduled') ? 'selected' : ''; ?>>Scheduled</option>
-                                        <option value="in_progress" <?php echo ($status_filter == 'in_progress') ? 'selected' : ''; ?>>In Progress</option>
-                                        <option value="completed" <?php echo ($status_filter == 'completed') ? 'selected' : ''; ?>>Completed</option>
-                                        <option value="cancelled" <?php echo ($status_filter == 'cancelled') ? 'selected' : ''; ?>>Cancelled</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <button type="submit" class="btn btn-primary">Filter</button>
-                                    <a href="equipment_maintenance.php" class="btn btn-secondary">Clear</a>
-                                </div>
-                            </form>
+            <div class="page-wrapper">
+                <div class="content container-fluid">
+                    <div class="page-header">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h3 class="page-title">Equipment Maintenance</h3>
+                                <ul class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="dashboard.php">Dashboard</a></li>
+                                    <li class="breadcrumb-item active">Equipment Maintenance</li>
+                                </ul>
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMaintenanceModal">
+                                    <i class="bi bi-plus"></i> Add Maintenance
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Maintenance Records -->
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title">Equipment Maintenance Records</h5>
+                    <?php if (isset($_SESSION['feedback'])): ?>
+                        <div class="alert alert-<?php echo $_SESSION['feedback']['type']; ?> alert-dismissible fade show">
+                            <?php echo $_SESSION['feedback']['message']; ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover" id="maintenanceTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Equipment Type</th>
-                                            <th>Maintenance Type</th>
-                                            <th>Branch</th>
-                                            <th>Maintenance Date</th>
-                                            <th>Status</th>
-                                            <th>Performed By</th>
-                                            <th>Cost</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($maintenance_records as $record): ?>
-                                            <tr class="status-<?php echo $record['status']; ?>">
-                                                <td><?php echo ucfirst(str_replace('_', ' ', $record['equipment_type'])); ?></td>
-                                                <td><?php echo ucfirst(str_replace('_', ' ', $record['maintenance_type'])); ?></td>
-                                                <td><?php echo htmlspecialchars($record['branch_name']); ?></td>
-                                                <td><?php echo date('M d, Y', strtotime($record['maintenance_date'])); ?></td>
-                                                <td>
-                                                    <span class="badge bg-<?php 
-                                                        echo $record['status'] === 'completed' ? 'success' : 
-                                                            ($record['status'] === 'in_progress' ? 'primary' : 
-                                                            ($record['status'] === 'cancelled' ? 'danger' : 'warning')); 
-                                                    ?>">
-                                                        <?php echo ucfirst(str_replace('_', ' ', $record['status'])); ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <?php if ($record['first_name']): ?>
-                                                        <?php echo htmlspecialchars($record['first_name'] . ' ' . $record['last_name']); ?>
-                                                        <br><small class="text-muted"><?php echo $record['employee_id']; ?></small>
-                                                    <?php else: ?>
-                                                        <span class="text-muted">Not assigned</span>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td><?php echo $record['cost'] ? '$' . number_format($record['cost'], 2) : 'N/A'; ?></td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                                data-bs-toggle="modal" data-bs-target="#updateStatusModal" 
-                                                                data-id="<?php echo $record['id']; ?>"
-                                                                data-status="<?php echo $record['status']; ?>">
-                                                            Update
-                                                        </button>
-                                                        <button type="button" class="btn btn-sm btn-outline-info" 
-                                                                data-bs-toggle="modal" data-bs-target="#viewDetailsModal"
-                                                                data-record='<?php echo json_encode($record); ?>'>
-                                                            View Details
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
+                        <?php unset($_SESSION['feedback']); ?>
+                    <?php endif; ?>
+
+                    <!-- Filters -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <form method="GET" class="row g-3">
+                                        <div class="col-md-4">
+                                            <label for="branch_id" class="form-label">Branch</label>
+                                            <select class="form-select" id="branch_id" name="branch_id">
+                                                <option value="">All Branches</option>
+                                                <?php foreach ($branches as $branch): ?>
+                                                    <option value="<?php echo $branch['id']; ?>" <?php echo ($selected_branch_id == $branch['id']) ? 'selected' : ''; ?>>
+                                                        <?php echo htmlspecialchars($branch['branch_name']); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="status" class="form-label">Status</label>
+                                            <select class="form-select" id="status" name="status">
+                                                <option value="">All Status</option>
+                                                <option value="scheduled" <?php echo ($status_filter == 'scheduled') ? 'selected' : ''; ?>>Scheduled</option>
+                                                <option value="in_progress" <?php echo ($status_filter == 'in_progress') ? 'selected' : ''; ?>>In Progress</option>
+                                                <option value="completed" <?php echo ($status_filter == 'completed') ? 'selected' : ''; ?>>Completed</option>
+                                                <option value="cancelled" <?php echo ($status_filter == 'cancelled') ? 'selected' : ''; ?>>Cancelled</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button type="submit" class="btn btn-primary">Filter</button>
+                                            <a href="equipment_maintenance.php" class="btn btn-secondary">Clear</a>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Maintenance Records -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">Equipment Maintenance Records</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover" id="maintenanceTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Equipment Type</th>
+                                                    <th>Maintenance Type</th>
+                                                    <th>Branch</th>
+                                                    <th>Maintenance Date</th>
+                                                    <th>Status</th>
+                                                    <th>Performed By</th>
+                                                    <th>Cost</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($maintenance_records as $record): ?>
+                                                    <tr class="status-<?php echo $record['status']; ?>">
+                                                        <td><?php echo ucfirst(str_replace('_', ' ', $record['equipment_type'])); ?></td>
+                                                        <td><?php echo ucfirst(str_replace('_', ' ', $record['maintenance_type'])); ?></td>
+                                                        <td><?php echo htmlspecialchars($record['branch_name']); ?></td>
+                                                        <td><?php echo date('M d, Y', strtotime($record['maintenance_date'])); ?></td>
+                                                        <td>
+                                                            <span class="badge bg-<?php 
+                                                                echo $record['status'] === 'completed' ? 'success' : 
+                                                                    ($record['status'] === 'in_progress' ? 'primary' : 
+                                                                    ($record['status'] === 'cancelled' ? 'danger' : 'warning')); 
+                                                            ?>">
+                                                                <?php echo ucfirst(str_replace('_', ' ', $record['status'])); ?>
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <?php if ($record['first_name']): ?>
+                                                                <?php echo htmlspecialchars($record['first_name'] . ' ' . $record['last_name']); ?>
+                                                                <br><small class="text-muted"><?php echo $record['employee_id']; ?></small>
+                                                            <?php else: ?>
+                                                                <span class="text-muted">Not assigned</span>
+                                                            <?php endif; ?>
+                                                        </td>
+                                                        <td><?php echo $record['cost'] ? '$' . number_format($record['cost'], 2) : 'N/A'; ?></td>
+                                                        <td>
+                                                            <div class="btn-group" role="group">
+                                                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                                        data-bs-toggle="modal" data-bs-target="#updateStatusModal" 
+                                                                        data-id="<?php echo $record['id']; ?>"
+                                                                        data-status="<?php echo $record['status']; ?>">
+                                                                    Update
+                                                                </button>
+                                                                <button type="button" class="btn btn-sm btn-outline-info" 
+                                                                        data-bs-toggle="modal" data-bs-target="#viewDetailsModal"
+                                                                        data-record='<?php echo json_encode($record); ?>'>
+                                                                    View Details
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
